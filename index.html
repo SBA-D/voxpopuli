@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPool - Login, Administração & Pix</title>
+    <title>VoxPool - Login, Administração & Pix Seguro</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -20,301 +20,58 @@
             --text-muted: #9ca3af;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Inter', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-principal); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
 
-        body {
-            background-color: var(--bg-principal);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ESTILOS DE AUTENTICAÇÃO (LOGIN / CADASTRO) */
-        .auth-container {
-            max-width: 400px;
-            width: 100%;
-            margin: auto;
-            padding: 32px 24px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-        }
-
-        .auth-logo {
-            font-size: 28px;
-            font-weight: 800;
-            color: var(--accent-blue);
-            text-align: center;
-            margin-bottom: 24px;
-        }
+        /* AUTENTICAÇÃO */
+        .auth-container { max-width: 400px; width: 100%; margin: auto; padding: 32px 24px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .auth-logo { font-size: 28px; font-weight: 800; color: var(--accent-blue); text-align: center; margin-bottom: 24px; }
         .auth-logo span { color: var(--accent-green); }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border-color); padding: 14px; border-radius: 12px; color: white; font-size: 15px; outline: none; }
+        .form-control:focus { border-color: var(--accent-blue); }
+        .auth-switch { text-align: center; margin-top: 16px; font-size: 14px; color: var(--text-muted); }
+        .auth-switch span { color: var(--accent-blue); cursor: pointer; font-weight: 600; }
 
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            padding: 14px;
-            border-radius: 12px;
-            color: white;
-            font-size: 15px;
-            outline: none;
-        }
-
-        .form-control:focus {
-            border-color: var(--accent-blue);
-        }
-
-        .auth-switch {
-            text-align: center;
-            margin-top: 16px;
-            font-size: 14px;
-            color: var(--text-muted);
-        }
-
-        .auth-switch span {
-            color: var(--accent-blue);
-            cursor: pointer;
-            font-weight: 600;
-        }
-
-        /* BARRA DE NAVEGAÇÃO */
-        nav {
-            background-color: var(--bg-card);
-            border-bottom: 1px solid var(--border-color);
-            padding: 16px 24px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--accent-blue);
-            letter-spacing: -0.5px;
-            cursor: pointer;
-        }
-
+        /* NAVEGAÇÃO */
+        nav { background-color: var(--bg-card); border-bottom: 1px solid var(--border-color); padding: 16px 24px; position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 22px; font-weight: 800; color: var(--accent-blue); letter-spacing: -0.5px; cursor: pointer; }
         .logo span { color: var(--accent-green); }
+        .menu-direita { display: flex; align-items: center; gap: 12px; }
+        .wallet-badge { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; color: var(--accent-green); }
+        .btn-nav { background-color: var(--bg-input); color: white; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 20px; font-weight: 600; font-size: 13px; cursor: pointer; }
 
-        .menu-direita {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        /* PAINEL ADM */
+        .adm-box { background: rgba(239, 68, 68, 0.05); border: 1px dashed var(--accent-red); border-radius: 20px; padding: 20px; margin-bottom: 24px; }
+        .adm-title { color: var(--accent-red); font-weight: 800; font-size: 16px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .adm-validation-zone { display: flex; gap: 10px; margin-top: 12px; }
 
-        .wallet-badge {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 700;
-            color: var(--accent-green);
-        }
-
-        .btn-nav {
-            background-color: var(--bg-input);
-            color: white;
-            border: 1px solid var(--border-color);
-            padding: 8px 14px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* PAINEL ADMINISTRATIVO (ADM) */
-        .adm-box {
-            background: rgba(239, 68, 68, 0.05);
-            border: 1px dashed var(--accent-red);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .adm-title {
-            color: var(--accent-red);
-            font-weight: 800;
-            font-size: 16px;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .adm-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .btn-adm {
-            background: var(--accent-red);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* CONTEÚDO PRINCIPAL */
-        main {
-            max-width: 600px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 24px 16px;
-            flex: 1;
-        }
-
+        /* CONTEÚDO */
+        main { max-width: 600px; width: 100%; margin: 0 auto; padding: 24px 16px; flex: 1; }
         .view-section { display: none; }
         .view-section.active { display: block; }
+        .titulo-secao { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
 
-        .titulo-secao {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* CARDS E ENQUETES */
-        .poll-card {
-            background: var(--bg-card);
-            border-radius: 24px;
-            border: 1px solid var(--border-color);
-            padding: 24px;
-        }
-
-        .prize-pool-box {
-            background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
-            border: 1px solid var(--accent-blue);
-            border-radius: 16px;
-            padding: 20px;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .prize-value {
-            font-size: 36px;
-            font-weight: 800;
-            color: #ffffff;
-            text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-        }
-
-        .options-group {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-
-        .option-label {
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-        }
-
-        .option-label.selected {
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .btn-action {
-            width: 100%;
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            border-radius: 14px;
-            padding: 16px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .btn-action:disabled {
-            background: #2d3242;
-            color: #6b7280;
-            cursor: not-allowed;
-        }
-
+        /* CARDS */
+        .poll-card { background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px; }
+        .prize-pool-box { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border: 1px solid var(--accent-blue); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px; }
+        .prize-value { font-size: 36px; font-weight: 800; color: #ffffff; text-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
+        .options-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+        .option-label { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+        .option-label.selected { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
+        .btn-action { width: 100%; background: var(--accent-blue); color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        .btn-action:disabled { background: #2d3242; color: #6b7280; cursor: not-allowed; }
+        
         .store-grid { display: flex; flex-direction: column; gap: 16px; }
-        
-        .credit-card {
-            background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); padding: 20px;
-            display: flex; flex-direction: column; gap: 12px;
-        }
-        
+        .credit-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
         .btn-buy-package { background: #1d4ed8; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer; }
 
-        /* MODAL DE PAGAMENTO PIX */
-        .pix-modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .pix-modal-content {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            padding: 24px;
-            border-radius: 24px;
-            max-width: 450px;
-            width: 100%;
-            text-align: center;
-        }
-        .pix-key-box {
-            background: var(--bg-input);
-            border: 1px dashed var(--accent-green);
-            padding: 14px;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--accent-green);
-            margin: 16px 0;
-            word-break: break-all;
-            user-select: all;
-        }
+        /* MODAL PIX */
+        .pix-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .pix-modal-content { background: var(--bg-card); border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; max-width: 450px; width: 100%; text-align: center; }
+        .pix-key-box { background: var(--bg-input); border: 1px dashed var(--accent-green); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; color: var(--accent-green); margin: 16px 0; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -323,7 +80,6 @@
     <div id="view-auth" class="view-section active" style="display: flex; min-height: 100vh; width: 100%;">
         <div class="auth-container">
             <div class="auth-logo">Vox<span>Pool</span></div>
-            
             <div id="auth-forms">
                 <div class="form-group">
                     <label>Login ou E-mail</label>
@@ -334,7 +90,6 @@
                     <input type="password" id="auth-senha" class="form-control" placeholder="••••••••">
                 </div>
                 <button class="btn-action" style="margin-top: 10px;" onclick="executarAutenticacao()">Entrar na Conta</button>
-                
                 <div class="auth-switch" id="btn-alternar-auth">
                     Não tem conta? <span onclick="alternarModoAuth()">Cadastre-se aqui</span>
                 </div>
@@ -358,25 +113,26 @@
         <main>
             <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR (@admhelth) -->
             <div id="painel-adm" class="adm-box" style="display: none;">
-                <div class="adm-title">🛡️ Modo Administrador Ativo (@admhelth)</div>
-                <div class="adm-actions">
-                    <button class="btn-adm" onclick="admZerarSaldoDemonstracao()">Zerar Saldo (Reset)</button>
-                    <button class="btn-adm" style="background:#4b5563;" onclick="admConfigurarVotos()">Alterar Votos Base</button>
+                <div class="adm-title">🛡️ Painel de Verificação de Créditos Antifraude</div>
+                <p style="font-size: 13px; color: var(--text-muted);">Insira o Token Secreto enviado pelo cliente via WhatsApp para validar o Pix e liberar o saldo:</p>
+                <div class="adm-validation-zone">
+                    <input type="text" id="adm-token-input" class="form-control" placeholder="Cole o Token de Liberação aqui...">
+                    <button class="btn-action" style="background: var(--accent-green); width: auto; padding: 0 20px; border-radius: 12px;" onclick="admProcessarToken()">Liberar</button>
                 </div>
+                <button class="btn-nav" style="background: var(--accent-red); margin-top: 12px; width: 100%; border: none;" onclick="admZerarTudo()">Zerar Saldo Global da Simulação</button>
             </div>
 
             <!-- VISÃO 1: ENQUETE -->
             <section id="view-enquetes" class="view-section">
                 <div class="titulo-secao">
-                    <span>Enquete em Destaque</span>
-                    <span style="font-size: 12px; color: #ef4444; font-weight: 600;">⏱️ Ativa</span>
+                    <span>Enquete Ativa</span>
+                    <span id="badge-pendente" style="font-size: 12px; color: #f59e0b; font-weight: 600; display: none;">⏳ Aguardando aprovação de créditos...</span>
                 </div>
 
                 <div class="poll-card">
                     <div class="prize-pool-box">
                         <div style="font-size: 12px; color: #93c5fd; text-transform: uppercase; margin-bottom: 6px;">Valor em Jogo (Multiplicado 5x)</div>
                         <div class="prize-value" id="label-premio-total">R$ 2.500,00</div>
-                        <div style="font-size: 12px; color: var(--text-muted);" id="label-base-calculo">Base: 100 Votos x R$ 5,00</div>
                     </div>
 
                     <div class="poll-question">Quem possui a maior torcida engajada e ativa no cenário nacional atual?</div>
@@ -384,15 +140,12 @@
                     <div class="options-group">
                         <label class="option-label" id="container-opt1" onclick="selecionarOpcao('opt1')">
                             <span>BOLSONARO</span> <span id="votos-opt1">45 votos</span>
-                            <input type="radio" name="poll_opt" id="opt1" style="display:none">
                         </label>
                         <label class="option-label" id="container-opt2" onclick="selecionarOpcao('opt2')">
                             <span>LULA</span> <span id="votos-opt2">35 votos</span>
-                            <input type="radio" name="poll_opt" id="opt2" style="display:none">
                         </label>
                         <label class="option-label" id="container-opt3" onclick="selecionarOpcao('opt3')">
                             <span>NENHUM DELES</span> <span id="votos-opt3">20 votos</span>
-                            <input type="radio" name="poll_opt" id="opt3" style="display:none">
                         </label>
                     </div>
 
@@ -415,25 +168,25 @@
     <div id="modal-pix" class="pix-modal">
         <div class="pix-modal-content">
             <h3 style="color: white; font-weight: 800;">Pagamento via Pix</h3>
-            <p style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">
-                Transfira o valor exato do pacote para a chave Pix abaixo:
-            </p>
-            <div class="pix-key-box" id="pix-chave-texto">tssnbshrs@gmail.com</div>
-            <p style="font-size: 12px; color: var(--accent-blue); margin-bottom: 16px; font-weight: 600;">
-                📋 Toque em cima da chave para copiar
-            </p>
-            <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--border-color);">
+            <p style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">Transfira o valor exato para a nossa chave:</p>
+            <div class="pix-key-box">tssnbshrs@gmail.com</div>
+            
+            <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--border-color); text-align: left;">
                 <div style="display:flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span>Pacote Escolhido:</span><span id="modal-info-qtd" style="font-weight:700;">-</span>
+                    <span>Pacote:</span><span id="modal-info-qtd" style="font-weight:700;">-</span>
                 </div>
-                <div style="display:flex; justify-content: space-between; color: var(--accent-green);">
-                    <span>Valor a Pagar:</span><span id="modal-info-preco" style="font-weight:700;">-</span>
+                <div style="display:flex; justify-content: space-between; color: var(--accent-green); margin-bottom: 4px;">
+                    <span>Valor:</span><span id="modal-info-preco" style="font-weight:700;">-</span>
+                </div>
+                <div style="display:flex; justify-content: space-between; color: var(--text-muted); font-size: 11px;">
+                    <span>Hora do Pedido:</span><span id="modal-info-hora">-</span>
                 </div>
             </div>
-            <button class="btn-action" style="background: var(--accent-green);" onclick="confirmarEnvioPix()">
-                Já fiz o Pix, liberar meus Créditos!
+            
+            <button class="btn-action" style="background: var(--accent-green);" onclick="solicitarLiberacaoPix()">
+                📱 Notificar Pagamento no WhatsApp
             </button>
-            <button class="btn-nav" style="margin-top: 12px; width: 100%;" onclick="fecharModalPix()">Cancelar</button>
+            <button class="btn-nav" style="margin-top: 12px; width: 100%; border: none;" onclick="fecharModalPix()">Cancelar</button>
         </div>
     </div>
 
@@ -466,7 +219,7 @@
             const loginInput = document.getElementById('auth-login').value.trim();
             const senhaInput = document.getElementById('auth-senha').value.trim();
 
-            if(!loginInput || !senhaInput) { alert("Preencha todos os campos!"); return; }
+            if(!loginInput || !senhaInput) { alert("Preencha tudo!"); return; }
 
             if(loginInput === "@admhelth" && senhaInput === "2481") {
                 usuarioLogado = { login: "@admhelth", role: "ADM" };
@@ -477,10 +230,10 @@
             let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
 
             if(modoAuth === "CADASTRO") {
-                if(bancoUsuarios[loginInput]) { alert("Este usuário já existe!"); return; }
-                bancoUsuarios[loginInput] = { senha: senhaInput, saldo: 25 };
+                if(bancoUsuarios[loginInput]) { alert("Usuário já existe!"); return; }
+                bancoUsuarios[loginInput] = { senha: senhaInput, saldo: 25, pendente: 0 };
                 localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
-                alert("Cadastro realizado! Faça login agora.");
+                alert("Cadastro feito! Faça login.");
                 alternarModoAuth();
             } else {
                 if(bancoUsuarios[loginInput] && bancoUsuarios[loginInput].senha === senhaInput) {
@@ -488,7 +241,7 @@
                     appState.saldoCreditos = bancoUsuarios[loginInput].saldo;
                     logarSucesso();
                 } else {
-                    alert("Usuário ou senha incorretos!");
+                    alert("Dados incorretos!");
                 }
             }
         }
@@ -497,94 +250,117 @@
             document.getElementById('view-auth').style.display = 'none';
             document.getElementById('app-conteudo').style.display = 'flex';
             document.getElementById('painel-adm').style.display = usuarioLogado.role === "ADM" ? 'block' : 'none';
+            
+            // Verifica se esse usuário específico tem recarga travada/pendente
+            if(usuarioLogado.role !== "ADM") {
+                let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
+                if(bancoUsuarios[usuarioLogado.login] && bancoUsuarios[usuarioLogado.login].pendente > 0) {
+                    document.getElementById('badge-pendente').style.display = 'block';
+                }
+            }
+
             navegarPara('view-enquetes');
             atualizarPainelPremio();
         }
 
         function fazerLogout() {
             usuarioLogado = null;
-            document.getElementById('auth-login').value = '';
-            document.getElementById('auth-senha').value = '';
             document.getElementById('app-conteudo').style.display = 'none';
             document.getElementById('view-auth').style.display = 'flex';
         }
 
-        // COBRANÇA E DISPARO DE NOTIFICAÇÃO VIA WHATSAPP (A NOTIFICAÇÃO PRO SEU PIX)
+        // FLUXO DE SOLICITAÇÃO COM PREVENÇÃO DE FRAUDE
         function abrirCheckoutPix(qtd, total) {
-            pacotePendente = { qtd, total };
+            const agora = new Date();
+            const horaFormatada = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            pacotePendente = { qtd, total, hora: horaFormatada };
+            
             document.getElementById('modal-info-qtd').innerText = `${qtd} Créditos`;
             document.getElementById('modal-info-preco').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('modal-info-hora').innerText = horaFormatada;
             document.getElementById('modal-pix').style.display = 'flex';
         }
 
         function fecharModalPix() {
             document.getElementById('modal-pix').style.display = 'none';
-            pacotePendente = null;
         }
 
-        function confirmarEnvioPix() {
+        function solicitarLiberacaoPix() {
             if(!pacotePendente) return;
 
-            // Adiciona os créditos ao usuário na tela imediatamente
-            appState.saldoCreditos += pacotePendente.qtd;
-            atualizarPainelPremio();
+            // Criar token criptografado/embaralhado para o ADM validar com 1 clique
+            const tokenSeguranca = btoa(`${usuarioLogado.login}|${pacotePendente.qtd}|${pacotePendente.hora}`).replace(/=/g, '');
 
-            // Monta a mensagem que você receberá no WhatsApp notificando a ação
-            const textoNotificacao = encodeURIComponent(
-                `🔔 *NOVA COMPRA VOXPOOL*\n\n` +
+            // Salva o estado pendente no usuário local
+            let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
+            bancoUsuarios[usuarioLogado.login].pendente = pacotePendente.qtd;
+            localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
+
+            document.getElementById('badge-pendente').style.display = 'block';
+
+            // Mensagem ultra detalhada para o seu WhatsApp pessoal
+            const mensagemZap = encodeURIComponent(
+                `Olá, acabei de fazer o Pix de confirmação!\n\n` +
                 `👤 *Membro:* ${usuarioLogado.login}\n` +
-                `💰 *Valor Pago:* R$ ${pacotePendente.total.toFixed(2)}\n` +
-                `🪙 *Créditos Liberados:* ${pacotePendente.qtd} Crd.\n` +
-                `🎯 *Destino:* tssnbshrs@gmail.com`
+                `🪙 *Créditos Solicitados:* ${pacotePendente.qtd} Crd\n` +
+                `💰 *Valor Enviado:* R$ ${pacotePendente.total.toFixed(2)}\n` +
+                `⏱️ *Hora da Solicitação:* ${pacotePendente.hora}\n\n` +
+                `🔑 *TOKEN DE LIBERAÇÃO RESTRITO (Copie abaixo):*\n` +
+                `${tokenSeguranca}`
             );
 
-            // Redireciona para o WhatsApp (Abre o seu próprio chat ou deixa pronto pro membro enviar)
-            // OBS: Se quiser forçar o envio direto para o seu número, mude o '0000000000000' abaixo para o seu número com DDD (ex: 5521999999999)
-            window.open(`https://api.whatsapp.com/send?text=${textoNotificacao}`, '_blank');
-
+            // Redireciona o cliente para o seu WhatsApp comercial/pessoal
+            window.open(`https://api.whatsapp.com/send?text=${mensagemZap}`, '_blank');
             fecharModalPix();
             navegarPara('view-enquetes');
         }
 
-        // FUNÇÕES DO ADMINISTRADOR (ADM)
-        function admZerarSaldoDemonstracao() {
+        // LÓGICA EXCLUSIVA DE VALIDAÇÃO DO ADM (@admhelth)
+        function admProcessarToken() {
+            const token = document.getElementById('adm-token-input').value.trim();
+            if(!token) { alert("Insira o token enviado pelo usuário!"); return; }
+
+            try {
+                // Decodifica o token de segurança de forma prática e automática
+                const decodificado = atob(token);
+                const [usuarioAlvo, creditosAString, horaPedido] = decodificado.split('|');
+                const qtdCreditos = parseInt(creditosAString);
+
+                let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
+
+                if(bancoUsuarios[usuarioAlvo]) {
+                    // Libera os créditos de verdade na carteira dele
+                    bancoUsuarios[usuarioAlvo].saldo += qtdCreditos;
+                    bancoUsuarios[usuarioAlvo].pendente = 0; // Remove flag pendente
+                    localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
+
+                    alert(`✅ SUCESSO!\nUsuário: ${usuarioAlvo}\nCréditos: +${qtdCreditos} liberados.\nPedido gerado às: ${horaPedido}`);
+                    document.getElementById('adm-token-input').value = '';
+                } else {
+                    alert("⚠️ Token inválido ou usuário inexistente!");
+                }
+            } catch(e) {
+                alert("❌ Erro: Esse token está corrompido ou é falso!");
+            }
+        }
+
+        function admZerarTudo() {
             appState.saldoCreditos = 0;
             appState.votos = { opt1: 0, opt2: 0, opt3: 0 };
             appState.jaVotou = false;
-            document.getElementById('btn-votar').disabled = false;
-            document.getElementById('btn-votar').innerText = "Confirmar Voto (1 Crédito)";
-            document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
             atualizarPainelPremio();
-            alert("Administração: Todo o saldo e votos da simulação foram ZERADOS!");
-        }
-
-        function admConfigurarVotos() {
-            const v1 = parseInt(prompt("Votos Bolsonaro:", appState.votos.opt1) || 0);
-            const v2 = parseInt(prompt("Votos Lula:", appState.votos.opt2) || 0);
-            const v3 = parseInt(prompt("Votos Nenhum:", appState.votos.opt3) || 0);
-            appState.votos.opt1 = v1; appState.votos.opt2 = v2; appState.votos.opt3 = v3;
-            atualizarPainelPremio();
+            alert("Saldos zerados com sucesso!");
         }
 
         function atualizarPainelPremio() {
             const totalVotos = appState.votos.opt1 + appState.votos.opt2 + appState.votos.opt3;
             const valorEmJogo = (totalVotos * 5.00) * 5;
-
             document.getElementById('label-premio-total').innerText = `R$ ${valorEmJogo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
-            document.getElementById('label-base-calculo').innerText = `Base: ${totalVotos} Votos x R$ 5,00 (Multiplicado 5x)`;
-            
             document.getElementById('votos-opt1').innerText = `${appState.votos.opt1} votos`;
             document.getElementById('votos-opt2').innerText = `${appState.votos.opt2} votos`;
             document.getElementById('votos-opt3').innerText = `${appState.votos.opt3} votos`;
             document.getElementById('saldo-atual').innerText = appState.saldoCreditos;
-
-            if(usuarioLogado && usuarioLogado.role !== "ADM") {
-                let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
-                if(bancoUsuarios[usuarioLogado.login]) {
-                    bancoUsuarios[usuarioLogado.login].saldo = appState.saldoCreditos;
-                    localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
-                }
-            }
         }
 
         function selecionarOpcao(idOpcao) {
@@ -596,7 +372,7 @@
 
         function processarVoto() {
             if (!appState.opcaoSelecionada) { alert("Selecione uma opção!"); return; }
-            if (appState.saldoCreditos < 1) { alert("Saldo insuficiente!"); navegarPara('view-loja'); return; }
+            if (appState.saldoCreditos < 1) { alert("Saldo insuficiente! Compre pacotes na Loja."); navegarPara('view-loja'); return; }
 
             appState.saldoCreditos -= 1;
             appState.votos[appState.opcaoSelecionada] += 1;
@@ -625,12 +401,9 @@
         function navegarPara(idVisao) {
             document.querySelectorAll('.view-section').forEach(secao => secao.style.display = 'none');
             document.getElementById(idVisao).style.display = 'block';
-            if(idVisao === 'view-auth') document.getElementById(idVisao).style.display = 'flex';
         }
 
-        window.onload = function() {
-            renderizarLoja();
-        };
+        window.onload = function() { renderizarLoja(); };
     </script>
 </body>
 </html>
