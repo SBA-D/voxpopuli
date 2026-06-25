@@ -215,7 +215,7 @@
                 : 'Já tem uma conta? <span onclick="alternarModoAuth()">Faça Login</span>';
         }
 
-        function executarAutenticacao() {
+        function ejecutarAutenticacao() {
             const loginInput = document.getElementById('auth-login').value.trim();
             const senhaInput = document.getElementById('auth-senha').value.trim();
 
@@ -251,7 +251,6 @@
             document.getElementById('app-conteudo').style.display = 'flex';
             document.getElementById('painel-adm').style.display = usuarioLogado.role === "ADM" ? 'block' : 'none';
             
-            // Verifica se esse usuário específico tem recarga travada/pendente
             if(usuarioLogado.role !== "ADM") {
                 let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
                 if(bancoUsuarios[usuarioLogado.login] && bancoUsuarios[usuarioLogado.login].pendente > 0) {
@@ -269,7 +268,6 @@
             document.getElementById('view-auth').style.display = 'flex';
         }
 
-        // FLUXO DE SOLICITAÇÃO COM PREVENÇÃO DE FRAUDE
         function abrirCheckoutPix(qtd, total) {
             const agora = new Date();
             const horaFormatada = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -289,40 +287,38 @@
         function solicitarLiberacaoPix() {
             if(!pacotePendente) return;
 
-            // Criar token criptografado/embaralhado para o ADM validar com 1 clique
+            // Criar token criptografado/embaralhado baseado nos dados
             const tokenSeguranca = btoa(`${usuarioLogado.login}|${pacotePendente.qtd}|${pacotePendente.hora}`).replace(/=/g, '');
 
-            // Salva o estado pendente no usuário local
             let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
             bancoUsuarios[usuarioLogado.login].pendente = pacotePendente.qtd;
             localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
 
             document.getElementById('badge-pendente').style.display = 'block';
 
-            // Mensagem ultra detalhada para o seu WhatsApp pessoal
+            // Mensagem direta configurada para o seu link wa.me/22992777193
             const mensagemZap = encodeURIComponent(
                 `Olá, acabei de fazer o Pix de confirmação!\n\n` +
                 `👤 *Membro:* ${usuarioLogado.login}\n` +
                 `🪙 *Créditos Solicitados:* ${pacotePendente.qtd} Crd\n` +
                 `💰 *Valor Enviado:* R$ ${pacotePendente.total.toFixed(2)}\n` +
-                `⏱️ *Hora da Solicitação:* ${pacotePendente.hora}\n\n` +
+                `⏱ *Hora da Solicitação:* ${pacotePendente.hora}\n\n` +
                 `🔑 *TOKEN DE LIBERAÇÃO RESTRITO (Copie abaixo):*\n` +
                 `${tokenSeguranca}`
             );
 
-            // Redireciona o cliente para o seu WhatsApp comercial/pessoal
-            window.open(`https://api.whatsapp.com/send?text=${mensagemZap}`, '_blank');
+            // Abre o chat direcionado ao seu número
+            window.open(`https://wa.me/22992777193?text=${mensagemZap}`, '_blank');
             fecharModalPix();
             navegarPara('view-enquetes');
         }
 
-        // LÓGICA EXCLUSIVA DE VALIDAÇÃO DO ADM (@admhelth)
+        // ADM REGRAS
         function admProcessarToken() {
             const token = document.getElementById('adm-token-input').value.trim();
             if(!token) { alert("Insira o token enviado pelo usuário!"); return; }
 
             try {
-                // Decodifica o token de segurança de forma prática e automática
                 const decodificado = atob(token);
                 const [usuarioAlvo, creditosAString, horaPedido] = decodificado.split('|');
                 const qtdCreditos = parseInt(creditosAString);
@@ -330,15 +326,14 @@
                 let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
 
                 if(bancoUsuarios[usuarioAlvo]) {
-                    // Libera os créditos de verdade na carteira dele
                     bancoUsuarios[usuarioAlvo].saldo += qtdCreditos;
-                    bancoUsuarios[usuarioAlvo].pendente = 0; // Remove flag pendente
+                    bancoUsuarios[usuarioAlvo].pendente = 0;
                     localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
 
                     alert(`✅ SUCESSO!\nUsuário: ${usuarioAlvo}\nCréditos: +${qtdCreditos} liberados.\nPedido gerado às: ${horaPedido}`);
                     document.getElementById('adm-token-input').value = '';
                 } else {
-                    alert("⚠️ Token inválido ou usuário inexistente!");
+                    alert("⚠ Token inválido ou usuário inexistente!");
                 }
             } catch(e) {
                 alert("❌ Erro: Esse token está corrompido ou é falso!");
