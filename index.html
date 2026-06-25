@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPool - Enquetes Gamificadas & Rateio</title>
+    <title>VoxPool - Login & Administração</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -14,6 +14,7 @@
             --bg-hover: #262936;
             --accent-blue: #3b82f6;
             --accent-green: #10b981;
+            --accent-red: #ef4444;
             --border-color: #2d3242;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
@@ -33,6 +34,67 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+        }
+
+        /* ESTILOS DE AUTENTICAÇÃO (LOGIN / CADASTRO) */
+        .auth-container {
+            max-width: 400px;
+            width: 100%;
+            margin: auto;
+            padding: 32px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .auth-logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent-blue);
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .auth-logo span { color: var(--accent-green); }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 14px;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-blue);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-muted);
+        }
+
+        .auth-switch span {
+            color: var(--accent-blue);
+            cursor: pointer;
+            font-weight: 600;
         }
 
         /* BARRA DE NAVEGAÇÃO */
@@ -61,43 +123,69 @@
             cursor: pointer;
         }
 
-        .logo span {
-            color: var(--accent-green);
-        }
+        .logo span { color: var(--accent-green); }
 
         .menu-direita {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
         }
 
         .wallet-badge {
             background: rgba(16, 185, 129, 0.1);
             border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 20px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 700;
             color: var(--accent-green);
+        }
+
+        .btn-nav {
+            background-color: var(--bg-input);
+            color: white;
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* PAINEL ADMINISTRATIVO (ADM) */
+        .adm-box {
+            background: rgba(239, 68, 68, 0.05);
+            border: 1px dashed var(--accent-red);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .adm-title {
+            color: var(--accent-red);
+            font-weight: 800;
+            font-size: 16px;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .btn-comprar-topo {
-            background-color: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: opacity 0.2s;
+        .adm-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
         }
 
-        .btn-comprar-topo:hover {
-            opacity: 0.9;
+        .btn-adm {
+            background: var(--accent-red);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
         }
 
         /* CONTEÚDO PRINCIPAL */
@@ -109,31 +197,24 @@
             flex: 1;
         }
 
-        .view-section {
-            display: none;
-        }
-
-        .view-section.active {
-            display: block;
-        }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
 
         .titulo-secao {
             font-size: 18px;
             font-weight: 700;
             margin-bottom: 20px;
-            color: var(--text-main);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        /* CARD DA ENQUETE */
+        /* CARDS E ENQUETES */
         .poll-card {
             background: var(--bg-card);
             border-radius: 24px;
             border: 1px solid var(--border-color);
             padding: 24px;
-            margin-bottom: 20px;
         }
 
         .prize-pool-box {
@@ -145,36 +226,13 @@
             margin-bottom: 24px;
         }
 
-        .prize-label {
-            font-size: 12px;
-            color: #93c5fd;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 6px;
-            font-weight: 600;
-        }
-
         .prize-value {
             font-size: 36px;
             font-weight: 800;
             color: #ffffff;
             text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
-            margin-bottom: 4px;
         }
 
-        .prize-sub {
-            font-size: 12px;
-            color: var(--text-muted);
-        }
-
-        .poll-question {
-            font-size: 18px;
-            font-weight: 700;
-            line-height: 1.5;
-            margin-bottom: 20px;
-        }
-
-        /* OPÇÕES DE VOTO */
         .options-group {
             display: flex;
             flex-direction: column;
@@ -191,26 +249,6 @@
             align-items: center;
             justify-content: space-between;
             cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .option-label:hover {
-            border-color: var(--accent-blue);
-            background: rgba(59, 130, 246, 0.05);
-        }
-
-        .option-label input[type="radio"] {
-            display: none;
-        }
-
-        .option-text {
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .option-stats {
-            font-size: 13px;
-            color: var(--text-muted);
         }
 
         .option-label.selected {
@@ -218,7 +256,6 @@
             background: rgba(59, 130, 246, 0.1);
         }
 
-        /* BOTÕES */
         .btn-action {
             width: 100%;
             background: var(--accent-blue);
@@ -229,304 +266,293 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
-            transition: transform 0.1s, opacity 0.2s;
-        }
-
-        .btn-action:active {
-            transform: scale(0.98);
         }
 
         .btn-action:disabled {
             background: #2d3242;
             color: #6b7280;
-            box-shadow: none;
             cursor: not-allowed;
         }
 
-        /* LOJA DE CRÉDITOS */
-        .store-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
+        .store-grid { display: flex; flex-direction: column; gap: 16px; }
         .credit-card {
-            background: var(--bg-card);
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); padding: 20px;
+            display: flex; flex-direction: column; gap: 12px;
         }
-
-        .credit-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .credit-title {
-            font-size: 20px;
-            font-weight: 800;
-        }
-
-        .credit-total {
-            font-size: 14px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .credit-badge-unit {
-            border: 1px dashed var(--accent-blue);
-            padding: 12px;
-            border-radius: 10px;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            background: rgba(59, 130, 246, 0.02);
-        }
-
-        .btn-buy-package {
-            background: #1d4ed8;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            padding: 14px;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: background 0.2s;
-        }
-
-        .btn-buy-package:hover {
-            background: var(--accent-blue);
-        }
-
-        .btn-voltar {
-            background: none;
-            border: none;
-            color: var(--accent-blue);
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        /* RODAPÉ DO APP */
-        .footer-notice {
-            text-align: center;
-            color: var(--text-muted);
-            font-size: 12px;
-            margin-top: 24px;
-            line-height: 1.4;
-        }
+        .btn-buy-package { background: #1d4ed8; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <nav>
-        <div class="nav-container">
-            <div class="logo" onclick="navegarPara('view-enquetes')">Vox<span>Pool</span></div>
-            <div class="menu-direita">
-                <div class="wallet-badge">
-                    🪙 <span id="saldo-atual">25</span> Créditos
+    <div id="view-auth" class="view-section active" style="display: flex; min-height: 100vh; width: 100%;">
+        <div class="auth-container">
+            <div class="auth-logo">Vox<span>Pool</span></div>
+            
+            <div id="auth-forms">
+                <div class="form-group">
+                    <label>Login ou E-mail</label>
+                    <input type="text" id="auth-login" class="form-control" placeholder="Ex: joao ou @admhelth">
                 </div>
-                <button class="btn-comprar-topo" onclick="navegarPara('view-loja')">+ Comprar</button>
+                <div class="form-group">
+                    <label>Senha</label>
+                    <input type="password" id="auth-senha" class="form-control" placeholder="••••••••">
+                </div>
+                <button class="btn-action" style="margin-top: 10px;" onclick="executarAutenticacao()">Entrar na Conta</button>
+                
+                <div class="auth-switch" id="btn-alternar-auth">
+                    Não tem conta? <span onclick="alternarModoAuth()">Cadastre-se aqui</span>
+                </div>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <main>
-        
-        <section id="view-enquetes" class="view-section active">
-            <div class="titulo-secao">
-                <span>Enquete Ativa</span>
-                <span style="font-size: 12px; color: #ef4444; font-weight: 600;">⏱️ Termina em breve</span>
+    <div id="app-conteudo" style="display: none; flex-direction: column; min-height: 100vh;">
+        <nav>
+            <div class="nav-container">
+                <div class="logo" onclick="navegarPara('view-enquetes')">Vox<span>Pool</span></div>
+                <div class="menu-direita">
+                    <div class="wallet-badge">🪙 <span id="saldo-atual">25</span> Crd.</div>
+                    <button class="btn-nav" style="background: var(--accent-blue);" onclick="navegarPara('view-loja')">+ Loja</button>
+                    <button class="btn-nav" onclick="fazerLogout()">Sair</button>
+                </div>
+            </div>
+        </nav>
+
+        <main>
+            <div id="painel-adm" class="adm-box" style="display: none;">
+                <div class="adm-title">🛡️ Modo Administrador Ativo (@admhelth)</div>
+                <div class="adm-actions">
+                    <button class="btn-adm" onclick="admZerarSaldoDemonstracao()">Zerar Saldo (Reset)</button>
+                    <button class="btn-adm" style="background:#4b5563;" onclick="admConfigurarVotos()">Alterar Votos Base</button>
+                </div>
             </div>
 
-            <div class="poll-card">
-                <div class="prize-pool-box">
-                    <div class="prize-label">Valor Total Acumulado em Jogo</div>
-                    <div class="prize-value" id="label-premio-total">R$ 2.500,00</div>
-                    <div class="prize-sub" id="label-base-calculo">Base: 100 Votos x R$ 5,00 (Multiplicado 5x)</div>
+            <section id="view-enquetes" class="view-section">
+                <div class="titulo-secao">
+                    <span>Enquete em Destaque</span>
+                    <span style="font-size: 12px; color: #ef4444; font-weight: 600;">⏱️ Ativa</span>
                 </div>
 
-                <div class="poll-question">
-                    Quem possui a maior torcida engajada e ativa no cenário nacional atual?
+                <div class="poll-card">
+                    <div class="prize-pool-box">
+                        <div style="font-size: 12px; color: #93c5fd; text-transform: uppercase; margin-bottom: 6px;">Valor em Jogo (Multiplicado 5x)</div>
+                        <div class="prize-value" id="label-premio-total">R$ 2.500,00</div>
+                        <div style="font-size: 12px; color: var(--text-muted);" id="label-base-calculo">Base: 100 Votos x R$ 5,00</div>
+                    </div>
+
+                    <div class="poll-question">Quem possui a maior torcida engajada e ativa no cenário nacional atual?</div>
+
+                    <div class="options-group">
+                        <label class="option-label" id="container-opt1" onclick="selecionarOpcao('opt1')">
+                            <span>BOLSONARO</span> <span id="votos-opt1">45 votos</span>
+                            <input type="radio" name="poll_opt" id="opt1" style="display:none">
+                        </label>
+                        <label class="option-label" id="container-opt2" onclick="selecionarOpcao('opt2')">
+                            <span>LULA</span> <span id="votos-opt2">35 votos</span>
+                            <input type="radio" name="poll_opt" id="opt2" style="display:none">
+                        </label>
+                        <label class="option-label" id="container-opt3" onclick="selecionarOpcao('opt3')">
+                            <span>NENHUM DELES</span> <span id="votos-opt3">20 votos</span>
+                            <input type="radio" name="poll_opt" id="opt3" style="display:none">
+                        </label>
+                    </div>
+
+                    <button class="btn-action" id="btn-votar" onclick="processarVoto()">Confirmar Voto (1 Crédito)</button>
                 </div>
+            </section>
 
-                <div class="options-group">
-                    <label class="option-label" id="container-opt1" onclick="selecionarOpcao('opt1')">
-                        <span class="option-text">BOLSONARO</span>
-                        <span class="option-stats" id="votos-opt1">45 votos</span>
-                        <input type="radio" name="enquete_principal" id="opt1" value="BOLSONARO">
-                    </label>
-
-                    <label class="option-label" id="container-opt2" onclick="selecionarOpcao('opt2')">
-                        <span class="option-text">LULA</span>
-                        <span class="option-stats" id="votos-opt2">35 votos</span>
-                        <input type="radio" name="enquete_principal" id="opt2" value="LULA">
-                    </label>
-
-                    <label class="option-label" id="container-opt3" onclick="selecionarOpcao('opt3')">
-                        <span class="option-text">NENHUM DELES</span>
-                        <span class="option-stats" id="votos-opt3">20 votos</span>
-                        <input type="radio" name="enquete_principal" id="opt3" value="NENHUM DELES">
-                    </label>
+            <section id="view-loja" class="view-section">
+                <div class="titulo-secao">
+                    <button class="btn-nav" onclick="navegarPara('view-enquetes')">← Voltar</button>
+                    <span>Loja de Créditos</span>
                 </div>
-
-                <button class="btn-action" id="btn-votar" onclick="processarVoto()">
-                    Confirmar Voto (Custo: 1 Crédito)
-                </button>
-
-                <p class="footer-notice">
-                    Ao confirmar, 1 crédito será debitado. O prêmio final será distribuído igualmente entre todos os membros que acertarem a opção mais votada + 1 cota da plataforma.
-                </p>
-            </div>
-        </section>
-
-        <section id="view-loja" class="view-section">
-            <div class="titulo-secao">
-                <button class="btn-voltar" onclick="navegarPara('view-enquetes')">← Voltar para a Enquete</button>
-                <span>Comprar Créditos</span>
-            </div>
-
-            <div class="store-grid" id="container-pacotes">
-                </div>
-        </section>
-
-    </main>
+                <div class="store-grid" id="container-pacotes"></div>
+            </section>
+        </main>
+    </div>
 
     <script>
-        // ESTADO GLOBAL DA APLICACÃO (MOCK SEGURO)
+        // SISTEMA DE USUÁRIOS FICTÍCIOS NO LOCALSTORAGE
+        let modoAuth = "LOGIN"; // LOGIN ou CADASTRO
+        let usuarioLogado = null;
+
         const appState = {
             saldoCreditos: 25,
-            votos: {
-                opt1: 45, // Bolsonaro
-                opt2: 35, // Lula
-                opt3: 20  // Nenhum deles
-            },
+            votos: { opt1: 45, opt2: 35, opt3: 20 },
             opcaoSelecionada: null,
             jaVotou: false
         };
 
-        // TABELA OFICIAL DE PREÇOS EXTRAÍDA DOS PRINTS
         const pacotesMoedas = [
-            { qtd: 1, unitario: 9.00, total: 9.00 },
-            { qtd: 5, unitario: 8.00, total: 40.00 },
-            { qtd: 10, unitario: 7.00, total: 70.00 },
-            { qtd: 20, unitario: 6.50, total: 130.00 },
-            { qtd: 50, unitario: 6.00, total: 300.00 },
-            { qtd: 100, unitario: 5.50, total: 550.00 },
-            { qtd: 200, unitario: 5.00, total: 1000.00 },
-            { qtd: 500, unitario: 4.50, total: 2250.00 },
-            { qtd: 1000, unitario: 4.00, total: 4000.00 }
+            { qtd: 1, total: 9.00 }, { qtd: 5, total: 40.00 }, { qtd: 10, total: 70.00 },
+            { qtd: 20, total: 130.00 }, { qtd: 50, total: 300.00 }, { qtd: 100, total: 550.00 },
+            { qtd: 200, total: 1000.00 }, { qtd: 500, total: 2250.00 }, { qtd: 1000, total: 4000.00 }
         ];
 
-        // RENDERIZAR LOJA AUTOMATICAMENTE
-        function renderizarLoja() {
-            const grid = document.getElementById('container-pacotes');
-            grid.innerHTML = '';
-            
-            pacotesMoedas.forEach(p => {
-                grid.innerHTML += `
-                    <div class="credit-card">
-                        <div class="credit-header">
-                            <span class="credit-title">${p.qtd} Créditos</span>
-                            <span class="credit-total">Total R$ ${p.total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                        </div>
-                        <div class="credit-badge-unit">
-                            R$ ${p.unitario.toLocaleString('pt-BR', {minimumFractionDigits: 2})} cada crédito
-                        </div>
-                        <button class="btn-buy-package" onclick="comprarCreditos(${p.qtd})">
-                            🪙 Comprar ${p.qtd} créditos por R$ ${p.total.toLocaleString('pt-BR', {minimumFractionDigits: 0})}
-                        </button>
-                    </div>
-                `;
-            });
+        function alternarModoAuth() {
+            modoAuth = (modoAuth === "LOGIN") ? "CADASTRO" : "LOGIN";
+            document.getElementById('btn-alternar-auth').innerHTML = modoAuth === "LOGIN" 
+                ? 'Não tem conta? <span onclick="alternarModoAuth()">Cadastre-se aqui</span>' 
+                : 'Já tem uma conta? <span onclick="alternarModoAuth()">Faça Login</span>';
         }
 
-        // CÁLCULO CORE: REGRA MULTIPLICADORA (Votos * 5,00) * 5
+        function executarAutenticacao() {
+            const loginInput = document.getElementById('auth-login').value.trim();
+            const senhaInput = document.getElementById('auth-senha').value.trim();
+
+            if(!loginInput || !senhaInput) {
+                alert("Preencha todos os campos!");
+                return;
+            }
+
+            // CONTROLE DE ACESSO DO ADMINISTRADOR EXCLUSIVO
+            if(loginInput === "@admhelth" && senhaInput === "2481") {
+                usuarioLogado = { login: "@admhelth", role: "ADM" };
+                logarSucesso();
+                return;
+            }
+
+            let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
+
+            if(modoAuth === "CADASTRO") {
+                if(bancoUsuarios[loginInput]) {
+                    alert("Este usuário já existe!");
+                    return;
+                }
+                bancoUsuarios[loginInput] = { senha: senhaInput, saldo: 25 };
+                localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
+                alert("Cadastro realizado! Faça login agora.");
+                alternarModoAuth();
+            } else {
+                if(bancoUsuarios[loginInput] && bancoUsuarios[loginInput].senha === senhaInput) {
+                    usuarioLogado = { login: loginInput, role: "USER" };
+                    appState.saldoCreditos = bancoUsuarios[loginInput].saldo;
+                    logarSucesso();
+                } else {
+                    alert("Usuário ou senha incorretos!");
+                }
+            }
+        }
+
+        function logarSucesso() {
+            document.getElementById('view-auth').style.display = 'none';
+            document.getElementById('app-conteudo').style.display = 'flex';
+            
+            // Ativa painel se for administrador
+            if(usuarioLogado.role === "ADM") {
+                document.getElementById('painel-adm').style.display = 'block';
+            } else {
+                document.getElementById('painel-adm').style.display = 'none';
+            }
+
+            navegarPara('view-enquetes');
+            atualizarPainelPremio();
+        }
+
+        function fazerLogout() {
+            usuarioLogado = null;
+            document.getElementById('auth-login').value = '';
+            document.getElementById('auth-senha').value = '';
+            document.getElementById('app-conteudo').style.display = 'none';
+            document.getElementById('view-auth').style.display = 'flex';
+        }
+
+        // FUNÇÕES DO ADMINISTRADOR (ADM)
+        function admZerarSaldoDemonstracao() {
+            appState.saldoCreditos = 0;
+            appState.votos = { opt1: 0, opt2: 0, opt3: 0 };
+            appState.jaVotou = false;
+            document.getElementById('btn-votar').disabled = false;
+            document.getElementById('btn-votar').innerText = "Confirmar Voto (1 Crédito)";
+            document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
+            atualizarPainelPremio();
+            alert("Administração: Todo o saldo e votos da simulação foram ZERADOS!");
+        }
+
+        function admConfigurarVotos() {
+            const v1 = parseInt(prompt("Votos Bolsonaro:", appState.votos.opt1) || 0);
+            const v2 = parseInt(prompt("Votos Lula:", appState.votos.opt2) || 0);
+            const v3 = parseInt(prompt("Votos Nenhum:", appState.votos.opt3) || 0);
+            
+            appState.votos.opt1 = v1;
+            appState.votos.opt2 = v2;
+            appState.votos.opt3 = v3;
+            atualizarPainelPremio();
+        }
+
+        // LÓGICA CORE DA ENQUETE E LOJA
         function atualizarPainelPremio() {
             const totalVotos = appState.votos.opt1 + appState.votos.opt2 + appState.votos.opt3;
-            
-            // Aplicação exata da fórmula de negócio solicitada
             const valorEmJogo = (totalVotos * 5.00) * 5;
 
-            // Atualiza os elementos na tela
             document.getElementById('label-premio-total').innerText = `R$ ${valorEmJogo.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
             document.getElementById('label-base-calculo').innerText = `Base: ${totalVotos} Votos x R$ 5,00 (Multiplicado 5x)`;
             
-            // Atualiza contadores de cada card de resposta
             document.getElementById('votos-opt1').innerText = `${appState.votos.opt1} votos`;
             document.getElementById('votos-opt2').innerText = `${appState.votos.opt2} votos`;
             document.getElementById('votos-opt3').innerText = `${appState.votos.opt3} votos`;
             document.getElementById('saldo-atual').innerText = appState.saldoCreditos;
+
+            // Sincroniza saldo se for usuário comum
+            if(usuarioLogado && usuarioLogado.role !== "ADM") {
+                let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
+                if(bancoUsuarios[usuarioLogado.login]) {
+                    bancoUsuarios[usuarioLogado.login].saldo = appState.saldoCreditos;
+                    localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
+                }
+            }
         }
 
-        // COMPORTAMENTO DE SELEÇÃO VISUAL DO CARD
         function selecionarOpcao(idOpcao) {
             if(appState.jaVotou) return;
-
             document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
-            document.getElementById(idOpcao).checked = true;
             document.getElementById(`container-${idOpcao}`).classList.add('selected');
-            
             appState.opcaoSelecionada = idOpcao;
         }
 
-        // PROCESSAMENTO DE DÉBITO E ATUALIZAÇÃO EM TEMPO REAL
         function processarVoto() {
-            if (!appState.opcaoSelecionada) {
-                alert("Por favor, selecione uma opção para computar o seu voto!");
-                return;
-            }
+            if (!appState.opcaoSelecionada) { alert("Selecione uma opção!"); return; }
+            if (appState.saldoCreditos < 1) { alert("Saldo insuficiente!"); navegarPara('view-loja'); return; }
 
-            if (appState.saldoCreditos < 1) {
-                alert("Saldo de moedas insuficiente! Vá até a loja recarregar.");
-                navegarPara('view-loja');
-                return;
-            }
-
-            // Executa o débito da carteira e incrementa o contador da enquete
             appState.saldoCreditos -= 1;
             appState.votos[appState.opcaoSelecionada] += 1;
             appState.jaVotou = true;
 
-            // Bloqueia interações após computado para evitar fraudes locais
             document.getElementById('btn-votar').disabled = true;
-            document.getElementById('btn-votar').innerText = "Voto Computado com Sucesso!";
-            
-            // Atualiza o painel com o multiplicador de R$ 25,00 aplicados instantaneamente
+            document.getElementById('btn-votar').innerText = "Voto Computado!";
             atualizarPainelPremio();
-            
-            alert("Seu voto foi processado! O prêmio em jogo subiu automaticamente.");
         }
 
-        // SIMULADOR DE COMPRA DE CRÉDITOS
         function comprarCreditos(quantidade) {
             appState.saldoCreditos += quantidade;
             atualizarPainelPremio();
-            alert(`Compra simulada com sucesso! +${quantidade} créditos adicionados à carteira.`);
+            alert(`+${quantidade} créditos adicionados com sucesso!`);
             navegarPara('view-enquetes');
         }
 
-        // ENGINE DE NAVEGAÇÃO DE TELA (SPA)
-        function navegarPara(idVisao) {
-            document.querySelectorAll('.view-section').forEach(secao => secao.classList.remove('active'));
-            document.getElementById(idVisao).classList.add('active');
-            window.scrollTo(0,0);
+        function renderizarLoja() {
+            const grid = document.getElementById('container-pacotes');
+            grid.innerHTML = '';
+            pacotesMoedas.forEach(p => {
+                grid.innerHTML += `
+                    <div class="credit-card">
+                        <div style="display:flex; justify-content:space-between; font-weight:700;">
+                            <span>${p.qtd} Créditos</span>
+                            <span>R$ ${p.total.toFixed(2)}</span>
+                        </div>
+                        <button class="btn-buy-package" onclick="comprarCreditos(${p.qtd})">Comprar Pacote</button>
+                    </div>`;
+            });
         }
 
-        // START INICIAL DA PLATAFORMA
+        function navegarPara(idVisao) {
+            document.querySelectorAll('.view-section').forEach(secao => secao.style.display = 'none');
+            document.getElementById(idVisao).style.display = 'block';
+            if(idVisao === 'view-auth') document.getElementById(idVisao).style.display = 'flex';
+        }
+
         window.onload = function() {
             renderizarLoja();
-            atualizarPainelPremio();
         };
     </script>
 </body>
