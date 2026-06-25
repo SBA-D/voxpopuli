@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPool - Login & Administração</title>
+    <title>VoxPool - Login, Administração & Pix</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -275,15 +275,51 @@
         }
 
         .store-grid { display: flex; flex-direction: column; gap: 16px; }
+        
         .credit-card {
             background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); padding: 20px;
             display: flex; flex-direction: column; gap: 12px;
         }
+        
         .btn-buy-package { background: #1d4ed8; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer; }
+
+        /* MODAL DE PAGAMENTO PIX */
+        .pix-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .pix-modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            border-radius: 24px;
+            max-width: 450px;
+            width: 100%;
+            text-align: center;
+        }
+        .pix-key-box {
+            background: var(--bg-input);
+            border: 1px dashed var(--accent-green);
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin: 16px 0;
+            word-break: break-all;
+            user-select: all;
+        }
     </style>
 </head>
 <body>
 
+    <!-- VISÃO 0: TELA DE LOGIN / CADASTRO -->
     <div id="view-auth" class="view-section active" style="display: flex; min-height: 100vh; width: 100%;">
         <div class="auth-container">
             <div class="auth-logo">Vox<span>Pool</span></div>
@@ -306,6 +342,7 @@
         </div>
     </div>
 
+    <!-- ESTRUTURA DO SITE PRINCIPAL -->
     <div id="app-conteudo" style="display: none; flex-direction: column; min-height: 100vh;">
         <nav>
             <div class="nav-container">
@@ -319,6 +356,7 @@
         </nav>
 
         <main>
+            <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR (@admhelth) -->
             <div id="painel-adm" class="adm-box" style="display: none;">
                 <div class="adm-title">🛡️ Modo Administrador Ativo (@admhelth)</div>
                 <div class="adm-actions">
@@ -327,6 +365,7 @@
                 </div>
             </div>
 
+            <!-- VISÃO 1: ENQUETE -->
             <section id="view-enquetes" class="view-section">
                 <div class="titulo-secao">
                     <span>Enquete em Destaque</span>
@@ -361,6 +400,7 @@
                 </div>
             </section>
 
+            <!-- VISÃO 2: LOJA -->
             <section id="view-loja" class="view-section">
                 <div class="titulo-secao">
                     <button class="btn-nav" onclick="navegarPara('view-enquetes')">← Voltar</button>
@@ -371,10 +411,36 @@
         </main>
     </div>
 
+    <!-- MODAL DE CHECKOUT PIX -->
+    <div id="modal-pix" class="pix-modal">
+        <div class="pix-modal-content">
+            <h3 style="color: white; font-weight: 800;">Pagamento via Pix</h3>
+            <p style="font-size: 14px; color: var(--text-muted); margin-top: 8px;">
+                Transfira o valor exato do pacote para a chave Pix abaixo:
+            </p>
+            <div class="pix-key-box" id="pix-chave-texto">tssnbshrs@gmail.com</div>
+            <p style="font-size: 12px; color: var(--accent-blue); margin-bottom: 16px; font-weight: 600;">
+                📋 Toque em cima da chave para copiar
+            </p>
+            <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--border-color);">
+                <div style="display:flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span>Pacote Escolhido:</span><span id="modal-info-qtd" style="font-weight:700;">-</span>
+                </div>
+                <div style="display:flex; justify-content: space-between; color: var(--accent-green);">
+                    <span>Valor a Pagar:</span><span id="modal-info-preco" style="font-weight:700;">-</span>
+                </div>
+            </div>
+            <button class="btn-action" style="background: var(--accent-green);" onclick="confirmarEnvioPix()">
+                Já fiz o Pix, liberar meus Créditos!
+            </button>
+            <button class="btn-nav" style="margin-top: 12px; width: 100%;" onclick="fecharModalPix()">Cancelar</button>
+        </div>
+    </div>
+
     <script>
-        // SISTEMA DE USUÁRIOS FICTÍCIOS NO LOCALSTORAGE
-        let modoAuth = "LOGIN"; // LOGIN ou CADASTRO
+        let modoAuth = "LOGIN";
         let usuarioLogado = null;
+        let pacotePendente = null;
 
         const appState = {
             saldoCreditos: 25,
@@ -400,12 +466,8 @@
             const loginInput = document.getElementById('auth-login').value.trim();
             const senhaInput = document.getElementById('auth-senha').value.trim();
 
-            if(!loginInput || !senhaInput) {
-                alert("Preencha todos os campos!");
-                return;
-            }
+            if(!loginInput || !senhaInput) { alert("Preencha todos os campos!"); return; }
 
-            // CONTROLE DE ACESSO DO ADMINISTRADOR EXCLUSIVO
             if(loginInput === "@admhelth" && senhaInput === "2481") {
                 usuarioLogado = { login: "@admhelth", role: "ADM" };
                 logarSucesso();
@@ -415,10 +477,7 @@
             let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
 
             if(modoAuth === "CADASTRO") {
-                if(bancoUsuarios[loginInput]) {
-                    alert("Este usuário já existe!");
-                    return;
-                }
+                if(bancoUsuarios[loginInput]) { alert("Este usuário já existe!"); return; }
                 bancoUsuarios[loginInput] = { senha: senhaInput, saldo: 25 };
                 localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
                 alert("Cadastro realizado! Faça login agora.");
@@ -437,14 +496,7 @@
         function logarSucesso() {
             document.getElementById('view-auth').style.display = 'none';
             document.getElementById('app-conteudo').style.display = 'flex';
-            
-            // Ativa painel se for administrador
-            if(usuarioLogado.role === "ADM") {
-                document.getElementById('painel-adm').style.display = 'block';
-            } else {
-                document.getElementById('painel-adm').style.display = 'none';
-            }
-
+            document.getElementById('painel-adm').style.display = usuarioLogado.role === "ADM" ? 'block' : 'none';
             navegarPara('view-enquetes');
             atualizarPainelPremio();
         }
@@ -455,6 +507,43 @@
             document.getElementById('auth-senha').value = '';
             document.getElementById('app-conteudo').style.display = 'none';
             document.getElementById('view-auth').style.display = 'flex';
+        }
+
+        // COBRANÇA E DISPARO DE NOTIFICAÇÃO VIA WHATSAPP (A NOTIFICAÇÃO PRO SEU PIX)
+        function abrirCheckoutPix(qtd, total) {
+            pacotePendente = { qtd, total };
+            document.getElementById('modal-info-qtd').innerText = `${qtd} Créditos`;
+            document.getElementById('modal-info-preco').innerText = `R$ ${total.toFixed(2)}`;
+            document.getElementById('modal-pix').style.display = 'flex';
+        }
+
+        function fecharModalPix() {
+            document.getElementById('modal-pix').style.display = 'none';
+            pacotePendente = null;
+        }
+
+        function confirmarEnvioPix() {
+            if(!pacotePendente) return;
+
+            // Adiciona os créditos ao usuário na tela imediatamente
+            appState.saldoCreditos += pacotePendente.qtd;
+            atualizarPainelPremio();
+
+            // Monta a mensagem que você receberá no WhatsApp notificando a ação
+            const textoNotificacao = encodeURIComponent(
+                `🔔 *NOVA COMPRA VOXPOOL*\n\n` +
+                `👤 *Membro:* ${usuarioLogado.login}\n` +
+                `💰 *Valor Pago:* R$ ${pacotePendente.total.toFixed(2)}\n` +
+                `🪙 *Créditos Liberados:* ${pacotePendente.qtd} Crd.\n` +
+                `🎯 *Destino:* tssnbshrs@gmail.com`
+            );
+
+            // Redireciona para o WhatsApp (Abre o seu próprio chat ou deixa pronto pro membro enviar)
+            // OBS: Se quiser forçar o envio direto para o seu número, mude o '0000000000000' abaixo para o seu número com DDD (ex: 5521999999999)
+            window.open(`https://api.whatsapp.com/send?text=${textoNotificacao}`, '_blank');
+
+            fecharModalPix();
+            navegarPara('view-enquetes');
         }
 
         // FUNÇÕES DO ADMINISTRADOR (ADM)
@@ -473,14 +562,10 @@
             const v1 = parseInt(prompt("Votos Bolsonaro:", appState.votos.opt1) || 0);
             const v2 = parseInt(prompt("Votos Lula:", appState.votos.opt2) || 0);
             const v3 = parseInt(prompt("Votos Nenhum:", appState.votos.opt3) || 0);
-            
-            appState.votos.opt1 = v1;
-            appState.votos.opt2 = v2;
-            appState.votos.opt3 = v3;
+            appState.votos.opt1 = v1; appState.votos.opt2 = v2; appState.votos.opt3 = v3;
             atualizarPainelPremio();
         }
 
-        // LÓGICA CORE DA ENQUETE E LOJA
         function atualizarPainelPremio() {
             const totalVotos = appState.votos.opt1 + appState.votos.opt2 + appState.votos.opt3;
             const valorEmJogo = (totalVotos * 5.00) * 5;
@@ -493,7 +578,6 @@
             document.getElementById('votos-opt3').innerText = `${appState.votos.opt3} votos`;
             document.getElementById('saldo-atual').innerText = appState.saldoCreditos;
 
-            // Sincroniza saldo se for usuário comum
             if(usuarioLogado && usuarioLogado.role !== "ADM") {
                 let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
                 if(bancoUsuarios[usuarioLogado.login]) {
@@ -523,13 +607,6 @@
             atualizarPainelPremio();
         }
 
-        function comprarCreditos(quantidade) {
-            appState.saldoCreditos += quantidade;
-            atualizarPainelPremio();
-            alert(`+${quantidade} créditos adicionados com sucesso!`);
-            navegarPara('view-enquetes');
-        }
-
         function renderizarLoja() {
             const grid = document.getElementById('container-pacotes');
             grid.innerHTML = '';
@@ -540,7 +617,7 @@
                             <span>${p.qtd} Créditos</span>
                             <span>R$ ${p.total.toFixed(2)}</span>
                         </div>
-                        <button class="btn-buy-package" onclick="comprarCreditos(${p.qtd})">Comprar Pacote</button>
+                        <button class="btn-buy-package" onclick="abrirCheckoutPix(${p.qtd}, ${p.total})">Adquirir Pacote</button>
                     </div>`;
             });
         }
