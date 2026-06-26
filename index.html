@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Painel Completo com Controle de Tempo</title>
+    <title>VoxPopuli - Sistema de Previsões e Votos</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -65,15 +65,15 @@
 
         /* CARDS */
         .poll-card { background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px; position: relative; }
-        .prize-pool-box { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border: 1px solid var(--accent-blue); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 24px; }
-        .prize-value { font-size: 36px; font-weight: 800; color: #ffffff; text-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
+        .prize-pool-box { background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%); border: 1px solid var(--accent-blue); border-radius: 16px; padding: 16px; text-align: center; margin-bottom: 20px; }
+        .prize-value { font-size: 28px; font-weight: 800; color: #ffffff; text-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
         
-        /* CRONÔMETRO ESTILO DIGITAL */
+        /* CRONÔMETRO */
         .timer-box { background: #000; border: 2px solid #ef4444; border-radius: 12px; padding: 10px; text-align: center; margin-bottom: 20px; font-family: monospace; font-size: 22px; font-weight: bold; color: #ef4444; letter-spacing: 2px; box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.3); }
         .timer-box.active-timer { border-color: var(--accent-green); color: var(--accent-green); box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.3); }
         .timer-box.paused-timer { border-color: #f59e0b; color: #f59e0b; box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.3); }
 
-        .options-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+        .options-group { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .option-label { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .option-label.selected { border-color: var(--accent-blue); background: rgba(59, 130, 246, 0.1); }
         .btn-action { width: 100%; background: var(--accent-blue); color: white; border: none; border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer; }
@@ -81,17 +81,20 @@
         
         .store-grid { display: flex; flex-direction: column; gap: 16px; }
         .credit-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--border-color); padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .btn-buy-package { background: #1d4ed8; color: white; border: none; border-radius: 12px; padding: 12px; font-weight: 700; cursor: pointer; }
 
         /* MODAIS */
         .pix-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .pix-modal-content { background: var(--bg-card); border: 1px solid var(--border-color); padding: 24px; border-radius: 24px; max-width: 450px; width: 100%; text-align: center; }
         .pix-key-box { background: var(--bg-input); border: 1px dashed var(--accent-green); padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 700; color: var(--accent-green); margin: 16px 0; word-break: break-all; }
+
+        /* DETALHAMENTO DE SAQUE TRANSPARENTE */
+        .saque-detalhes-container { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+        .saque-linha-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .saque-linha-info:last-child { margin-bottom: 0; padding-top: 8px; border-top: 1px dashed var(--border-color); }
     </style>
 </head>
 <body>
 
-    <!-- VISÃO 0: TELA DE LOGIN / CADASTRO -->
     <div id="view-auth" class="view-section active" style="display: flex; min-height: 100vh; width: 100%;">
         <div class="auth-container">
             <div class="auth-logo">Vox<span>Populi</span></div>
@@ -129,88 +132,85 @@
         </div>
     </div>
 
-    <!-- ESTRUTURA DO SITE PRINCIPAL -->
     <div id="app-conteudo" style="display: none; flex-direction: column; min-height: 100vh;">
         <nav>
             <div class="nav-container">
                 <div class="logo" onclick="navegarPara('view-enquetes')">Vox<span>Populi</span></div>
                 <div class="menu-direita">
                     <div class="member-badge" id="badge-codigo-membro" style="display:none;">ID: -</div>
-                    <div class="wallet-badge">🪙 <span id="saldo-atual">0</span> Crd.</div>
-                    <button class="btn-nav" style="background: var(--accent-blue);" onclick="navegarPara('view-loja')">+ Loja</button>
+                    <div class="wallet-badge">🪙 <span id="saldo-atual">0.00</span> Moedas</div>
+                    <button class="btn-nav" style="background: var(--accent-blue);" onclick="navegarPara('view-loja')">+ Comprar Moedas</button>
                     <button class="btn-nav" onclick="fazerLogout()">Sair</button>
                 </div>
             </div>
         </nav>
 
         <main>
-            <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR -->
             <div id="painel-adm" style="display: none;">
                 
-                <!-- Bloco 1: Validação de Tokens Rápidos -->
                 <div class="adm-box" style="border-color: rgba(16, 185, 129, 0.3);">
                     <div class="adm-section-title" style="color: var(--accent-green)">🛡️ 1. Aprovação por Token (WhatsApp)</div>
                     <div class="adm-validation-zone" style="display: flex; gap: 10px;">
                         <input type="text" id="adm-token-input" class="form-control" placeholder="Cole o Token recebido...">
-                        <button class="btn-action" style="background: var(--accent-green); width: auto; padding: 0 20px; border-radius: 12px;" onclick="admProcessarToken()">Liberar</button>
+                        <button class="btn-action" style="background: var(--accent-green); width: auto; padding: 0 20px; border-radius: 12px;" onclick="admProcessarToken()">Liberar Moedas</button>
                     </div>
                 </div>
 
-                <!-- Bloco 2: Criador / Editor de Enquetes Ativas com Cronômetro -->
                 <div class="adm-box" style="border-color: rgba(59, 130, 246, 0.3);">
-                    <div class="adm-section-title">📝 2. Publicar Nova Enquete Ativa</div>
+                    <div class="adm-section-title">📝 2. Publicar Nova Enquete Ativa (2 Opções)</div>
                     <div class="form-group" style="margin-bottom: 10px;">
-                        <input type="text" id="adm-poll-pergunta" class="form-control" placeholder="Escreva a nova pergunta aqui...">
+                        <input type="text" id="adm-poll-pergunta" class="form-control" placeholder="Escreva a pergunta (Ex: Quem é melhor?)">
                     </div>
                     <div class="adm-row">
-                        <div class="form-group"><input type="text" id="adm-poll-opt1" class="form-control" placeholder="Opção 1"></div>
-                        <div class="form-group"><input type="text" id="adm-poll-opt2" class="form-control" placeholder="Opção 2"></div>
-                        <div class="form-group"><input type="text" id="adm-poll-opt3" class="form-control" placeholder="Opção 3"></div>
+                        <div class="form-group"><input type="text" id="adm-poll-opt1" class="form-control" placeholder="Opção 1 (Ex: Ronaldo)"></div>
+                        <div class="form-group"><input type="text" id="adm-poll-opt2" class="form-control" placeholder="Opção 2 (Ex: Kaka)"></div>
                     </div>
                     
                     <div class="form-group" style="margin-top: 10px;">
                         <label style="color: var(--accent-blue); font-weight: 600;">Tempo de Duração da Enquete (em minutos):</label>
-                        <input type="number" id="adm-poll-tempo" class="form-control" placeholder="Ex: 60 (para 1 hora), 1440 (para 24 horas)" min="1">
+                        <input type="number" id="adm-poll-tempo" class="form-control" placeholder="Ex: 60" min="1">
                     </div>
                     
-                    <button class="btn-action" style="margin-top: 12px; background: var(--accent-blue);" onclick="admAtualizarEnquete()">⚡ Inserir Nova Enquete (Fica Pausada por Padrão)</button>
+                    <button class="btn-action" style="margin-top: 12px; background: var(--accent-blue);" onclick="admAtualizarEnquete()">Injetar Nova Enquete (Pausada)</button>
                 </div>
 
-                <!-- Bloco 2.1: Modificar / Zerar o Tempo em Tempo Real -->
                 <div class="adm-box" style="border-color: rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.02);">
-                    <div class="adm-section-title" style="color: var(--accent-red)">⏱️ 2.1 Controle de Tempo da Enquete Ativa</div>
-                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Gerencie o prazo da enquete que está rodando agora sem alterar a pergunta.</p>
+                    <div class="adm-section-title" style="color: var(--accent-red)">⏱️ 2.1 Finalização e Controle da Enquete</div>
                     
                     <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                         <button class="btn-action" style="background: var(--accent-green); padding: 10px; font-size: 13px;" onclick="admAlternarCronometro('RODANDO')">▶️ Iniciar / Retomar</button>
                         <button class="btn-action" style="background: #f59e0b; padding: 10px; font-size: 13px;" onclick="admAlternarCronometro('PAUSADO')">⏸️ Pausar Tempo</button>
                     </div>
 
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <input type="number" id="adm-ajuste-tempo-minutos" class="form-control" placeholder="Novos minutos para expirar... Ex: 30" min="1">
-                        <button class="btn-action" style="width: auto; padding: 0 16px; background: #2563eb; white-space: nowrap; font-size: 13px;" onclick="admAlterarMinutosEnquete()">Atualizar Minutos</button>
+                    <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                        <input type="number" id="adm-ajuste-tempo-minutos" class="form-control" placeholder="Minutos..." min="1">
+                        <button class="btn-action" style="width: auto; padding: 0 16px; background: #2563eb; font-size: 13px;" onclick="admAlterarMinutosEnquete()">Mudar Minutos</button>
                     </div>
                     
-                    <button class="btn-action" style="background: var(--accent-red); padding: 12px; font-size: 14px;" onclick="admZerarTempoEnquete()">🚨 Zerar Tempo (Encerrar Enquete Imediatamente)</button>
-                </div>
-
-                <!-- Bloco 3: Controle e Correção Manual de Membros por Código -->
-                <div class="adm-box" style="border-color: rgba(245, 158, 11, 0.3);" id="modulo-correcao-membro">
-                    <div class="adm-section-title" style="color: #f59e0b;">⚙️ 3. Modificar Membro Selecionado</div>
-                    <div class="adm-row">
-                        <div class="form-group" style="flex: 1.5;">
-                            <label style="font-size:11px; color:var(--text-muted);">ID do Usuário Selecionado</label>
-                            <input type="text" id="adm-membro-codigo" class="form-control" placeholder="Código (Ex: M-1052)" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:11px; color:var(--text-muted);">Configurar Novo Saldo</label>
-                            <input type="number" id="adm-membro-novo-saldo" class="form-control" placeholder="Novo Saldo">
+                    <button class="btn-action" style="background: var(--accent-red); padding: 12px; font-size: 14px; margin-bottom:10px;" onclick="admZerarTempoEnquete()">🚨 Zerar Tempo (Encerrar Imediatamente)</button>
+                    
+                    <div style="border-top:1px dashed var(--border-color); padding-top:10px; margin-top:10px;">
+                        <label style="display:block; font-size:12px; margin-bottom:6px; color:var(--text-muted);">Definir Vencedor Manual e Distribuir Prêmios:</label>
+                        <div style="display:flex; gap:10px;">
+                            <button class="btn-action" style="background:#4b5563;" id="adm-btn-win-opt1" onclick="admFinalizarEVisualizarGanhador('opt1')">Finalizar c/ Opção 1</button>
+                            <button class="btn-action" style="background:#4b5563;" id="adm-btn-win-opt2" onclick="admFinalizarEVisualizarGanhador('opt2')">Finalizar c/ Opção 2</button>
                         </div>
                     </div>
-                    <button class="btn-action" style="margin-top: 12px; background: #d97706;" onclick="admAjustarMembroManual()">Salvar Atualizações do Cliente</button>
                 </div>
 
-                <!-- BLOCO 4: LISTA DE MEMBROS CADASTRADOS -->
+                <div class="adm-box" style="border-color: rgba(245, 158, 11, 0.3);" id="modulo-correcao-membro">
+                    <div class="adm-section-title" style="color: #f59e0b;">⚙️ 3. Modificar Saldo do Membro</div>
+                    <div class="adm-row">
+                        <div class="form-group" style="flex: 1.5;">
+                            <input type="text" id="adm-membro-codigo" class="form-control" placeholder="Código do Usuário" readonly>
+                        </div>
+                        <div class="form-group">
+                            <input type="number" id="adm-membro-novo-saldo" class="form-control" placeholder="Qtd Moedas" step="0.01">
+                        </div>
+                    </div>
+                    <button class="btn-action" style="margin-top: 12px; background: #d97706;" onclick="admAjustarMembroManual()">Salvar Moedas do Cliente</button>
+                </div>
+
                 <div class="adm-box" style="border-color: rgba(255, 255, 255, 0.15);">
                     <div class="adm-section-title" style="color: #f3f4f6;">👥 4. Lista Completa de Membros Registrados</div>
                     <div class="table-container">
@@ -222,10 +222,9 @@
                                     <th>E-mail</th>
                                     <th>WhatsApp</th>
                                     <th>CPF</th>
-                                    <th>Chave Pix</th>
-                                    <th>Saldo</th>
+                                    <th>Moedas</th>
                                     <th>Dep. Pendente</th>
-                                    <th>Saque Pendente</th>
+                                    <th>Saque Solicitado</th>
                                     <th>Ações</th>
                                 </tr>
                             </thead>
@@ -235,69 +234,88 @@
                 </div>
             </div>
 
-            <!-- VISÃO 1: ENQUETE -->
             <section id="view-enquetes" class="view-section">
                 <div class="titulo-secao">
-                    <span>Enquete Ativa</span>
+                    <span>Previsão Ativa</span>
                     <div style="text-align: right;">
                         <span id="badge-pendente" style="font-size: 11px; color: #f59e0b; font-weight: 600; display: none;">⏳ Depósito aguardando aprovação...</span>
                         <span id="badge-saque-pendente" style="font-size: 11px; color: #3b82f6; font-weight: 600; display: none;">⏱️ Saque em processamento...</span>
                     </div>
                 </div>
 
-                <!-- RELÓGIO CRONÔMETRO DIGITAL VISÍVEL PARA MEMBROS E ADM -->
                 <div id="cronometro-container" class="timer-box paused-timer">
                     ⏱️ <span id="status-relogio-label">PAUSADO:</span> <span id="label-cronometro">00:00:00</span>
                 </div>
 
                 <div class="poll-card">
                     <div class="prize-pool-box">
-                        <div style="font-size: 12px; color: #93c5fd; text-transform: uppercase; margin-bottom: 6px;">Valor Acumulado em Jogo</div>
-                        <div class="prize-value" id="label-premio-total">R$ 0,00</div>
+                        <div style="font-size: 11px; color: #93c5fd; text-transform: uppercase; margin-bottom: 4px;">Volume Total Acumulado nesta Enquete</div>
+                        <div class="prize-value" id="label-premio-total">0.00 Moedas</div>
                     </div>
 
-                    <div class="poll-question" style="margin-bottom:20px; font-weight:600;" id="label-pergunta-ativa">Carregando enquete...</div>
+                    <div class="poll-question" style="margin-bottom:16px; font-weight:600; text-align:center; font-size:18px;" id="label-pergunta-ativa">Carregando pergunta...</div>
 
                     <div class="options-group">
                         <label class="option-label" id="container-opt1" onclick="selecionarOpcao('opt1')">
-                            <span id="texto-opt1">-</span> <span id="votos-opt1">0 votos</span>
+                            <span id="texto-opt1">-</span> <span id="votos-opt1" style="font-weight:700; color:var(--accent-blue)">0.00 moedas</span>
                         </label>
                         <label class="option-label" id="container-opt2" onclick="selecionarOpcao('opt2')">
-                            <span id="texto-opt2">-</span> <span id="votos-opt2">0 votos</span>
-                        </label>
-                        <label class="option-label" id="container-opt3" onclick="selecionarOpcao('opt3')">
-                            <span id="texto-opt3">-</span> <span id="votos-opt3">0 votos</span>
+                            <span id="texto-opt2">-</span> <span id="votos-opt2" style="font-weight:700; color:var(--accent-blue)">0.00 moedas</span>
                         </label>
                     </div>
 
-                    <button class="btn-action" id="btn-votar" onclick="processarVoto()">Confirmar Voto (1 Crédito)</button>
-                    
-                    <!-- AREA FINANCEIRA DO COMPARTILHAMENTO / SAQUES DO MEMBRO -->
-                    <div id="financeiro-membro-box" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border-color); display:none;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-                            <div>
-                                <div style="font-size:11px; color:var(--text-muted)">Saldo Disponível para Saque</div>
-                                <div style="font-size:20px; font-weight:800; color:var(--accent-green)">🪙 <span id="saldo-saque-disponivel">0</span> Créditos</div>
-                            </div>
-                            <button class="btn-nav" style="background:var(--accent-green); color:white; border:none;" onclick="solicitarSaqueMembro()">💸 Sacar Saldo</button>
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label style="font-weight:600; color:var(--text-main); margin-bottom:6px;">Quantas moedas deseja votar?</label>
+                        <input type="number" id="input-qtd-voto-moedas" class="form-control" value="1" min="1" placeholder="Ex: 1, 5, 10...">
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:4px;">
+                            Ganha a mais votada: Acertou ganha <b style="color:var(--accent-green)">1,40 moedas</b>. Errou recupera <b style="color:#f59e0b">0,60 moedas</b> por unidade.
                         </div>
-                        <button class="btn-nav" style="background:transparent; color:var(--accent-red); border:1px solid rgba(239,68,68,0.2); width:100%; padding:10px; border-radius:12px; margin-top:10px;" onclick="membroDeletarPropriaConta()">⚠️ Excluir Minha Conta</button>
+                    </div>
+
+                    <button class="btn-action" id="btn-votar" onclick="processarVoto()">Confirmar Palpites</button>
+                    
+                    <div id="financeiro-membro-box" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--border-color); display:none;">
+                        <div style="font-size: 13px; font-weight:700; margin-bottom:10px; color:var(--text-main)">Painel de Retirada (Pix)</div>
+                        
+                        <div class="saque-detalhes-container">
+                            <div class="saque-linha-info">
+                                <span>Saldo Disponível (Bruto):</span>
+                                <span style="font-weight:700; color:#fff">🪙 <span id="saque-txt-bruto">0.00</span></span>
+                            </div>
+                            <div class="saque-linha-info" style="color:var(--accent-red)">
+                                <span>Taxa Adm do Site (3%):</span>
+                                <span>- R$ <span id="saque-txt-taxa">0.00</span></span>
+                            </div>
+                            <div class="saque-linha-info" style="color:var(--accent-green); font-size:15px; font-weight:700;">
+                                <span>Valor Líquido a Receber:</span>
+                                <span>R$ <span id="saque-txt-liquido">0.00</span></span>
+                            </div>
+                        </div>
+
+                        <button class="btn-action" style="background:var(--accent-green); color:white; border:none; padding:12px;" onclick="solicitarSaqueMembro()">💸 Solicitar Saque via Pix</button>
                     </div>
                 </div>
             </section>
 
-            <!-- VISÃO 2: LOJA -->
             <section id="view-loja" class="view-section">
                 <div class="titulo-secao">
                     <button class="btn-nav" onclick="navegarPara('view-enquetes')">← Voltar</button>
-                    <span>Loja de Créditos</span>
+                    <span>Comprar Moedas</span>
                 </div>
-                <div class="store-grid" id="container-pacotes"></div>
+                <div class="poll-card">
+                    <p style="font-size:14px; color:var(--text-muted); margin-bottom:16px; text-align:center;">
+                        Insira abaixo o valor em reais que deseja comprar. <br>Cada <b>R$ 1,00 = 1 Moeda</b>.
+                    </p>
+                    <div class="form-group">
+                        <label>Valor de Moedas (Mínimo de 9 moedas / R$ 9,00):</label>
+                        <input type="number" id="store-input-reais" class="form-control" value="9" min="9" placeholder="Ex: 9, 15, 50">
+                    </div>
+                    <button class="btn-action" style="background:var(--accent-green); margin-top:10px;" onclick="gerarCheckoutLoja()">Gerar Pix de Moedas</button>
+                </div>
             </section>
         </main>
     </div>
 
-    <!-- MODAL DE CHECKOUT PIX -->
     <div id="modal-pix" class="pix-modal">
         <div class="pix-modal-content">
             <h3 style="color: white; font-weight: 800;">Pagamento via Pix</h3>
@@ -305,10 +323,10 @@
             <div class="pix-key-box">tssnbshrs@gmail.com</div>
             <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; margin-bottom: 20px; font-size: 14px; border: 1px solid var(--border-color); text-align: left;">
                 <div style="display:flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span>Pacote:</span><span id="modal-info-qtd" style="font-weight:700;">-</span>
+                    <span>Moedas a Receber:</span><span id="modal-info-qtd" style="font-weight:700;">-</span>
                 </div>
                 <div style="display:flex; justify-content: space-between; color: var(--accent-green); margin-bottom: 4px;">
-                    <span>Valor:</span><span id="modal-info-preco" style="font-weight:700;">-</span>
+                    <span>Valor em Dinheiro:</span><span id="modal-info-preco" style="font-weight:700;">-</span>
                 </div>
             </div>
             <button class="btn-action" style="background: var(--accent-green);" onclick="solicitarLiberacaoPix()">📱 Notificar Pagamento no WhatsApp</button>
@@ -323,34 +341,25 @@
         let intervaloCronometro = null;
 
         const enquetePadrao = {
-            pergunta: "Quem possui a maior torcida engajada e ativa no cenário nacional atual?",
-            opt1: "BOLSONARO", opt2: "LULA", opt3: "NENHUM DELES",
+            pergunta: "Quem é o melhor? Ronaldo ou Kaká?",
+            opt1: "Ronaldo", opt2: "Kaka",
             tempoRestanteMilis: 60 * 60 * 1000,
             statusTempo: "PAUSADO"
         };
 
         const appState = {
             saldoCreditos: 0,
-            votos: JSON.parse(localStorage.getItem('voxpopuli_votos')) || { opt1: 0, opt2: 0, opt3: 0 },
-            estruturaEnquete: JSON.parse(localStorage.getItem('voxpopuli_estrutura_enquete')) || enquetePadrao,
+            votos: JSON.parse(localStorage.getItem('voxpopuli_votos_novos')) || { opt1: 0, opt2: 0 },
+            estruturaEnquete: JSON.parse(localStorage.getItem('voxpopuli_estrutura_enquete_nova')) || enquetePadrao,
             opcaoSelecionada: null,
-            jaVotou: false,
             enqueteEncerrada: false
         };
 
-        const pacotesMoedas = [
-            { qtd: 1, total: 9.00 }, { qtd: 5, total: 40.00 }, { qtd: 10, total: 70.00 },
-            { qtd: 20, total: 130.00 }, { qtd: 50, total: 300.00 }, { qtd: 100, total: 550.00 },
-            { qtd: 200, total: 1000.00 }, { qtd: 500, total: 2250.00 }, { qtd: 1000, total: 4000.00 }
-        ];
-
-        // FUNÇÃO DE SEGURANÇA: Garante que o banco de dados de usuários exista sem apagar nada antigo
         function obterBancoUsuarios() {
             try {
                 const dados = localStorage.getItem('voxpopuli_usuarios');
                 return dados ? JSON.parse(dados) : {};
             } catch (e) {
-                console.error("Erro ao ler banco de usuários, resetando de forma segura:", e);
                 return {};
             }
         }
@@ -406,11 +415,12 @@
                 
                 bancoUsuarios[emailInput] = { 
                     nome: nomeInput, whatsapp: whatsappInput, cpf: cpfInput, chavePix: chavePixInput,
-                    senha: senhaInput, saldo: 0, pendente: 0, saquePendente: 0, codigo: codigoGerado
+                    senha: senhaInput, saldo: 0, pendente: 0, saquePendente: 0, codigo: codigoGerado,
+                    historicoVotos: []
                 };
                 
                 localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
-                alert(`Cadastro concluído com sucesso!\nSeu ID: ${codigoGerado}`);
+                alert(`Cadastro concluído!\nSeu ID: ${codigoGerado}`);
                 alternarModoAuth();
             } else {
                 if(bancoUsuarios[emailInput] && bancoUsuarios[emailInput].senha === senhaInput) {
@@ -434,27 +444,24 @@
             document.getElementById('painel-adm').style.display = isAdm ? 'block' : 'none';
             document.getElementById('financeiro-membro-box').style.display = isAdm ? 'none' : 'block';
             
-            if(isAdm) { admAtualizarTabelaMembros(); }
+            if(isAdm) { 
+                admAtualizarTabelaMembros(); 
+                document.getElementById('adm-btn-win-opt1').innerText = `Finalizar c/ ${appState.estruturaEnquete.opt1}`;
+                document.getElementById('adm-btn-win-opt2').innerText = `Finalizar c/ ${appState.estruturaEnquete.opt2}`;
+            }
             
             const badgeCod = document.getElementById('badge-codigo-membro');
             if(!isAdm) {
                 badgeCod.innerText = `ID: ${usuarioLogado.codigo}`;
                 badgeCod.style.display = 'block';
                 
-                let bancoUsuarios = obterBancoUsuarios();
-                const dadosUser = bancoUsuarios[usuarioLogado.login];
-                if(dadosUser) {
-                    document.getElementById('badge-pendente').style.display = (dadosUser.pendente > 0) ? 'inline-block' : 'none';
-                    document.getElementById('badge-saque-pendente').style.display = (dadosUser.saquePendente > 0) ? 'inline-block' : 'none';
-                    document.getElementById('saldo-saque-disponivel').innerText = dadosUser.saldo || 0;
-                }
+                atualizarValoresSaqueInterface();
             } else {
                 badgeCod.style.display = 'none';
             }
 
-            appState.jaVotou = false;
             document.getElementById('btn-votar').disabled = false;
-            document.getElementById('btn-votar').innerText = "Confirmar Voto (1 Crédito)";
+            document.getElementById('btn-votar').innerText = "Confirmar Palpites";
             document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
             appState.opcaoSelecionada = null;
 
@@ -462,6 +469,24 @@
             renderizarEstruturaEnquete();
             atualizarPainelPremio();
             inicializarCronometro();
+        }
+
+        function atualizarValoresSaqueInterface() {
+            let bancoUsuarios = obterBancoUsuarios();
+            const dadosUser = bancoUsuarios[usuarioLogado.login];
+            if(dadosUser) {
+                const saldoBruto = dadosUser.saldo || 0;
+                const taxa = saldoBruto * 0.03;
+                const liquido = Math.max(0, saldoBruto - taxa);
+
+                document.getElementById('badge-pendente').style.display = (dadosUser.pendente > 0) ? 'inline-block' : 'none';
+                document.getElementById('badge-saque-pendente').style.display = (dadosUser.saquePendente > 0) ? 'inline-block' : 'none';
+                
+                // Preenche a interface transparente do Usuário
+                document.getElementById('saque-txt-bruto').innerText = saldoBruto.toFixed(2);
+                document.getElementById('saque-txt-taxa').innerText = taxa.toFixed(2);
+                document.getElementById('saque-txt-liquido').innerText = liquido.toFixed(2);
+            }
         }
 
         function fazerLogout() {
@@ -475,21 +500,25 @@
             document.getElementById('label-pergunta-ativa').innerText = appState.estruturaEnquete.pergunta;
             document.getElementById('texto-opt1').innerText = appState.estruturaEnquete.opt1;
             document.getElementById('texto-opt2').innerText = appState.estruturaEnquete.opt2;
-            document.getElementById('texto-opt3').innerText = appState.estruturaEnquete.opt3;
             atualizarVotosVisuais();
         }
 
         function atualizarVotosVisuais() {
-            document.getElementById('votos-opt1').innerText = `${appState.votos.opt1} votos`;
-            document.getElementById('votos-opt2').innerText = `${appState.votos.opt2} votos`;
-            document.getElementById('votos-opt3').innerText = `${appState.votos.opt3} votos`;
+            document.getElementById('votos-opt1').innerText = `${Number(appState.votos.opt1).toFixed(2)} moedas`;
+            document.getElementById('votos-opt2').innerText = `${Number(appState.votos.opt2).toFixed(2)} moedas`;
         }
 
         function navegarPara(idSecao) {
             document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
             const destino = document.getElementById(idSecao);
             if(destino) destino.classList.add('active');
-            if(idSecao === 'view-loja') renderizarLoja();
+            
+            let bancoUsuarios = obterBancoUsuarios();
+            if(usuarioLogado && usuarioLogado.role !== "ADM" && bancoUsuarios[usuarioLogado.login]) {
+                appState.saldoCreditos = bancoUsuarios[usuarioLogado.login].saldo || 0;
+                atualizarValoresSaqueInterface();
+            }
+            document.getElementById('saldo-atual').innerText = Number(appState.saldoCreditos).toFixed(2);
         }
 
         function inicializarCronometro() {
@@ -501,10 +530,10 @@
 
             function atualizarVisualRelogio(totalMilis) {
                 if (totalMilis <= 0) {
-                    labelRelogio.innerText = "00:00:00 - ENCERRADA";
-                    statusLabel.innerText = "FIM:";
+                    labelRelogio.innerText = "00:00:00 - AGUARDANDO ADM";
+                    statusLabel.innerText = "FIM DO TEMPO:";
                     document.getElementById('btn-votar').disabled = true;
-                    document.getElementById('btn-votar').innerText = "Enquete Finalizada e Paga!";
+                    document.getElementById('btn-votar').innerText = "Tempo Esgotado! Aguardando Resultado.";
                     appState.enqueteEncerrada = true;
                     if(boxRelogio) {
                         boxRelogio.style.borderColor = "#ef4444";
@@ -519,7 +548,7 @@
                 const segundos = Math.floor((totalMilis % (1000 * 60)) / 1000);
 
                 const hDisplay = horas < 10 ? "0" + horas : horas;
-                const mDisplay = minutos < 10 ? "0" + minutos : minutes;
+                const mDisplay = minutes = minutos < 10 ? "0" + minutos : minutos;
                 const sDisplay = segundos < 10 ? "0" + segundos : segundos;
 
                 labelRelogio.innerText = `${hDisplay}:${mDisplay}:${sDisplay}`;
@@ -533,7 +562,7 @@
                 if(boxRelogio) boxRelogio.className = "timer-box paused-timer";
                 if (appState.estruturaEnquete.tempoRestanteMilis <= 0) {
                     document.getElementById('btn-votar').disabled = true;
-                    document.getElementById('btn-votar').innerText = "Enquete Finalizada e Paga!";
+                    document.getElementById('btn-votar').innerText = "Tempo Esgotado! Aguardando Resultado.";
                 }
                 return;
             }
@@ -558,13 +587,13 @@
                 if (appState.estruturaEnquete.tempoRestanteMilis <= 0) {
                     appState.estruturaEnquete.tempoRestanteMilis = 0;
                     appState.estruturaEnquete.statusTempo = "PAUSADO";
-                    localStorage.setItem('voxpopuli_estrutura_enquete', JSON.stringify(appState.estruturaEnquete));
+                    localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
                     atualizarVisualRelogio(0);
                     clearInterval(intervaloCronometro);
                     return;
                 }
 
-                localStorage.setItem('voxpopuli_estrutura_enquete', JSON.stringify(appState.estruturaEnquete));
+                localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
                 atualizarVisualRelogio(appState.estruturaEnquete.tempoRestanteMilis);
             }, 1000);
         }
@@ -575,25 +604,22 @@
                 return;
             }
             appState.estruturaEnquete.statusTempo = novoEstado;
-            localStorage.setItem('voxpopuli_estrutura_enquete', JSON.stringify(appState.estruturaEnquete));
+            localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
             inicializarCronometro();
             alert(`O cronômetro agora está: ${novoEstado}`);
         }
 
         function admAlterarMinutosEnquete() {
             const novosMinutos = parseInt(document.getElementById('adm-ajuste-tempo-minutos').value.trim());
-            
-            if(isNaN(novosMinutos) || novosMinutos <= 0) {
-                alert("Insira uma quantidade de minutos válida!");
-                return;
-            }
+            if(isNaN(novosMinutos) || novosMinutos <= 0) { alert("Insira minutos válidos!"); return; }
 
             appState.estruturaEnquete.tempoRestanteMilis = novosMinutos * 60 * 1000;
-            localStorage.setItem('voxpopuli_estrutura_enquete', JSON.stringify(appState.estruturaEnquete));
+            localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
             
-            if (appState.estruturaEnquete.tempoRestanteMilis > 0 && appState.enqueteEncerrada) {
+            if (appState.estruturaEnquete.tempoRestanteMilis > 0) {
+                appState.enqueteEncerrada = false;
                 document.getElementById('btn-votar').disabled = false;
-                document.getElementById('btn-votar').innerText = "Confirmar Voto (1 Crédito)";
+                document.getElementById('btn-votar').innerText = "Confirmar Palpites";
             }
 
             inicializarCronometro();
@@ -602,91 +628,148 @@
 
         function admZerarTempoEnquete() {
             if(!confirm("Tem certeza que deseja encerrar a enquete imediatamente?")) return;
-            
             appState.estruturaEnquete.tempoRestanteMilis = 0;
             appState.estruturaEnquete.statusTempo = "PAUSADO";
-            localStorage.setItem('voxpopuli_estrutura_enquete', JSON.stringify(appState.estruturaEnquete));
-            
+            localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
             inicializarCronometro();
-            alert("Tempo zerado! Enquete encerrada.");
         }
 
         function admAtualizarEnquete() {
             const novaPerg = document.getElementById('adm-poll-pergunta').value.trim();
             const o1 = document.getElementById('adm-poll-opt1').value.trim();
             const o2 = document.getElementById('adm-poll-opt2').value.trim();
-            const o3 = document.getElementById('adm-poll-opt3').value.trim();
             const minutosInput = parseInt(document.getElementById('adm-poll-tempo').value.trim());
 
-            if(!novaPerg || !o1 || !o2 || !o3 || isNaN(minutosInput) || minutosInput <= 0) {
-                alert("Preencha todos os dados da enquete e o tempo em minutos!");
+            if(!novaPerg || !o1 || !o2 || isNaN(minutosInput) || minutosInput <= 0) {
+                alert("Preencha a pergunta, as 2 opções e o tempo!");
                 return;
             }
 
             appState.estruturaEnquete = {
                 pergunta: novaPerg,
-                opt1: o1, opt2: o2, opt3: o3,
+                opt1: o1, opt2: o2,
                 tempoRestanteMilis: minutosInput * 60 * 1000,
                 statusTempo: "PAUSADO"
             };
 
-            appState.votos = { opt1: 0, opt2: 0, opt3: 0 };
-            localStorage.setItem('voxpopuli_estrutura_enquete', JSON.stringify(appState.estruturaEnquete));
-            localStorage.setItem('voxpopuli_votos', JSON.stringify(appState.votos));
+            appState.votos = { opt1: 0, opt2: 0 };
+            localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
+            localStorage.setItem('voxpopuli_votos_novos', JSON.stringify(appState.votos));
+
+            let bancoUsuarios = obterBancoUsuarios();
+            Object.keys(bancoUsuarios).forEach(k => {
+                bancoUsuarios[k].historicoVotos = [];
+            });
+            localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
 
             renderizarEstruturaEnquete();
+            document.getElementById('adm-btn-win-opt1').innerText = `Finalizar c/ ${o1}`;
+            document.getElementById('adm-btn-win-opt2').innerText = `Finalizar c/ ${o2}`;
             
             document.getElementById('btn-votar').disabled = false;
-            document.getElementById('btn-votar').innerText = "Confirmar Voto (1 Crédito)";
+            document.getElementById('btn-votar').innerText = "Confirmar Palpites";
             
             inicializarCronometro();
-            alert("Nova enquete inserida com sucesso! Clique em 'Iniciar / Retomar' no painel 2.1 para abrir a votação.");
+            alert("Nova enquete injetada! Ative o cronômetro para abrir as votações.");
         }
 
         function selecionarOpcao(idOpcao) {
             if(appState.enqueteEncerrada || appState.estruturaEnquete.statusTempo === "PAUSADO") {
-                alert("A votação está suspensa ou encerrada no momento.");
+                alert("A votação está suspensa ou encerrada.");
                 return;
             }
-            if(appState.jaVotou) return;
             document.querySelectorAll('.option-label').forEach(el => el.classList.remove('selected'));
             document.getElementById(`container-${idOpcao}`).classList.add('selected');
             appState.opcaoSelecionada = idOpcao;
         }
 
         function processarVoto() {
-            if(appState.estruturaEnquete.statusTempo === "PAUSADO") {
-                alert("Cronômetro pausado pelo Administrador. Aguarde a liberação para votar!");
+            if(appState.estruturaEnquete.statusTempo === "PAUSADO" || appState.enqueteEncerrada) {
+                alert("Votação pausada ou finalizada.");
                 return;
             }
-            if(!appState.opcaoSelecionada) { alert("Selecione uma opção para votar!"); return; }
-            if(appState.saldoCreditos < 1) { alert("Você não possui créditos suficientes! Compre mais na Loja."); return; }
-
-            appState.saldoCreditos -= 1;
-            appState.votos[appState.opcaoSelecionada] += 1;
-            appState.jaVotou = true;
-
-            localStorage.setItem('voxpopuli_votos', JSON.stringify(appState.votos));
-
+            if(!appState.opcaoSelecionada) { alert("Escolha uma opção primeiro!"); return; }
+            
+            const qtdMoedasVoto = parseFloat(document.getElementById('input-qtd-voto-moedas').value);
+            if(isNaN(qtdMoedasVoto) || qtdMoedasVoto < 1) { alert("Insira uma quantidade válida de moedas (Mínimo 1)!"); return; }
+            
             let bancoUsuarios = obterBancoUsuarios();
-            if(bancoUsuarios[usuarioLogado.login]) {
-                bancoUsuarios[usuarioLogado.login].saldo = appState.saldoCreditos;
-                localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
+            let dadosUser = bancoUsuarios[usuarioLogado.login];
+
+            if(!dadosUser || dadosUser.saldo < qtdMoedasVoto) { 
+                alert("Moedas insuficientes! Compre mais recargas na Loja."); 
+                return; 
             }
 
-            document.getElementById('saldo-atual').innerText = appState.saldoCreditos;
+            appState.votos[appState.opcaoSelecionada] += qtdMoedasVoto;
+
+            dadosUser.saldo -= qtdMoedasVoto;
+            appState.saldoCreditos = dadosUser.saldo;
+
+            if(!dadosUser.historicoVotos) dadosUser.historicoVotos = [];
+            dadosUser.historicoVotos.push({
+                opcaoEscolhida: appState.opcaoSelecionada,
+                moedasApostadas: qtdMoedasVoto
+            });
+
+            bancoUsuarios[usuarioLogado.login] = dadosUser;
+            localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
+            localStorage.setItem('voxpopuli_votos_novos', JSON.stringify(appState.votos));
+
+            document.getElementById('saldo-atual').innerText = Number(appState.saldoCreditos).toFixed(2);
+            
             atualizarVotosVisuais();
             atualizarPainelPremio();
-
-            document.getElementById('btn-votar').disabled = true;
-            document.getElementById('btn-votar').innerText = "Voto Computado com Sucesso!";
-            alert("Seu voto foi registrado!");
+            atualizarValoresSaqueInterface();
+            
+            alert(`Palpite confirmado! Suas ${qtdMoedasVoto} moedas foram computadas.`);
         }
 
         function atualizarPainelPremio() {
-            const totalVotos = appState.votos.opt1 + appState.votos.opt2 + appState.votos.opt3;
-            const valorReal = totalVotos * 5.00; 
-            document.getElementById('label-premio-total').innerText = `R$ ${valorReal.toFixed(2).replace('.', ',')}`;
+            const totalMoedas = appState.votos.opt1 + appState.votos.opt2;
+            document.getElementById('label-premio-total').innerText = `${Number(totalMoedas).toFixed(2)} Moedas`;
+        }
+
+        // LIQUIDAÇÃO SINCRONIZADA E SEGURA COM PROTEÇÃO DE 0,60 PARA ERROS
+        function admFinalizarEVisualizarGanhador(opcaoVencedora) {
+            const nomeOpcao = opcaoVencedora === 'opt1' ? appState.estruturaEnquete.opt1 : appState.estruturaEnquete.opt2;
+            if(!confirm(`Confirma que a resposta certa/vencedora é "${nomeOpcao}"? As contas dos membros serão liquidadas agora.`)) return;
+
+            let bancoUsuarios = obterBancoUsuarios();
+
+            Object.keys(bancoUsuarios).forEach(email => {
+                let u = bancoUsuarios[email];
+                if(u.historicoVotos && u.historicoVotos.length > 0) {
+                    u.historicoVotos.forEach(voto => {
+                        if(voto.opcaoEscolhida === opcaoVencedora) {
+                            // ACERTOU: Retorno de 1,40 moedas por unidade apostada
+                            const retornoGanhador = voto.moedasApostadas * 1.40;
+                            u.saldo = (u.saldo || 0) + retornoGanhador;
+                        } else {
+                            // ERROU: Proteção de capital de 0,60 moedas de volta por unidade apostada
+                            const retornoConsolacao = voto.moedasApostadas * 0.60;
+                            u.saldo = (u.saldo || 0) + retornoConsolacao;
+                        }
+                    });
+                    u.historicoVotos = []; // Limpa histórico da rodada encerrada
+                }
+            });
+
+            localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
+            
+            // Reseta estados locais e buffers de visualização da enquete de forma limpa
+            appState.votos = { opt1: 0, opt2: 0 };
+            appState.estruturaEnquete.tempoRestanteMilis = 0;
+            appState.estruturaEnquete.statusTempo = "PAUSADO";
+            
+            localStorage.setItem('voxpopuli_votos_novos', JSON.stringify(appState.votos));
+            localStorage.setItem('voxpopuli_estrutura_enquete_nova', JSON.stringify(appState.estruturaEnquete));
+
+            alert("Prêmios e Proteções distribuídos com Sucesso! Saldos recalculados.");
+            admAtualizarTabelaMembros();
+            inicializarCronometro();
+            renderizarEstruturaEnquete();
+            atualizarPainelPremio();
         }
 
         function admAtualizarTabelaMembros() {
@@ -705,10 +788,9 @@
                     <td>${email}</td>
                     <td>${u.whatsapp || '-'}</td>
                     <td>${u.cpf || '-'}</td>
-                    <td><small>${u.chavePix || '-'}</small></td>
-                    <td>🪙 <b>${u.saldo || 0}</b></td>
-                    <td style="color:${u.pendente > 0 ? '#f59e0b':'#9ca3af'}">R$ ${u.pendente || 0}</td>
-                    <td style="color:${u.saquePendente > 0 ? '#3b82f6':'#9ca3af'}">R$ ${u.saquePendente || 0}</td>
+                    <td>🪙 <b>${Number(u.saldo || 0).toFixed(2)}</b></td>
+                    <td style="color:${u.pendente > 0 ? '#f59e0b':'#9ca3af'}">R$ ${Number(u.pendente || 0).toFixed(2)}</td>
+                    <td style="color:${u.saquePendente > 0 ? '#3b82f6':'#9ca3af'}">R$ ${Number(u.saquePendente || 0).toFixed(2)}</td>
                     <td>
                         <button class="btn-table-action" onclick="admCarregarMembroParaCorrecao('${u.codigo}')">Mudar Saldo</button>
                     </td>
@@ -716,7 +798,7 @@
                 corpo.appendChild(tr);
             });
             if(Object.keys(bancoUsuarios).length === 0) {
-                corpo.innerHTML = `<tr><td colspan="10" style="text-align:center; color:var(--text-muted);">Nenhum membro cadastrado.</td></tr>`;
+                corpo.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">Nenhum membro cadastrado.</td></tr>`;
             }
         }
 
@@ -732,9 +814,9 @@
 
         function admAjustarMembroManual() {
             const cod = document.getElementById('adm-membro-codigo').value;
-            const novoSaldo = parseInt(document.getElementById('adm-membro-novo-saldo').value);
+            const novoSaldo = parseFloat(document.getElementById('adm-membro-novo-saldo').value);
             
-            if(!cod || isNaN(novoSaldo)) { alert("Selecione um membro válido na tabela primeiro!"); return; }
+            if(!cod || isNaN(novoSaldo)) { alert("Selecione um membro válido!"); return; }
 
             let bancoUsuarios = obterBancoUsuarios();
             const email = Object.keys(bancoUsuarios).find(k => bancoUsuarios[k].codigo === cod);
@@ -743,7 +825,7 @@
                 bancoUsuarios[email].saldo = novoSaldo;
                 localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
                 admAtualizarTabelaMembros();
-                alert("Saldo atualizado manualmente!");
+                alert("Saldo alterado pelo Administrador!");
             }
         }
 
@@ -758,15 +840,7 @@
                 const p = bancoUsuarios[email].pendente;
                 if(p <= 0) { alert("Esse usuário não possui recargas pendentes!"); return; }
                 
-                let moedasAdicionadas = 0;
-                if(p >= 4000) moedasAdicionadas = 1000;
-                else if(p >= 2250) moedasAdicionadas = 500;
-                else if(p >= 1000) moedasAdicionadas = 200;
-                else if(p >= 300) moedasAdicionadas = 50;
-                else if(p >= 130) moedasAdicionadas = 20;
-                else if(p >= 70) moedasAdicionadas = 10;
-                else if(p >= 40) moedasAdicionadas = 5;
-                else if(p >= 9) moedasAdicionadas = 1;
+                const moedasAdicionadas = p;
 
                 bancoUsuarios[email].saldo = (bancoUsuarios[email].saldo || 0) + moedasAdicionadas;
                 bancoUsuarios[email].pendente = 0;
@@ -774,38 +848,23 @@
                 
                 document.getElementById('adm-token-input').value = "";
                 admAtualizarTabelaMembros();
-                alert(`Sucesso! Adicionado ${moedasAdicionadas} créditos à conta do usuário.`);
+                alert(`Sucesso! Adicionado ${moedasAdicionadas.toFixed(2)} moedas à conta do usuário.`);
             } else {
-                alert("Token/ID inválido ou não encontrado!");
+                alert("Token/ID inválido!");
             }
         }
 
-        function renderizarLoja() {
-            const container = document.getElementById('container-pacotes');
-            container.innerHTML = "";
-            document.getElementById('saldo-atual').innerText = appState.saldoCreditos;
+        function gerarCheckoutLoja() {
+            const valorDigitado = parseFloat(document.getElementById('store-input-reais').value);
             
-            pacotesMoedas.forEach(p => {
-                const div = document.createElement('div');
-                div.className = "credit-card";
-                div.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <div>
-                            <div style="font-size:18px; font-weight:800; color:white;">🪙 ${p.qtd} ${p.qtd === 1 ? 'Crédito':'Créditos'}</div>
-                            <div style="font-size:12px; color:var(--text-muted);">Para votar nas enquetes</div>
-                        </div>
-                        <div style="font-size:20px; font-weight:800; color:var(--accent-green)">R$ ${p.total.toFixed(2).replace('.',',')}</div>
-                    </div>
-                    <button class="btn-buy-package" onclick="abrirCheckoutPix(${p.qtd}, ${p.total})">Comprar via Pix</button>
-                `;
-                container.appendChild(div);
-            });
-        }
+            if(isNaN(valorDigitado) || valorDigitado < 9) {
+                alert("A compra mínima no site é de R$ 9,00 (9 Moedas)!");
+                return;
+            }
 
-        function abrirCheckoutPix(qtd, total) {
-            pacotePendente = { qtd, total };
-            document.getElementById('modal-info-qtd').innerText = `${qtd} Créditos`;
-            document.getElementById('modal-info-preco').innerText = `R$ ${total.toFixed(2).replace('.',',')}`;
+            pacotePendente = { qtd: valorDigitado, total: valorDigitado };
+            document.getElementById('modal-info-qtd').innerText = `${valorDigitado.toFixed(2)} Moedas`;
+            document.getElementById('modal-info-preco').innerText = `R$ ${valorDigitado.toFixed(2).replace('.',',')}`;
             document.getElementById('modal-pix').style.display = 'flex';
         }
 
@@ -825,45 +884,37 @@
             
             document.getElementById('badge-pendente').style.display = 'inline-block';
             
-            const msgWhatsApp = `Olá, realizei o pagamento via Pix no valor de R$ ${pacotePendente.total.toFixed(2)} referente ao pacote de ${pacotePendente.qtd} Créditos. Liberar meu ID: ${usuarioLogado.codigo}`;
+            const msgWhatsApp = `Olá, realizei o pagamento via Pix no valor de R$ ${pacotePendente.total.toFixed(2)} para comprar ${pacotePendente.qtd} Moedas. Liberar meu ID: ${usuarioLogado.codigo}`;
             const urlWpp = `https://api.whatsapp.com/send?phone=5522997184205&text=${encodeURIComponent(msgWhatsApp)}`;
             
             fecharModalPix();
             window.open(urlWpp, '_blank');
         }
 
+        // SISTEMA DE SAQUE TOTALMENTE EXCLUSIVO E MONETIZADO SOBRE A RETIRADA
         function solicitarSaqueMembro() {
             let bancoUsuarios = obterBancoUsuarios();
             const d = bancoUsuarios[usuarioLogado.login];
             
-            if(!d || d.saldo <= 0) { alert("Você não possui saldo em créditos para realizar saques!"); return; }
+            if(!d || d.saldo <= 0) { alert("Você não possui saldo ou moedas para sacar!"); return; }
             
-            const valorEmDinheiro = d.saldo * 5.00;
-            if(!confirm(`Deseja converter todos os seus ${d.saldo} créditos em um saque de R$ ${valorEmDinheiro.toFixed(2)} direto na sua chave Pix cadastrada?`)) return;
+            const valorBruto = d.saldo; 
+            const taxaSite = valorBruto * 0.03; 
+            const valorLiquidoAReceber = valorBruto - taxaSite;
 
-            d.saquePendente = valorEmDinheiro;
+            if(!confirm(`Confirmação de Retirada Pix:\n\nValor Bruto: 🪙 ${valorBruto.toFixed(2)}\nTaxa Adm (3%): - R$ ${taxaSite.toFixed(2)}\nLíquido p/ sua Conta: R$ ${valorLiquidoAReceber.toFixed(2)}\n\nDeseja prosseguir?`)) return;
+
+            d.saquePendente = valorLiquidoAReceber;
             d.saldo = 0;
             appState.saldoCreditos = 0;
             
             localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
-            document.getElementById('saldo-atual').innerText = 0;
-            document.getElementById('saldo-saque-disponivel').innerText = 0;
-            document.getElementById('badge-saque-pendente').style.display = 'inline-block';
             
-            const msgWpp = `Solicitação de Saque! Converti meus créditos em dinheiro. Por favor aprovem meu pagamento de R$ ${valorEmDinheiro.toFixed(2)}. Meu ID de Membro é: ${usuarioLogado.codigo}`;
+            document.getElementById('saldo-atual').innerText = "0.00";
+            atualizarValoresSaqueInterface();
+            
+            const msgWpp = `Solicitação de Saque! Resgate solicitado.\nBruto: R$ ${valorBruto.toFixed(2)}\nTaxa (3%): R$ ${taxaSite.toFixed(2)}\nLíquido a Enviar: R$ ${valorLiquidoAReceber.toFixed(2)}\nID do Membro: ${usuarioLogado.codigo}`;
             window.open(`https://api.whatsapp.com/send?phone=5522997184205&text=${encodeURIComponent(msgWpp)}`, '_blank');
-        }
-
-        function membroDeletarPropriaConta() {
-            if(!confirm("⚠️ ATENÇÃO:\nTem certeza que quer DELETAR de vez a sua conta? Todos os seus saldos de créditos e saques serão apagados imediatamente e permanentemente!")) return;
-            
-            let bancoUsuarios = obterBancoUsuarios();
-            if(bancoUsuarios[usuarioLogado.login]) {
-                delete bancoUsuarios[usuarioLogado.login];
-                localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
-                alert("Sua conta foi excluída do sistema.");
-                fazerLogout();
-            }
         }
     </script>
 </body>
