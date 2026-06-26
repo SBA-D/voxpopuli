@@ -24,7 +24,7 @@
         body { background-color: var(--bg-principal); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
 
         /* AUTENTICAÇÃO */
-        .auth-container { max-width: 400px; width: 100%; margin: auto; padding: 32px 24px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .auth-container { max-width: 450px; width: 100%; margin: auto; padding: 32px 24px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); transition: max-width 0.3s ease; }
         .auth-logo { font-size: 28px; font-weight: 800; color: var(--accent-blue); text-align: center; margin-bottom: 24px; }
         .auth-logo span { color: var(--accent-green); }
         .form-group { margin-bottom: 16px; }
@@ -52,7 +52,7 @@
 
         /* TABELA DE MEMBROS */
         .table-container { overflow-x: auto; margin-top: 10px; background: var(--bg-input); border-radius: 12px; border: 1px solid var(--border-color); }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; white-space: nowrap; }
         th, td { padding: 12px; border-bottom: 1px solid var(--border-color); }
         th { background: rgba(255, 255, 255, 0.02); font-weight: 600; color: var(--text-muted); }
         .btn-table-action { background: var(--accent-blue); border: none; color: white; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; }
@@ -86,20 +86,45 @@
 </head>
 <body>
 
-    <!-- VISÃO 0: TELA DE LOGIN / CADASTRO -->
     <div id="view-auth" class="view-section active" style="display: flex; min-height: 100vh; width: 100%;">
         <div class="auth-container">
             <div class="auth-logo">Vox<span>Pool</span></div>
+            
+            <h3 id="auth-titulo" style="text-align: center; margin-bottom: 20px; font-size: 16px;">Acesse sua Conta</h3>
+            
             <div id="auth-forms">
-                <div class="form-group">
-                    <label>Login ou E-mail</label>
-                    <input type="text" id="auth-login" class="form-control" placeholder="Ex: joao">
+                <div class="form-group campo-cadastro" style="display: none;">
+                    <label>Nome Completo</label>
+                    <input type="text" id="auth-nome" class="form-control" placeholder="Seu nome completo">
                 </div>
+
+                <div class="form-group">
+                    <label id="label-login-email">E-mail</label>
+                    <input type="email" id="auth-email" class="form-control" placeholder="Ex: seuemail@dominio.com">
+                </div>
+
+                <div class="form-group campo-cadastro" style="display: none;">
+                    <label>WhatsApp</label>
+                    <input type="text" id="auth-whatsapp" class="form-control" placeholder="Ex: (22) 99999-9999">
+                </div>
+
+                <div class="form-group campo-cadastro" style="display: none;">
+                    <label>CPF</label>
+                    <input type="text" id="auth-cpf" class="form-control" placeholder="000.000.000-00">
+                </div>
+
+                <div class="form-group campo-cadastro" style="display: none;">
+                    <label>Chave Pix para Recebimento</label>
+                    <input type="text" id="auth-chavepix" class="form-control" placeholder="CPF, Celular, E-mail ou Aleatória">
+                </div>
+
                 <div class="form-group">
                     <label>Senha</label>
                     <input type="password" id="auth-senha" class="form-control" placeholder="••••••••">
                 </div>
-                <button class="btn-action" style="margin-top: 10px;" onclick="executarAutenticacao()">Entrar na Conta</button>
+
+                <button class="btn-action" style="margin-top: 10px;" id="btn-auth-principal" onclick="executarAutenticacao()">Entrar na Conta</button>
+                
                 <div class="auth-switch" id="btn-alternar-auth">
                     Não tem conta? <span onclick="alternarModoAuth()">Cadastre-se aqui</span>
                 </div>
@@ -107,7 +132,6 @@
         </div>
     </div>
 
-    <!-- ESTRUTURA DO SITE PRINCIPAL -->
     <div id="app-conteudo" style="display: none; flex-direction: column; min-height: 100vh;">
         <nav>
             <div class="nav-container">
@@ -122,10 +146,8 @@
         </nav>
 
         <main>
-            <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR (@admhelth) -->
             <div id="painel-adm" style="display: none;">
                 
-                <!-- Bloco 1: Validação de Tokens Rápidos -->
                 <div class="adm-box" style="border-color: rgba(16, 185, 129, 0.3);">
                     <div class="adm-section-title" style="color: var(--accent-green)">🛡️ 1. Aprovação por Token (WhatsApp)</div>
                     <div class="adm-validation-zone" style="display: flex; gap: 10px;">
@@ -134,7 +156,6 @@
                     </div>
                 </div>
 
-                <!-- Bloco 2: Criador / Editor de Enquetes Ativas -->
                 <div class="adm-box" style="border-color: rgba(59, 130, 246, 0.3);">
                     <div class="adm-section-title">📝 2. Publicar Nova Enquete Ativa</div>
                     <div class="form-group" style="margin-bottom: 10px;">
@@ -148,13 +169,12 @@
                     <button class="btn-action" style="margin-top: 12px; background: var(--accent-blue);" onclick="admAtualizarEnquete()">⚡ Inserir e Atualizar Enquete no Site</button>
                 </div>
 
-                <!-- Bloco 3: Controle e Correção Manual de Membros por Código -->
                 <div class="adm-box" style="border-color: rgba(245, 158, 11, 0.3);" id="modulo-correcao-membro">
                     <div class="adm-section-title" style="color: #f59e0b;">⚙️ 3. Modificar Membro Selecionado</div>
                     <div class="adm-row">
                         <div class="form-group" style="flex: 1.5;">
                             <label style="font-size:11px; color:var(--text-muted);">ID do Usuário Selecionado</label>
-                            <input type="text" id="adm-membro-codigo" class="form-control" placeholder="Código (Ex: M-1052)">
+                            <input type="text" id="adm-membro-codigo" class="form-control" placeholder="Código (Ex: M-1052)" readonly>
                         </div>
                         <div class="form-group">
                             <label style="font-size:11px; color:var(--text-muted);">Configurar Novo Saldo</label>
@@ -164,34 +184,34 @@
                     <button class="btn-action" style="margin-top: 12px; background: #d97706;" onclick="admAjustarMembroManual()">Salvar Atualizações do Cliente</button>
                 </div>
 
-                <!-- BLOCO 4: LISTA DE MEMBROS CADASTRADOS -->
                 <div class="adm-box" style="border-color: rgba(255, 255, 255, 0.15);">
                     <div class="adm-section-title" style="color: #f3f4f6;">👥 4. Lista Completa de Membros Registrados</div>
-                    <p style="font-size:12px; color:var(--text-muted); margin-bottom: 8px;">Clique em "Gerenciar" para carregar os dados do membro no painel de correção acima.</p>
+                    <p style="font-size:12px; color:var(--text-muted); margin-bottom: 8px;">Clique em "Gerenciar" para ver todos os dados completos do membro e realizar ajustes de saldo.</p>
                     
                     <div class="table-container">
                         <table>
                             <thead>
                                 <tr>
-                                    <th>Usuário</th>
-                                    <th>Código (ID)</th>
+                                    <th>ID (Código)</th>
+                                    <th>Nome</th>
+                                    <th>E-mail (Login)</th>
+                                    <th>WhatsApp</th>
+                                    <th>CPF</th>
+                                    <th>Chave Pix</th>
                                     <th>Saldo</th>
                                     <th>Pendente</th>
                                     <th>Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="adm-tabela-membros-corpo">
-                                <!-- Preenchido dinamicamente via JS -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Botão de Reset Absoluto -->
                 <button class="btn-nav" style="background: var(--accent-red); margin-bottom: 24px; width: 100%; border: none; font-weight: 700; padding: 14px;" onclick="admZerarTudo()">⚠️ ZERAR CRÉDITOS DE TODAS AS CONTAS E ENQUETES</button>
             </div>
 
-            <!-- VISÃO 1: ENQUETE -->
             <section id="view-enquetes" class="view-section">
                 <div class="titulo-secao">
                     <span>Enquete Ativa</span>
@@ -222,7 +242,6 @@
                 </div>
             </section>
 
-            <!-- VISÃO 2: LOJA -->
             <section id="view-loja" class="view-section">
                 <div class="titulo-secao">
                     <button class="btn-nav" onclick="navegarPara('view-enquetes')">← Voltar</button>
@@ -233,7 +252,6 @@
         </main>
     </div>
 
-    <!-- MODAL DE CHECKOUT PIX -->
     <div id="modal-pix" class="pix-modal">
         <div class="pix-modal-content">
             <h3 style="color: white; font-weight: 800;">Pagamento via Pix</h3>
@@ -284,20 +302,35 @@
         ];
 
         function alternarModoAuth() {
-            modoAuth = (modoAuth === "LOGIN") ? "CADASTRO" : "LOGIN";
-            document.getElementById('btn-alternar-auth').innerHTML = modoAuth === "LOGIN" 
-                ? 'Não tem conta? <span onclick="alternarModoAuth()">Cadastre-se aqui</span>' 
-                : 'Já tem uma conta? <span onclick="alternarModoAuth()">Faça Login</span>';
+            const camposCadastro = document.querySelectorAll('.campo-cadastro');
+            const titulo = document.getElementById('auth-titulo');
+            const btnPrincipal = document.getElementById('btn-auth-principal');
+            const alternarTexto = document.getElementById('btn-alternar-auth');
+
+            if (modoAuth === "LOGIN") {
+                modoAuth = "CADASTRO";
+                titulo.innerText = "Crie sua Conta Gratuitamente";
+                btnPrincipal.innerText = "Finalizar Cadastro";
+                camposCadastro.forEach(el => el.style.display = 'block');
+                alternarTexto.innerHTML = 'Já tem uma conta? <span onclick="alternarModoAuth()">Faça Login</span>';
+            } else {
+                modoAuth = "LOGIN";
+                titulo.innerText = "Acesse sua Conta";
+                btnPrincipal.innerText = "Entrar na Conta";
+                camposCadastro.forEach(el => el.style.display = 'none');
+                alternarTexto.innerHTML = 'Não tem conta? <span onclick="alternarModoAuth()">Cadastre-se aqui</span>';
+            }
         }
 
         function executarAutenticacao() {
-            const loginInput = document.getElementById('auth-login').value.trim();
+            const emailInput = document.getElementById('auth-email').value.trim();
             const senhaInput = document.getElementById('auth-senha').value.trim();
 
-            if(!loginInput || !senhaInput) { alert("Preencha tudo!"); return; }
+            if(!emailInput || !senhaInput) { alert("Preencha o e-mail e a senha!"); return; }
 
-            if(loginInput === "@admhelth" && senhaInput === "2481") {
-                usuarioLogado = { login: "@admhelth", role: "ADM", codigo: "MASTER-ADM" };
+            // Credenciais mestre do Administrador
+            if(emailInput === "@admhelth" && senhaInput === "2481") {
+                usuarioLogado = { login: "@admhelth", email: "@admhelth", role: "ADM", codigo: "MASTER-ADM", nome: "Administrador" };
                 logarSucesso();
                 return;
             }
@@ -305,30 +338,55 @@
             let bancoUsuarios = JSON.parse(localStorage.getItem('voxpool_usuarios') || "{}");
 
             if(modoAuth === "CADASTRO") {
-                if(bancoUsuarios[loginInput]) { alert("Usuário já existe!"); return; }
+                const nomeInput = document.getElementById('auth-nome').value.trim();
+                const whatsappInput = document.getElementById('auth-whatsapp').value.trim();
+                const cpfInput = document.getElementById('auth-cpf').value.trim();
+                const chavePixInput = document.getElementById('auth-chavepix').value.trim();
+
+                if(!nomeInput || !whatsappInput || !cpfInput || !chavePixInput) {
+                    alert("Por favor, preencha todos os campos do cadastro!");
+                    return;
+                }
+
+                if(bancoUsuarios[emailInput]) { alert("Este e-mail já está cadastrado!"); return; }
                 
                 const codigoGerado = `M-${Math.floor(1000 + Math.random() * 9000)}`;
                 
-                bancoUsuarios[loginInput] = { 
+                bancoUsuarios[emailInput] = { 
+                    nome: nomeInput,
+                    whatsapp: whatsappInput,
+                    cpf: cpfInput,
+                    chavePix: chavePixInput,
                     senha: senhaInput, 
                     saldo: 0, 
                     pendente: 0,
                     codigo: codigoGerado
                 };
+                
                 localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
-                alert(`Cadastro concluído!\nSeu Código de Membro é: ${codigoGerado}`);
+                alert(`Cadastro concluído com sucesso!\nSeu Código de Membro é: ${codigoGerado}\n\nUse seu E-mail e Senha para logar.`);
+                
+                // Limpa campos de cadastro
+                document.getElementById('auth-nome').value = '';
+                document.getElementById('auth-whatsapp').value = '';
+                document.getElementById('auth-cpf').value = '';
+                document.getElementById('auth-chavepix').value = '';
+                
                 alternarModoAuth();
             } else {
-                if(bancoUsuarios[loginInput] && bancoUsuarios[loginInput].senha === senhaInput) {
+                // Modo LOGIN
+                if(bancoUsuarios[emailInput] && bancoUsuarios[emailInput].senha === senhaInput) {
                     usuarioLogado = { 
-                        login: loginInput, 
+                        login: emailInput, 
+                        email: emailInput,
                         role: "USER", 
-                        codigo: bancoUsuarios[loginInput].codigo || "M-Def"
+                        nome: bancoUsuarios[emailInput].nome || "Membro",
+                        codigo: bancoUsuarios[emailInput].codigo || "M-Def"
                     };
-                    appState.saldoCreditos = bancoUsuarios[loginInput].saldo;
+                    appState.saldoCreditos = bancoUsuarios[emailInput].saldo;
                     logarSucesso();
                 } else {
-                    alert("Dados incorretos!");
+                    alert("E-mail ou Senha incorretos!");
                 }
             }
         }
@@ -369,6 +427,8 @@
 
         function fazerLogout() {
             usuarioLogado = null;
+            document.getElementById('auth-email').value = '';
+            document.getElementById('auth-senha').value = '';
             document.getElementById('app-conteudo').style.display = 'none';
             document.getElementById('view-auth').style.display = 'flex';
         }
@@ -381,20 +441,28 @@
             const chaves = Object.keys(bancoUsuarios);
             
             if(chaves.length === 0) {
-                corpoTabela.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Nenhum membro cadastrado até o momento.</td></tr>`;
+                corpoTabela.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted);">Nenhum membro cadastrado até o momento.</td></tr>`;
                 return;
             }
 
-            chaves.forEach(usuario => {
-                const dados = bancoUsuarios[usuario];
+            chaves.forEach(emailChave => {
+                const dados = bancoUsuarios[emailChave];
                 const cod = dados.codigo || 'Não definido';
+                const nome = dados.nome || '-';
+                const whatsapp = dados.whatsapp || '-';
+                const cpf = dados.cpf || '-';
+                const pix = dados.chavePix || '-';
                 const sal = dados.saldo || 0;
                 const pend = dados.pendente || 0;
 
                 corpoTabela.innerHTML += `
                     <tr>
-                        <td style="font-weight:600; color:#fff;">${usuario}</td>
                         <td style="color:var(--accent-blue); font-family:monospace; font-weight:700;">${cod}</td>
+                        <td style="font-weight:600; color:#fff;">${nome}</td>
+                        <td>${emailChave}</td>
+                        <td>${whatsapp}</td>
+                        <td>${cpf}</td>
+                        <td style="color:var(--accent-green); max-width: 120px; overflow: hidden; text-overflow: ellipsis;">${pix}</td>
                         <td>🪙 ${sal}</td>
                         <td style="color:${pend > 0 ? '#f59e0b' : 'var(--text-muted)'}">${pend > 0 ? '⏳ ' + pend : 'Nenhum'}</td>
                         <td>
@@ -442,7 +510,7 @@
             const novoSaldoVal = document.getElementById('adm-membro-novo-saldo').value.trim();
 
             if(!codProcurado || novoSaldoVal === "") {
-                alert("Selecione um membro na lista abaixo ou preencha os dados manualmente!");
+                alert("Selecione um membro na lista abaixo para carregar os dados!");
                 return;
             }
 
@@ -464,8 +532,8 @@
                 document.getElementById('adm-membro-codigo').value = '';
                 document.getElementById('adm-membro-novo-saldo').value = '';
                 
-                admAtualuberTabelaMembros();
-                alert(`⚙️ Conta de "${usuarioEncontradoChave}" atualizada com sucesso para ${novoSaldoVal} créditos.`);
+                admAtualizarTabelaMembros();
+                alert(`⚙️ Conta de "${bancoUsuarios[usuarioEncontradoChave].nome}" atualizada com sucesso para ${novoSaldoVal} créditos.`);
             } else {
                 alert("⚠️ Nenhum membro encontrado com o ID informado!");
             }
@@ -500,7 +568,7 @@
 
             const mensagemZap = encodeURIComponent(
                 `Olá, acabei de fazer o Pix de confirmação!\n\n` +
-                `👤 *Membro:* ${usuarioLogado.login} (ID: ${usuarioLogado.codigo})\n` +
+                `👤 *Membro:* ${usuarioLogado.nome} (ID: ${usuarioLogado.codigo})\n` +
                 `🪙 *Créditos Solicitados:* ${pacotePendente.qtd} Crd\n` +
                 `💰 *Valor Enviado:* R$ ${pacotePendente.total.toFixed(2)}\n` +
                 `⏱ *Hora da Solicitação:* ${pacotePendente.hora}\n\n` +
@@ -530,7 +598,7 @@
                     localStorage.setItem('voxpool_usuarios', JSON.stringify(bancoUsuarios));
 
                     admAtualizarTabelaMembros();
-                    alert(`✅ SUCESSO!\nUsuário: ${usuarioAlvo}\nCréditos: +${qtdCreditos} liberados.`);
+                    alert(`✅ SUCESSO!\nUsuário: ${bancoUsuarios[usuarioAlvo].nome}\nCréditos: +${qtdCreditos} liberados.`);
                     document.getElementById('adm-token-input').value = '';
                 } else {
                     alert("⚠ Usuário não encontrado!");
