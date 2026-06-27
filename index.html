@@ -104,7 +104,6 @@
 </head>
 <body>
 
-    <!-- VISÃO 0: TELA DE LOGIN / CADASTRO -->
     <div id="view-auth" class="view-section active" style="display: flex; min-height: 100vh; width: 100%;">
         <div class="auth-container">
             <div class="auth-logo">Vox<span>Populi</span></div>
@@ -142,7 +141,6 @@
         </div>
     </div>
 
-    <!-- ESTRUTURA DO SITE PRINCIPAL -->
     <div id="app-conteudo" style="display: none; flex-direction: column; min-height: 100vh;">
         <nav>
             <div class="nav-container">
@@ -157,11 +155,10 @@
         </nav>
 
         <main>
-            <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR -->
             <div id="painel-adm" style="display: none;">
                 
                 <div class="adm-box" style="border-color: rgba(16, 185, 129, 0.3);">
-                    <div class="adm-section-title" style="color: var(--accent-green)">🛡️ 1. Aprovação por Token (WhatsApp)</div>
+                    <div class="adm-section-title" style="color: var(--accent-green)">🛡️ 1. Approval por Token (WhatsApp)</div>
                     <div class="adm-validation-zone" style="display: flex; gap: 10px;">
                         <input type="text" id="adm-token-input" class="form-control" placeholder="Cole o Token recebido...">
                         <button class="btn-action" style="background: var(--accent-green); width: auto; padding: 0 20px; border-radius: 12px;" onclick="admProcessarToken()">Liberar Moedas</button>
@@ -239,7 +236,6 @@
                 </div>
             </div>
 
-            <!-- VISÃO 1: ENQUETES (PAINEL DO CLIENTE) -->
             <section id="view-enquetes" class="view-section">
                 <div class="titulo-secao">
                     <span>Previsões Ativas</span>
@@ -271,7 +267,6 @@
                 </div>
             </section>
 
-            <!-- VISÃO 2: LOJA -->
             <section id="view-loja" class="view-section">
                 <div class="titulo-secao">
                     <button class="btn-nav" onclick="navegarPara('view-enquetes')">← Voltar</button>
@@ -291,7 +286,6 @@
         </main>
     </div>
 
-    <!-- MODAL DE CHECKOUT PIX -->
     <div id="modal-pix" class="pix-modal">
         <div class="pix-modal-content">
             <h3 style="color: white; font-weight: 800;">Pagamento via Pix</h3>
@@ -335,8 +329,28 @@
 
         function obterBancoUsuarios() {
             try {
-                const dados = localStorage.getItem('voxpopuli_usuarios');
-                return dados ? JSON.parse(dados) : {};
+                let dados = localStorage.getItem('voxpopuli_usuarios');
+                let usuarios = dados ? JSON.parse(dados) : {};
+                
+                // INJEÇÃO AUTOMÁTICA DE CONTA DE TESTE PARA USUÁRIO COMUM SE ESTIVER ZERADO
+                if (!usuarios || Object.keys(usuarios).length === 0) {
+                    usuarios = {
+                        "teste@membro.com": {
+                            nome: "Membro de Teste",
+                            whatsapp: "(22) 99999-9999",
+                            cpf: "111.111.111-11",
+                            chavePix: "teste@membro.com",
+                            senha: "123456",
+                            saldo: 50.00,
+                            pendente: 0,
+                            saquePendente: 0,
+                            codigo: "M-7777",
+                            historicoVotos: []
+                        }
+                    };
+                    localStorage.setItem('voxpopuli_usuarios', JSON.stringify(usuarios));
+                }
+                return usuarios;
             } catch (e) { return {}; }
         }
 
@@ -361,12 +375,13 @@
             }
         }
 
-        function ejecutarAutenticacao() {
+        function executarAutenticacao() {
             const emailInput = document.getElementById('auth-email').value.trim();
             const senhaInput = document.getElementById('auth-senha').value.trim();
 
             if(!emailInput || !senhaInput) { alert("Preencha o e-mail e a senha!"); return; }
 
+            // AUTENTICAÇÃO DIRETA DO ADMINISTRADOR MASTER
             if(emailInput === "@admhelth" && senhaInput === "2481") {
                 usuarioLogado = { login: "@admhelth", email: "@admhelth", role: "ADM", codigo: "MASTER-ADM", nome: "Administrador" };
                 logarSucesso();
@@ -396,18 +411,25 @@
                 };
                 
                 localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
-                alert(`Cadastro concluído!\nSeu ID: ${codigoGerado}`);
+                alert(`Cadastro concluído!\nSeu ID para login: ${codigoGerado}`);
                 alternarModoAuth();
             } else {
-                if(bancoUsuarios[emailInput] && bancoUsuarios[emailInput].senha === senhaInput) {
-                    usuarioLogado = { 
-                        login: emailInput, email: emailInput, role: "USER", 
-                        nome: bancoUsuarios[emailInput].nome || "Membro", codigo: bancoUsuarios[emailInput].codigo || "M-Def"
-                    };
-                    logarSucesso();
-                } else {
-                    alert("E-mail ou Senha incorretos!");
+                // VALIDAÇÃO DE LOGIN COM MENSAGENS EXPLICATIVAS DE ERRO
+                if (!bancoUsuarios[emailInput]) {
+                    alert("Esse e-mail não foi encontrado no sistema! Caso tenha limpado o navegador, crie uma nova conta clicando em 'Cadastre-se aqui' abaixo.");
+                    return;
                 }
+
+                if (bancoUsuarios[emailInput].senha !== senhaInput) {
+                    alert("Senha incorreta para esse e-mail! Verifique as letras maiúsculas/minúsculas.");
+                    return;
+                }
+
+                usuarioLogado = { 
+                    login: emailInput, email: emailInput, role: "USER", 
+                    nome: bancoUsuarios[emailInput].nome || "Membro", codigo: bancoUsuarios[emailInput].codigo || "M-Def"
+                };
+                logarSucesso();
             }
         }
 
