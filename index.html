@@ -15,6 +15,7 @@
             --accent-blue: #3b82f6;
             --accent-green: #10b981;
             --accent-red: #ef4444;
+            --accent-warning: #f59e0b;
             --border-color: #2d3242;
             --text-main: #f3f4f6;
             --text-muted: #9ca3af;
@@ -58,7 +59,7 @@
         .btn-table-action { background: var(--accent-blue); border: none; color: white; padding: 6px 10px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; margin-right: 4px; }
 
         /* CONTEÚDO */
-        main { max-width: 700px; width: 100%; margin: 0 auto; padding: 24px 16px; flex: 1; }
+        main { max-width: 850px; width: 100%; margin: 0 auto; padding: 24px 16px; flex: 1; }
         .view-section { display: none; }
         .view-section.active { display: block; }
         .titulo-secao { font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
@@ -67,16 +68,18 @@
         .polls-container { display: flex; flex-direction: column; gap: 24px; }
         .poll-card { background: var(--bg-card); border-radius: 24px; border: 1px solid var(--border-color); padding: 24px; }
         
-        /* CONTAINER FLEX PARA ALINHAR O CRONÔMETRO AO LADO DO CONTEÚDO DA ENQUETE */
-        .poll-layout-wrapper { display: flex; gap: 20px; flex-wrap: wrap; }
-        .poll-main-content { flex: 1; min-width: 280px; }
+        /* CONTAINER FLEX EM DUAS COLUNAS */
+        .poll-layout-wrapper { display: flex; gap: 24px; align-items: stretch; flex-wrap: wrap; }
+        .poll-main-content { flex: 1; min-width: 280px; display: flex; flex-direction: column; justify-content: space-between; }
         
-        /* NOVO CRONÔMETRO GRANDÃO LATERAL */
-        .poll-side-timer { width: 160px; background: #000; border: 2px solid var(--accent-red); border-radius: 16px; padding: 16px 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.2); height: fit-content; align-self: center; }
-        .poll-side-timer.active-timer { border-color: var(--accent-green); box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.2); }
-        .poll-side-timer.paused-timer { border-color: #f59e0b; box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2); }
-        .side-timer-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 6px; font-weight: 700; }
-        .side-timer-clock { font-family: monospace; font-size: 18px; font-weight: 800; color: inherit; letter-spacing: 1px; }
+        /* BLOCO DO CRONÔMETRO LATERAL */
+        .poll-side-timer { width: 200px; min-width: 180px; background: #000; border: 2px solid var(--accent-green); border-radius: 20px; padding: 24px 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; height: auto; }
+        .poll-side-timer.active-timer { border-color: var(--accent-green); box-shadow: 0 0 15px rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .poll-side-timer.paused-timer { border-color: var(--accent-warning); box-shadow: 0 0 15px rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
+        .poll-side-timer.ended-timer { border-color: var(--accent-red); box-shadow: 0 0 15px rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        
+        .side-timer-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 800; }
+        .side-timer-clock { font-family: monospace; font-size: 22px; font-weight: 900; letter-spacing: 1px; color: #fff; background: var(--bg-input); padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border-color); width: 100%; margin-top: 6px; }
 
         /* MONITORAMENTO */
         .status-andamento-box { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 12px; text-align: center; margin-bottom: 16px; }
@@ -89,7 +92,7 @@
         .btn-action { width: 100%; background: var(--accent-blue); color: white; border: none; border-radius: 14px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; }
         .btn-action:disabled { background: #2d3242; color: #6b7280; cursor: not-allowed; }
         
-        /* DETALHAMENTO DE SAQUE TRANSPARENTE */
+        /* FINANCEIRO */
         .saque-detalhes-container { background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 16px; }
         .saque-linha-info { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
         .saque-linha-info:last-child { margin-bottom: 0; padding-top: 8px; border-top: 1px dashed var(--border-color); }
@@ -157,7 +160,6 @@
             <!-- ÁREA EXCLUSIVA DO ADMINISTRADOR -->
             <div id="painel-adm" style="display: none;">
                 
-                <!-- Bloco 1: Validação de Tokens Rápidos -->
                 <div class="adm-box" style="border-color: rgba(16, 185, 129, 0.3);">
                     <div class="adm-section-title" style="color: var(--accent-green)">🛡️ 1. Aprovação por Token (WhatsApp)</div>
                     <div class="adm-validation-zone" style="display: flex; gap: 10px;">
@@ -166,7 +168,6 @@
                     </div>
                 </div>
 
-                <!-- Bloco 2: Criador / Injetor de Enquetes Múltiplas (Apenas 2 Opções Fixo) -->
                 <div class="adm-box" style="border-color: rgba(59, 130, 246, 0.3);">
                     <div class="adm-section-title">📝 2. Injetar Nova Enquete Ativa na Plataforma</div>
                     <div class="form-group" style="margin-bottom: 10px;">
@@ -176,16 +177,13 @@
                         <div class="form-group"><input type="text" id="adm-poll-opt1" class="form-control" placeholder="Opção 1"></div>
                         <div class="form-group"><input type="text" id="adm-poll-opt2" class="form-control" placeholder="Opção 2"></div>
                     </div>
-                    
                     <div class="form-group" style="margin-top: 10px;">
                         <label style="color: var(--accent-blue); font-weight: 600;">Tempo de Duração (em minutos):</label>
                         <input type="number" id="adm-poll-tempo" class="form-control" placeholder="Ex: 60" min="1">
                     </div>
-                    
                     <button class="btn-action" style="margin-top: 12px; background: var(--accent-blue);" onclick="admCriarNovaEnquete()">Injetar Enquete na Plataforma</button>
                 </div>
 
-                <!-- Bloco 3: Painel de Controle de Enquetes Injetadas -->
                 <div class="adm-box" style="border-color: rgba(239, 68, 68, 0.4);">
                     <div class="adm-section-title" style="color: var(--accent-red)">🎛️ 3. Controle Individual das Enquetes Injetadas</div>
                     <div class="table-container">
@@ -205,7 +203,6 @@
                     </div>
                 </div>
 
-                <!-- Bloco 4: Ajuste Manual de Moedas do Cliente -->
                 <div class="adm-box" style="border-color: rgba(245, 158, 11, 0.3);" id="modulo-correcao-membro">
                     <div class="adm-section-title" style="color: #f59e0b;">⚙️ 4. Modificar Saldo do Membro</div>
                     <div class="adm-row">
@@ -219,7 +216,6 @@
                     <button class="btn-action" style="margin-top: 12px; background: #d97706;" onclick="admAjustarMembroManual()">Salvar Moedas do Cliente</button>
                 </div>
 
-                <!-- BLOCO 5: LISTA DE MEMBROS CADASTRADOS -->
                 <div class="adm-box" style="border-color: rgba(255, 255, 255, 0.15);">
                     <div class="adm-section-title" style="color: #f3f4f6;">👥 5. Lista Completa de Membros Registrados</div>
                     <div class="table-container">
@@ -253,13 +249,10 @@
                     </div>
                 </div>
 
-                <!-- Container Dinâmico onde todas as enquetes injetadas vão aparecer -->
                 <div id="lista-enquetes-cliente" class="polls-container"></div>
                 
-                <!-- AREA FINANCEIRA DE SAQUE DO MEMBRO (FIXA ABAIXO DAS ENQUETES) -->
                 <div id="financeiro-membro-box" style="margin-top:32px; padding-top:20px; border-top:1px solid var(--border-color); display:none;">
                     <div style="font-size: 14px; font-weight:700; margin-bottom:12px; color:var(--text-main)">Painel de Retirada (Pix)</div>
-                    
                     <div class="saque-detalhes-container">
                         <div class="saque-linha-info">
                             <span>Saldo Disponível (Bruto):</span>
@@ -274,7 +267,6 @@
                             <span>R$ <span id="saque-txt-liquido">0.00</span></span>
                         </div>
                     </div>
-
                     <button class="btn-action" style="background:var(--accent-green); color:white; border:none; padding:12px;" onclick="solicitarSaqueMembro()">💸 Solicitar Saque via Pix</button>
                 </div>
             </section>
@@ -324,19 +316,17 @@
         let pacotePendente = null;
         let loopGlobalCronometros = null;
 
-        // Array Global de Enquetes carregado do LocalStorage
         let bancoEnquetes = JSON.parse(localStorage.getItem('voxpopuli_banco_enquetes')) || [
             {
                 id: "E-101",
                 pergunta: "Quem é o melhor? Ronaldo ou Kaká?",
                 opt1: "Ronaldo", opt2: "Kaka",
-                tempoRestanteMilis: 60 * 60 * 1000,
+                tempoRestanteMilis: 5 * 60 * 60 * 1000,
                 statusTempo: "RODANDO",
                 votos: { opt1: 0, opt2: 0 }
             }
         ];
 
-        // Estado temporário de seleções locais de voto do cliente nesta sessão
         let selecoesLocaisClientes = {};
 
         function salvarEnquetesNoStorage() {
@@ -371,7 +361,7 @@
             }
         }
 
-        function executarAutenticacao() {
+        function ejecutarAutenticacao() {
             const emailInput = document.getElementById('auth-email').value.trim();
             const senhaInput = document.getElementById('auth-senha').value.trim();
 
@@ -484,7 +474,7 @@
             document.getElementById('saldo-atual').innerText = Number(saldoUser).toFixed(2);
         }
 
-        /* ENGINE DE TEMPO: ATUALIZA CADA CRONÔMETRO INDEPENDENTE SEGUNDO A SEGUNDO */
+        /* ENGINE DE TEMPO SEM INTERRUPÇÃO */
         function inicializarLoopCronometros() {
             clearInterval(loopGlobalCronometros);
             let ultimoTimestamp = Date.now();
@@ -502,7 +492,7 @@
                         houveAlteracao = true;
                         if (enq.tempoRestanteMilis <= 0) {
                             enq.tempoRestanteMilis = 0;
-                            enq.statusTempo = "PAUSADO";
+                            enq.statusTempo = "ENCERRADO";
                         }
                     }
                 });
@@ -511,21 +501,23 @@
                     salvarEnquetesNoStorage();
                 }
 
-                // Recarrega dinamicamente os contadores e textos visuais sem travar o clique do cliente
                 bancoEnquetes.forEach(enq => {
-                    // Atualiza os relógios no painel do cliente
                     const elemRelogio = document.getElementById(`clock-${enq.id}`);
                     const elemBoxRelogio = document.getElementById(`timerbox-${enq.id}`);
+                    const elemStatusTxt = document.getElementById(`statustxt-${enq.id}`);
+                    
                     if (elemRelogio) {
                         elemRelogio.innerText = formatarMilisParaRelogio(enq.tempoRestanteMilis);
-                        if (enq.tempoRestanteMilis <= 0) {
-                            if(elemBoxRelogio) elemBoxRelogio.className = "poll-side-timer";
-                            const btnVoto = document.getElementById(`btnvotar-${enq.id}`);
-                            if(btnVoto) { btnVoto.disabled = true; btnVoto.innerText = "Tempo Esgotado!"; }
+                        
+                        if (enq.tempoRestanteMilis <= 0 || enq.statusTempo === "ENCERRADO") {
+                            if(elemBoxRelogio) elemBoxRelogio.className = "poll-side-timer ended-timer";
+                            if(elemStatusTxt) elemStatusTxt.innerText = "⏱️ Tempo Esgotado";
                         } else if (enq.statusTempo === "PAUSADO") {
                             if(elemBoxRelogio) elemBoxRelogio.className = "poll-side-timer paused-timer";
+                            if(elemStatusTxt) elemStatusTxt.innerText = "⏱️ PAUSADA";
                         } else {
                             if(elemBoxRelogio) elemBoxRelogio.className = "poll-side-timer active-timer";
+                            if(elemStatusTxt) elemStatusTxt.innerText = "⏱️ ATIVA";
                         }
                     }
                 });
@@ -541,7 +533,6 @@
             return `${horas < 10 ? "0"+horas : horas}:${minutos < 10 ? "0"+minutos : minutos}:${segundos < 10 ? "0"+segundos : segundos}`;
         }
 
-        /* CRIAÇÃO DE NOVAS ENQUETES PELO ADM */
         function admCriarNovaEnquete() {
             const pergunta = document.getElementById('adm-poll-pergunta').value.trim();
             const o1 = document.getElementById('adm-poll-opt1').value.trim();
@@ -549,7 +540,7 @@
             const minutos = parseInt(document.getElementById('adm-poll-tempo').value.trim());
 
             if(!pergunta || !o1 || !o2 || isNaN(minutos) || minutos <= 0) {
-                alert("Preencha todos os dados da enquete e o tempo em minutos!");
+                alert("Preencha todos os dados da enquete!");
                 return;
             }
 
@@ -559,25 +550,23 @@
                 opt1: o1,
                 opt2: o2,
                 tempoRestanteMilis: minutos * 60 * 1000,
-                statusTempo: "RODANDO", // Inicia rodando imediatamente ao injetar
+                statusTempo: "RODANDO",
                 votos: { opt1: 0, opt2: 0 }
             };
 
             bancoEnquetes.push(novaEnquete);
             salvarEnquetesNoStorage();
 
-            // Limpa campos
             document.getElementById('adm-poll-pergunta').value = "";
             document.getElementById('adm-poll-opt1').value = "";
             document.getElementById('adm-poll-opt2').value = "";
             document.getElementById('adm-poll-tempo').value = "";
 
-            alert("Nova enquete injetada com sucesso e cronômetro em andamento!");
+            alert("Nova enquete injetada com sucesso!");
             admAtualizarTabelaEnquetes();
             renderizarListaEnquetesCliente();
         }
 
-        /* RENDERS DA INTERFACE DO CLIENTE (MÚLTIPLOS CARDS) */
         function renderizarListaEnquetesCliente() {
             const container = document.getElementById('lista-enquetes-cliente');
             container.innerHTML = "";
@@ -588,7 +577,6 @@
             }
 
             bancoEnquetes.forEach(enq => {
-                // Cálculo de Tendência
                 let txtTendencia = "Aguardando palpites...";
                 let corTendencia = "var(--text-muted)";
                 if (enq.votos.opt1 > enq.votos.opt2) {
@@ -599,23 +587,31 @@
                     txtTendencia = "Empate Técnico no Momento!"; corTendencia = "#f59e0b";
                 }
 
-                // Verifica se o cliente já selecionou algo localmente nesta sessão para aplicar o 70%/30% visual
                 const selecao = selecoesLocaisClientes[enq.id];
                 const v1Txt = selecao === 'opt1' ? '70%' : (selecao === 'opt2' ? '30%' : '--');
                 const v2Txt = selecao === 'opt2' ? '70%' : (selecao === 'opt1' ? '30%' : '--');
+
+                let classeTimer = "poll-side-timer active-timer";
+                let textoStatus = "⏱️ ATIVA";
+                if(enq.statusTempo === "PAUSADO") {
+                    classeTimer = "poll-side-timer paused-timer";
+                    textoStatus = "⏱️ PAUSADA";
+                } else if(enq.tempoRestanteMilis <= 0) {
+                    classeTimer = "poll-side-timer ended-timer";
+                    textoStatus = "⏱️ Tempo Esgotado";
+                }
 
                 const card = document.createElement('div');
                 card.className = "poll-card";
                 card.innerHTML = `
                     <div class="poll-layout-wrapper">
-                        <!-- LADO ESQUERDO: CONTEÚDO DA ENQUETE -->
                         <div class="poll-main-content">
                             <div class="status-andamento-box">
                                 <div class="status-andamento-titulo">🔥 Enquete em Andamento</div>
                                 <div class="status-andamento-lider" style="color: ${corTendencia}">${txtTendencia}</div>
                             </div>
 
-                            <div class="poll-question" style="margin-bottom:16px; font-weight:600; text-align:center; font-size:16px;">${enq.pergunta}</div>
+                            <div style="margin-bottom:16px; font-weight:600; text-align:center; font-size:16px;">${enq.pergunta}</div>
 
                             <div class="options-group">
                                 <label class="option-label ${selecao === 'opt1' ? 'selected' : ''}" onclick="clienteSelecionarOpcaoLocal('${enq.id}', 'opt1')">
@@ -631,14 +627,13 @@
                                 <input type="number" id="inputmoedas-${enq.id}" class="form-control" value="1" min="1" style="padding:10px; font-size:14px;">
                             </div>
 
-                            <button class="btn-action" id="btnvotar-${enq.id}" onclick="clienteConfirmarVoto('${enq.id}')" ${enq.tempoRestanteMilis <= 0 || enq.statusTempo === 'PAUSADO' ? 'disabled' : ''}>
-                                ${enq.tempoRestanteMilis <= 0 ? 'Tempo Esgotado' : (enq.statusTempo === 'PAUSADO' ? 'Votação Suspensa' : 'Confirmar Palpites')}
+                            <button class="btn-action" id="btnvotar-${enq.id}" onclick="clienteConfirmarVoto('${enq.id}')">
+                                Confirmar Palpites
                             </button>
                         </div>
 
-                        <!-- LADO DIREITO: CRONÔMETRO GRANDÃO EXCLUSIVO -->
-                        <div id="timerbox-${enq.id}" class="poll-side-timer">
-                            <div class="side-timer-title">⏱️ Tempo Próprio</div>
+                        <div id="timerbox-${enq.id}" class="${classeTimer}">
+                            <div class="side-timer-title" id="statustxt-${enq.id}">${textoStatus}</div>
                             <div class="side-timer-clock" id="clock-${enq.id}">${formatarMilisParaRelogio(enq.tempoRestanteMilis)}</div>
                         </div>
                     </div>
@@ -648,21 +643,12 @@
         }
 
         function clienteSelecionarOpcaoLocal(enqueteId, opcao) {
-            const enq = bancoEnquetes.find(e => e.id === enqueteId);
-            if(!enq || enq.tempoRestanteMilis <= 0 || enq.statusTempo === "PAUSADO") {
-                alert("Essa votação está pausada ou encerrada pelo tempo.");
-                return;
-            }
             selecoesLocaisClientes[enqueteId] = opcao;
             renderizarListaEnquetesCliente();
         }
 
         function clienteConfirmarVoto(enqueteId) {
             const enq = bancoEnquetes.find(e => e.id === enqueteId);
-            if(!enq || enq.statusTempo === "PAUSADO" || enq.tempoRestanteMilis <= 0) {
-                alert("Votação indisponível."); return;
-            }
-
             const escolha = selecoesLocaisClientes[enqueteId];
             if(!escolha) { alert("Escolha uma opção antes de confirmar!"); return; }
 
@@ -675,10 +661,9 @@
             let dadosUser = bancoUsuarios[usuarioLogado.login];
 
             if(!dadosUser || dadosUser.saldo < qtdMoedas) {
-                alert("Moedas insuficientes! Realize uma recarga na Loja."); return;
+                alert("Moedas insuficientes!"); return;
             }
 
-            // Computa o voto na enquete correta
             enq.votos[escolha] += qtdMoedas;
             dadosUser.saldo -= qtdMoedas;
 
@@ -694,11 +679,10 @@
             salvarEnquetesNoStorage();
 
             document.getElementById('saldo-atual').innerText = Number(dadosUser.saldo).toFixed(2);
-            alert("Seu palpite foi computado com sucesso nesta enquete!");
+            alert("Seu palpite foi computado com sucesso!");
             renderizarListaEnquetesCliente();
         }
 
-        /* PAINEL ADMINISTRATIVO: TABELA DE GERENCIAMENTO DE ENQUETES */
         function admAtualizarTabelaEnquetes() {
             const corpo = document.getElementById('adm-tabela-enquetes-corpo');
             if(!corpo) return;
@@ -709,7 +693,7 @@
                 tr.innerHTML = `
                     <td><b>${enq.id}</b></td>
                     <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis;">${enq.pergunta}</td>
-                    <td><span style="font-family:monospace;" id="adm-clock-${enq.id}">${formatarMilisParaRelogio(enq.tempoRestanteMilis)}</span></td>
+                    <td><span style="font-family:monospace;">${formatarMilisParaRelogio(enq.tempoRestanteMilis)}</span></td>
                     <td><b style="color:${enq.statusTempo === 'RODANDO' ? 'var(--accent-green)' : '#f59e0b'}">${enq.statusTempo}</b></td>
                     <td>O1: ${enq.votos.opt1} | O2: ${enq.votos.opt2}</td>
                     <td>
@@ -732,7 +716,7 @@
                 enq.statusTempo = enq.statusTempo === "RODANDO" ? "PAUSADO" : "RODANDO";
             } else if(acao === 'ZERAR') {
                 enq.tempoRestanteMilis = 0;
-                enq.statusTempo = "PAUSADO";
+                enq.statusTempo = "ENCERRADO";
             }
             salvarEnquetesNoStorage();
             admAtualizarTabelaEnquetes();
@@ -742,11 +726,12 @@
         function admAjustarMinutosEspecifico(id) {
             const enq = bancoEnquetes.find(e => e.id === id);
             if(!enq) return;
-            const min = prompt("Adicionar quantos minutos de duração a esta enquete?", "30");
+            const min = prompt("Adicionar quantos minutos de duração?", "30");
             const minutosInt = parseInt(min);
             if(isNaN(minutosInt) || minutosInt <= 0) return;
 
-            enq.tempoRestanteMilis = minutosInt * 60 * 1000;
+            enq.tempoRestanteMilis += minutosInt * 60 * 1000;
+            if(enq.statusTempo === "ENCERRADO") enq.statusTempo = "RODANDO";
             salvarEnquetesNoStorage();
             admAtualizarTabelaEnquetes();
             renderizarListaEnquetesCliente();
@@ -757,14 +742,13 @@
             if(!enq) return;
 
             const nomeVencedor = opcaoVencedora === 'opt1' ? enq.opt1 : enq.opt2;
-            if(!confirm(`Confirma encerrar a enquete ${enq.id} definindo "${nomeVencedor}" como vencedor?`)) return;
+            if(!confirm(`Confirma encerrar definindo "${nomeVencedor}" como vencedor?`)) return;
 
             let bancoUsuarios = obterBancoUsuarios();
 
             Object.keys(bancoUsuarios).forEach(email => {
                 let u = bancoUsuarios[email];
                 if(u.historicoVotos && u.historicoVotos.length > 0) {
-                    // Liquida apenas os palpites pertencentes a este ID de enquete específico
                     u.historicoVotos = u.historicoVotos.filter(voto => {
                         if(voto.enqueteId === enqueteId) {
                             if(voto.opcaoEscolhida === opcaoVencedora) {
@@ -772,7 +756,7 @@
                             } else {
                                 u.saldo = (u.saldo || 0) + (voto.moedasApostadas * 0.60);
                             }
-                            return false; // remove do histórico ativo porque foi pago
+                            return false;
                         }
                         return true;
                     });
@@ -780,18 +764,15 @@
             });
 
             localStorage.setItem('voxpopuli_usuarios', JSON.stringify(bancoUsuarios));
-
-            // Remove a enquete do array pois já foi resolvida financeiramente
             bancoEnquetes = bancoEnquetes.filter(e => e.id !== enqueteId);
             salvarEnquetesNoStorage();
 
-            alert("Saldos calculados e liquidados com sucesso para os participantes!");
+            alert("Saldos liquidados com sucesso!");
             admAtualizarTabelaEnquetes();
             admAtualizarTabelaMembros();
             renderizarListaEnquetesCliente();
         }
 
-        /* RESTANTE DO SISTEMA FINANCEIRO PADRÃO */
         function admAtualizarTabelaMembros() {
             const corpo = document.getElementById('adm-tabela-membros-corpo');
             if(!corpo) return; corpo.innerHTML = "";
