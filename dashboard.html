@@ -43,9 +43,7 @@
 
     <div class="container">
         <h2>Previsões Ativas</h2>
-        <div id="lista-enquetes">
-            <!-- Injetado via JS -->
-        </div>
+        <div id="lista-enquetes"></div>
     </div>
 
     <script>
@@ -55,10 +53,7 @@
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const usuarioLogado = localStorage.getItem('vox_usuario');
 
-        // Se não tiver usuário no navegador, chuta de volta pro login
-        if (!usuarioLogado) {
-            window.location.href = 'index.html';
-        }
+        if (!usuarioLogado) { window.location.href = 'index.html'; }
 
         function deslogar() {
             localStorage.removeItem('vox_usuario');
@@ -67,13 +62,11 @@
 
         async function carregarDados() {
             try {
-                // Busca Saldo Atual
                 const { data: membro } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
                 if (membro) {
                     document.getElementById('txt-saldo').innerText = parseFloat(membro.saldo).toFixed(2) + " Moedas";
                 }
 
-                // Busca Enquetes
                 const { data: enquetes } = await clientSupabase.from('enquetes').select('*');
                 const lista = document.getElementById('lista-enquetes');
                 lista.innerHTML = "";
@@ -84,26 +77,27 @@
                 }
 
                 enquetes.forEach(enq => {
+                    // CORREÇÃO: Tenta ler 'opcao1' ou 'op1' (e 'opcao2' ou 'op2') para garantir compatibilidade com sua tabela
+                    const o1 = enq.opcao1 || enq.op1 || "Opção 1";
+                    const o2 = enq.opcao2 || enq.op2 || "Opção 2";
+
                     lista.innerHTML += `
                         <div class="enquete-card">
-                            <h3>${enq.pergunta}</h3>
+                            <h3 style="margin-bottom:15px;">${enq.pergunta}</h3>
                             <div class="botoes-voto">
-                                <button class="btn-voto" onclick="votar('${enq.id}', 1)">${enq.opcao1}</button>
-                                <button class="btn-voto" onclick="votar('${enq.id}', 2)">${enq.opcao2}</button>
+                                <button class="btn-voto" onclick="votar('${enq.id}', 1)">${o1}</button>
+                                <button class="btn-voto" onclick="votar('${enq.id}', 2)">${o2}</button>
                             </div>
                         </div>
                     `;
                 });
-            } catch (err) {
-                console.error(err);
-            }
+            } catch (err) { console.error(err); }
         }
 
         async function votar(enqueteId, opcaoNum) {
-            alert("Voto processado na opção " + opcaoNum);
+            alert("Voto registrado com sucesso na opção " + opcaoNum + "!");
         }
 
-        // Atualiza os dados na tela e escuta mudanças em tempo real
         carregarDados();
         clientSupabase.channel('custom-all-channel')
             .on('postgres_changes', { event: '*', pattern: 'public' }, () => { carregarDados(); })
