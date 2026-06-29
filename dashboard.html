@@ -19,7 +19,10 @@
         header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); }
         .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
         .user-info { display: flex; align-items: center; gap: 15px; }
+        .saldo-wrapper { display: flex; align-items: center; gap: 10px; }
         .saldo-badge { background: rgba(16, 185, 129, 0.2); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 8px 16px; border-radius: 20px; font-weight: bold; }
+        .btn-comprar { background: var(--primary-blue); color: white; border: none; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: bold; font-size: 13px; }
+        .btn-comprar:hover { background: #1d4ed8; }
         .btn-sair { background: #374151; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
         .container { max-width: 800px; margin: 40px auto; }
         h2 { text-align: center; margin-bottom: 30px; color: var(--text-muted); }
@@ -38,7 +41,10 @@
     <header>
         <div class="logo">VoxPopuli</div>
         <div class="user-info">
-            <span class="saldo-badge" id="txt-saldo">... Moedas</span>
+            <div class="saldo-wrapper">
+                <span class="saldo-badge" id="txt-saldo">... Moedas</span>
+                <button class="btn-comprar" onclick="comprarMoedas()">+ Recarregar</button>
+            </div>
             <button class="btn-sair" onclick="deslogar()">Sair</button>
         </div>
     </header>
@@ -65,14 +71,12 @@
 
         async function carregarDados() {
             try {
-                // Carrega o saldo do usuário
                 const { data: membro } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
                 if (membro) {
                     saldoAtual = parseFloat(membro.saldo);
                     document.getElementById('txt-saldo').innerText = saldoAtual.toFixed(2) + " Moedas";
                 }
 
-                // Carrega as enquetes
                 const { data: enquetes } = await clientSupabase.from('enquetes').select('*');
                 const lista = document.getElementById('lista-enquetes');
                 lista.innerHTML = "";
@@ -130,7 +134,6 @@
 
             const opInfo = apostaSelecionada[enqueteId];
             
-            // Grava a aposta na tabela nova do Supabase
             const { error } = await clientSupabase.from('historico_apostas').insert([{
                 membro_id: usuarioLogado,
                 enquete_id: enqueteId.toString(),
@@ -143,13 +146,37 @@
                 return;
             }
 
-            // Deduz as moedas do saldo do membro
             const novoSaldo = saldoAtual - qtd;
             await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
 
             alert(`Injeção realizada!\n70% (R$ ${(qtd*0.7).toFixed(2)}) alocados em: ${opInfo.nome}\n30% (R$ ${(qtd*0.3).toFixed(2)}) na outra opção.`);
             document.getElementById(`painel-${enqueteId}`).style.display = "none";
             carregarDados();
+        }
+
+        // FUNÇÃO NOVA: Permite o usuário injetar moedas para testar sem travar
+        async function comprarMoedas() {
+            const quantidade = prompt("Quantas moedas deseja adicionar para teste?");
+            const qtdNum = parseFloat(quantidade);
+
+            if (isNaN(qtdNum) || qtdNum <= 0) {
+                alert("Quantidade inválida.");
+                return;
+            }
+
+            const novoSaldo = saldoAtual + qtdNum;
+
+            const { error } = await clientSupabase
+                .from('membros')
+                .update({ saldo: novoSaldo })
+                .eq('id', usuarioLogado);
+
+            if (error) {
+                alert("Erro ao adicionar moedas: " + error.message);
+            } else {
+                alert(`Sucesso! ${qtdNum} moedas adicionadas.`);
+                carregarDados();
+            }
         }
 
         carregarDados();
