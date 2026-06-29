@@ -88,8 +88,9 @@
                 }
 
                 enquetes.forEach(enq => {
-                    const o1 = enq.opcao1 || "Opção 1";
-                    const o2 = enq.opcao2 || "Opção 2";
+                    const chaves = Object.keys(enq).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at');
+                    const o1 = enq[chaves[0]] || "Opção 1";
+                    const o2 = enq[chaves[1]] || "Opção 2";
 
                     tabela.innerHTML += `
                         <tr>
@@ -109,23 +110,37 @@
 
             if(!p || !o1 || !o2) { alert("Preencha todos os campos!"); return; }
 
-            // ENVIANDO APENAS AS COLUNAS QUE REALMENTE EXISTEM NO SEU BANCO
-            const { error } = await clientSupabase.from('enquetes').insert([
-                { 
-                    pergunta: p, 
-                    opcao1: o1, 
-                    opcao2: o2 
-                }
-            ]);
+            try {
+                // Descobre dinamicamente os nomes reais das colunas trazendo uma linha de exemplo
+                const { data: colunasExemplo } = await clientSupabase.from('enquetes').select('*').limit(1);
+                
+                let nomeColuna1 = "opcao1";
+                let nomeColuna2 = "opcao2";
 
-            if(error) { 
-                alert("Erro ao salvar: " + error.message); 
-            } else {
-                alert("Enquete enviada com sucesso!");
-                document.getElementById('enq-pergunta').value = "";
-                document.getElementById('enq-op1').value = "";
-                document.getElementById('enq-op2').value = "";
-                carregarAdmin();
+                if (colunasExemplo && colunasExemplo.length > 0) {
+                    const chaves = Object.keys(colunasExemplo[0]).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at');
+                    if(chaves[0]) nomeColuna1 = chaves[0];
+                    if(chaves[1]) nomeColuna2 = chaves[1];
+                }
+
+                // Monta o objeto perfeito para o seu banco
+                const payload = { pergunta: p };
+                payload[nomeColuna1] = o1;
+                payload[nomeColuna2] = o2;
+
+                const { error } = await clientSupabase.from('enquetes').insert([payload]);
+
+                if(error) { 
+                    alert("Erro ao salvar: " + error.message); 
+                } else {
+                    alert("Enquete enviada com sucesso!");
+                    document.getElementById('enq-pergunta').value = "";
+                    document.getElementById('enq-op1').value = "";
+                    document.getElementById('enq-op2').value = "";
+                    carregarAdmin();
+                }
+            } catch (err) {
+                alert("Erro inesperado: " + err.message);
             }
         }
 
