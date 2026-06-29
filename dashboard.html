@@ -13,6 +13,7 @@
             --text: #f3f4f6; 
             --border: #374151;
             --red: #ef4444;
+            --yellow: #f59e0b;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 20px; }
@@ -29,10 +30,21 @@
         .modal-content { background: #1f2937; padding: 25px; border-radius: 12px; max-width: 450px; width: 100%; border: 1px solid var(--border); text-align: center; }
         .pix-box { background: #111827; padding: 12px; border-radius: 6px; word-break: break-all; margin: 15px 0; font-family: monospace; color: #9ca3af; font-size: 13px; border: 1px solid var(--border); text-align: left; max-height: 100px; overflow-y: auto; }
         
-        /* Estilo do aviso de erro de carga */
         .alerta-erro { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red); padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .alerta-erro h5 { color: #fca5a5; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
         .alerta-erro p { font-size: 13px; color: #f3f4f6; margin-bottom: 10px; }
+
+        /* Estilos da nova seção de histórico de transações */
+        .secao-historico { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 40px; }
+        .secao-historico h3 { margin-bottom: 15px; font-size: 18px; color: #60a5fa; display: flex; align-items: center; gap: 8px; }
+        .tabela-responsiva { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        th, td { padding: 12px; border-bottom: 1px solid var(--border); }
+        th { color: #9ca3af; font-weight: normal; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .badge-pendente { background: rgba(245, 158, 11, 0.2); color: var(--yellow); }
+        .badge-concluido { background: rgba(16, 185, 129, 0.2); color: var(--green); }
+        .badge-recusado { background: rgba(239, 68, 68, 0.2); color: var(--red); }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -56,6 +68,27 @@
 </div>
 
 <div id="lista-previsoes"></div>
+
+<div class="secao-historico">
+    <h3>📊 Histórico de Depósitos e Saques</h3>
+    <div class="tabela-responsiva">
+        <table>
+            <thead>
+                <tr>
+                    <th>Data / Hora</th>
+                    <th>Tipo</th>
+                    <th>Valor</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="tabela-transacoes">
+                <tr>
+                    <td colspan="4" style="text-align: center; color: gray; padding: 20px;">Carregando transações...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
 
 <div class="modal" id="modalPix">
     <div class="modal-content">
@@ -98,6 +131,10 @@
 
     function gerarPayloadPixEstatico(chave, nome, city, val) {
         function emv(id, v) { return id + String(v.length).padStart(2, '0') + v; }
+        let txtValor = val.toFixed(2);
+        let infoAdicional = emv('00', 'BR.GOV.BCB.PIX') + emv('01', chave);
+        let payload = emv('00', '01') + emv('26', infoAdicional) + emv('52', '0000') + emv('53', '986') + emv('54', txtValor) + emv('58', 'BR') + emv('59', nome.substring(0, 25)) + emv('60', city.substring(0, 15)) + emv('62', emv('05', 'VOXRECARGA'));
+        
         function crc16(s) {
             let crc = 0xFFFF;
             for (let c = 0; c < s.length; c++) {
@@ -108,10 +145,18 @@
             }
             return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
         }
-        let txtValor = val.toFixed(2);
-        let infoAdicional = emv('00', 'BR.GOV.BCB.PIX') + emv('01', chave);
-        let payload = emv('00', '01') + emv('26', infoAdicional) + emv('52', '0000') + emv('53', '986') + emv('54', txtValor) + emv('58', 'BR') + emv('59', nome.substring(0, 25)) + emv('60', city.substring(0, 15)) + emv('62', emv('05', 'VOXRECARGA'));
         return payload + '6304' + crc16(payload + '6304');
+    }
+
+    // Tradutor visual de status amigável
+    function obterBadgeStatus(status) {
+        if (status === 'pendente' || status === 'envio_confirmado_usuario') {
+            return `<span class="badge badge-pendente">⏳ Em Andamento</span>`;
+        } else if (status === 'aprovado' || status === 'concluido' || status === 'sucesso') {
+            return `<span class="badge badge-concluido">✅ Concluído</span>`;
+        } else {
+            return `<span class="badge badge-recusado">❌ Recusado</span>`;
+        }
     }
 
     async function carregarDados() {
@@ -150,58 +195,89 @@
 
             if (!enq || enq.length === 0) {
                 lista.innerHTML += "<p style='text-align:center; color:gray; padding:20px;'>Nenhuma previsão ativa nesta categoria.</p>";
-                return;
-            }
-
-            if (categoriaAtual === "Mercado Financeiro") {
-                lista.innerHTML += `
-                    <div style="background: rgba(37, 99, 235, 0.1); border: 1px dashed var(--blue); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-                        <h4 style="color: #60a5fa; margin: 0; font-size: 16px;">🎯 PREVISÃO DIÁRIA: Hoje o ativo fecha ACIMA ou ABAIXO do preço de ontem?</h4>
-                    </div>`;
-            }
-
-            // 4. Renderiza cada enquete na tela de forma limpa
-            enq.forEach(e => {
+            } else {
                 if (categoriaAtual === "Mercado Financeiro") {
-                    try {
-                        const parts = e.pergunta.split(' [');
-                        const ativo = parts[0]; 
-                        const info = parts[1].replace(']', '').split(' vs ');
-                        lista.innerHTML += `
-                            <div class="ativo-card">
-                                <div><b>${ativo}</b><br><small style="color:gray">Fechamento: f: ${info[0]}</small></div>
-                                <div>
-                                    <button class="btn-acao btn-analise" onclick="window.open('https://www.tradingview.com/symbols/${ativo.replace('/','').replace(' ','').replace('&','')}/', '_blank')">Analisar</button>
-                                    <button class="btn-acao" style="background:var(--green)" onclick="apostar('${e.id}', '1', 'ACIMA - ${ativo}')">ACIMA</button>
-                                    <button class="btn-acao" style="background:var(--blue)" onclick="apostar('${e.id}', '2', 'ABAIXO - ${ativo}')">ABAIXO</button>
-                                </div>
-                            </div>`;
-                    } catch(err) {
-                        // Caso a pergunta fuja do formato padrão do Mercado Financeiro
-                        lista.innerHTML += `<div class="ativo-card"><div><b>${e.pergunta}</b></div></div>`;
-                    }
-                } else {
-                    let o1 = "Opção 1", o2 = "Opção 2"; 
-                    let perguntaExibida = e.pergunta;
-                    if (e.pergunta.includes("[") && e.pergunta.includes("vs")) {
-                        try { 
-                            const partes = e.pergunta.split(" ["); 
-                            perguntaExibida = partes[0]; 
-                            const opcoesRaw = partes[1].replace("]", "").split(" vs "); 
-                            o1 = opcoesRaw[0]; 
-                            o2 = opcoesRaw[1]; 
-                        } catch(err){}
-                    }
                     lista.innerHTML += `
-                        <div class="ativo-card" style="flex-direction: column; align-items: flex-start; gap: 15px;">
-                            <b>${perguntaExibida}</b>
-                            <div>
-                                <button class="btn-acao" style="background:var(--blue); margin-right:10px;" onclick="apostar('${e.id}', '1', '${o1}')">${o1}</button>
-                                <button class="btn-acao" style="background:var(--green);" onclick="apostar('${e.id}', '2', '${o2}')">${o2}</button>
-                            </div>
+                        <div style="background: rgba(37, 99, 235, 0.1); border: 1px dashed var(--blue); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                            <h4 style="color: #60a5fa; margin: 0; font-size: 16px;">🎯 PREVISÃO DIÁRIA: Hoje o ativo fecha ACIMA ou ABAIXO do preço de ontem?</h4>
                         </div>`;
                 }
-            });
+
+                enq.forEach(e => {
+                    if (categoriaAtual === "Mercado Financeiro") {
+                        try {
+                            const parts = e.pergunta.split(' [');
+                            const ativo = parts[0]; 
+                            const info = parts[1].replace(']', '').split(' vs ');
+                            lista.innerHTML += `
+                                <div class="ativo-card">
+                                    <div><b>${ativo}</b><br><small style="color:gray">Fechamento: f: ${info[0]}</small></div>
+                                    <div>
+                                        <button class="btn-acao btn-analise" onclick="window.open('https://www.tradingview.com/symbols/${ativo.replace('/','').replace(' ','').replace('&','')}/', '_blank')">Analisar</button>
+                                        <button class="btn-acao" style="background:var(--green)" onclick="apostar('${e.id}', '1', 'ACIMA - ${ativo}')">ACIMA</button>
+                                        <button class="btn-acao" style="background:var(--blue)" onclick="apostar('${e.id}', '2', 'ABAIXO - ${ativo}')">ABAIXO</button>
+                                    </div>
+                                </div>`;
+                        } catch(err) {
+                            lista.innerHTML += `<div class="ativo-card"><div><b>${e.pergunta}</b></div></div>`;
+                        }
+                    } else {
+                        let o1 = "Opção 1", o2 = "Opção 2"; 
+                        let perguntaExibida = e.pergunta;
+                        if (e.pergunta.includes("[") && e.pergunta.includes("vs")) {
+                            try { 
+                                const partes = e.pergunta.split(" ["); 
+                                perguntaExibida = partes[0]; 
+                                const opcoesRaw = partes[1].replace("]", "").split(" vs "); 
+                                o1 = opcoesRaw[0]; 
+                                o2 = opcoesRaw[1]; 
+                            } catch(err){}
+                        }
+                        lista.innerHTML += `
+                            <div class="ativo-card" style="flex-direction: column; align-items: flex-start; gap: 15px;">
+                                <b>${perguntaExibida}</b>
+                                <div>
+                                    <button class="btn-acao" style="background:var(--blue); margin-right:10px;" onclick="apostar('${e.id}', '1', '${o1}')">${o1}</button>
+                                    <button class="btn-acao" style="background:var(--green);" onclick="apostar('${e.id}', '2', '${o2}')">${o2}</button>
+                                </div>
+                            </div>`;
+                    }
+                });
+            }
+
+            // 4. ATUALIZAÇÃO DO HISTÓRICO DE TRANSAÇÕES (NOVO)
+            // Busca depósitos
+            const { data: depositos } = await clientSupabase.from('pedidos_recarga').select('created_at, quantidade_moedas, status').eq('membro_id', usuarioLogado.toString());
+            // Busca saques
+            const { data: saques } = await clientSupabase.from('pedidos_saque').select('created_at, quantidade_moedas, status').eq('membro_id', usuarioLogado.toString());
+
+            let todasTransacoes = [];
+            if (depositos) { depositos.forEach(d => todasTransacoes.push({ data: d.created_at, tipo: '🟢 Depósito', valor: d.quantidade_moedas, status: d.status })); }
+            if (saques) { saques.forEach(s => todasTransacoes.push({ data: s.created_at, tipo: '🛑 Saque (Retirada)', valor: s.quantidade_moedas, status: s.status })); }
+
+            // Ordena da mais recente para a mais antiga
+            todasTransacoes.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+            const tabelaCorpo = document.getElementById('tabela-transacoes');
+            if (todasTransacoes.length === 0) {
+                tabelaCorpo.innerHTML = `<tr><td colspan="4" style="text-align: center; color: gray; padding: 20px;">Nenhuma movimentação financeira encontrada.</td></tr>`;
+            } else {
+                tabelaCorpo.innerHTML = "";
+                todasTransacoes.forEach(t => {
+                    let dataFormatada = new Date(t.data).toLocaleString('pt-BR');
+                    tabelaCorpo.innerHTML += `
+                        <tr>
+                            <td>${dataFormatada}</td>
+                            <td><b>${t.tipo}</b></td>
+                            <td style="color:${t.tipo.includes('Depósito') ? 'var(--green)' : 'var(--red)'}">
+                                ${t.tipo.includes('Depósito') ? '+' : '-'} ${parseFloat(t.valor).toFixed(2)}
+                            </td>
+                            <td>${obterBadgeStatus(t.status)}</td>
+                        </tr>
+                    `;
+                });
+            }
+
         } catch(err) { 
             console.error(err); 
         }
@@ -221,11 +297,9 @@
             if(!chavePixAlvo) { alert("A chave PIX é estritamente necessária para processar o resgate!"); return; }
         }
 
-        // Deduz do saldo local imediatamente por segurança
         const novoSaldo = saldoAtual - valorSaque;
         await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
 
-        // Registra o pedido de saque
         await clientSupabase.from('pedidos_saque').insert([{
             membro_id: usuarioLogado.toString(),
             quantidade_moedas: valorSaque,
@@ -233,7 +307,7 @@
             status: 'pendente'
         }]);
 
-        alert(`Solicitação de saque de R$ ${valorSaque.toFixed(2)} enviada com sucesso!\nO valor já foi reservado e será enviado para a chave: ${chavePixAlvo}`);
+        alert(`Solicitação de saque de R$ ${valorSaque.toFixed(2)} enviada com sucesso!\nO valor já foi reservado e ficará em andamento no seu histórico.`);
         carregarDados();
     }
 
@@ -255,7 +329,7 @@
         
         document.getElementById('btnConfirmarPagamento').onclick = async function() {
             await clientSupabase.from('pedidos_recarga').update({ status: 'envio_confirmado_usuario' }).eq('id', idPedidoAtual);
-            alert("Notificação de pagamento enviada!"); 
+            alert("Notificação de pagamento enviada! O saldo entrará assim que aprovado."); 
             fecharModal(); 
             carregarDados();
         };
@@ -285,7 +359,6 @@
         carregarDados();
     }
 
-    // Inicialização da página
     carregarDados();
 </script>
 </body>
