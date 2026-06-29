@@ -77,9 +77,7 @@
                 }
 
                 enquetes.forEach(enq => {
-                    // Descobre dinamicamente quais chaves vieram do banco ignorando id e pergunta
-                    const chaves = Object.keys(enq).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at');
-                    
+                    const chaves = Object.keys(enq).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at' && k !== 'duracao');
                     const o1 = enq[chaves[0]] || "Opção 1";
                     const o2 = enq[chaves[1]] || "Opção 2";
 
@@ -97,7 +95,7 @@
         }
 
         async function votar(enqueteId, nomeOpcao) {
-            alert("Voto registrado em: " + nomeOpcao);
+            alert("Voto registrado com sucesso em: " + nomeOpcao);
         }
 
         carregarDados();
