@@ -77,9 +77,11 @@
                 }
 
                 enquetes.forEach(enq => {
-                    // MAPEAMENTO ULTRA-FLEXÍVEL: Procura por qualquer nome de coluna comum para a Opção 1 e 2
-                    const o1 = enq.opcao1 || enq.opcao_1 || enq.op1 || enq.opcaoA || enq.opcao_a || "Opção 1";
-                    const o2 = enq.opcao2 || enq.opcao_2 || enq.op2 || enq.opcaoB || enq.opcao_b || "Opção 2";
+                    // Descobre dinamicamente quais chaves vieram do banco ignorando id e pergunta
+                    const chaves = Object.keys(enq).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at');
+                    
+                    const o1 = enq[chaves[0]] || "Opção 1";
+                    const o2 = enq[chaves[1]] || "Opção 2";
 
                     lista.innerHTML += `
                         <div class="enquete-card">
@@ -95,7 +97,7 @@
         }
 
         async function votar(enqueteId, nomeOpcao) {
-            alert("Voto registado com sucesso em: " + nomeOpcao);
+            alert("Voto registrado em: " + nomeOpcao);
         }
 
         carregarDados();
