@@ -65,12 +65,14 @@
 
         async function carregarDados() {
             try {
+                // Carrega o saldo do usuário
                 const { data: membro } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
                 if (membro) {
                     saldoAtual = parseFloat(membro.saldo);
                     document.getElementById('txt-saldo').innerText = saldoAtual.toFixed(2) + " Moedas";
                 }
 
+                // Carrega as enquetes
                 const { data: enquetes } = await clientSupabase.from('enquetes').select('*');
                 const lista = document.getElementById('lista-enquetes');
                 lista.innerHTML = "";
@@ -128,25 +130,24 @@
 
             const opInfo = apostaSelecionada[enqueteId];
             
-            // Registra a aposta no banco flexível
+            // Grava a aposta na tabela nova do Supabase
             const { error } = await clientSupabase.from('historico_apostas').insert([{
                 membro_id: usuarioLogado,
-                enquete_id: enqueteId,
-                opcao_escolhida: opInfo.opcaoNum,
+                enquete_id: enqueteId.toString(),
+                opcao_escolhida: opInfo.opcaoNum.toString(),
                 valor_total: qtd
             }]);
 
             if (error) {
-                // Caso não tenha a tabela historico_apostas estruturada ainda, faremos direto via simulação local
-                alert("Erro ao computar dados no servidor. Verifique suas tabelas.");
+                alert("Erro ao salvar aposta no banco: " + error.message);
                 return;
             }
 
-            // Deduz o saldo do usuário imediatamente
+            // Deduz as moedas do saldo do membro
             const novoSaldo = saldoAtual - qtd;
             await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
 
-            alert(`Injeção de ${qtd} moedas realizada com sucesso!\n70% alocado em: ${opInfo.nome}\n30% alocado na opção oposta.`);
+            alert(`Injeção realizada!\n70% (R$ ${(qtd*0.7).toFixed(2)}) alocados em: ${opInfo.nome}\n30% (R$ ${(qtd*0.3).toFixed(2)}) na outra opção.`);
             document.getElementById(`painel-${enqueteId}`).style.display = "none";
             carregarDados();
         }
