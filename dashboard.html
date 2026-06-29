@@ -21,13 +21,15 @@
         .user-info { display: flex; align-items: center; gap: 15px; }
         .saldo-badge { background: rgba(16, 185, 129, 0.2); border: 1px solid var(--accent-green); color: var(--accent-green); padding: 8px 16px; border-radius: 20px; font-weight: bold; }
         .btn-sair { background: #374151; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
-        .btn-sair:hover { background: #4b5563; }
         .container { max-width: 800px; margin: 40px auto; }
         h2 { text-align: center; margin-bottom: 30px; color: var(--text-muted); }
         .enquete-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
         .botoes-voto { display: flex; gap: 20px; margin-top: 20px; }
         .btn-voto { flex: 1; padding: 12px; border: 1px solid var(--primary-blue); background: transparent; color: white; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
         .btn-voto:hover { background: var(--primary-blue); }
+        .painel-aposta { margin-top: 15px; background: #1f2937; padding: 15px; border-radius: 6px; display: none; }
+        .input-moedas { padding: 8px; border-radius: 4px; border: 1px solid var(--border-color); background: #0b0f19; color: white; width: 100px; margin-right: 10px; }
+        .btn-confirmar { background: var(--accent-green); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -52,6 +54,7 @@
         
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         const usuarioLogado = localStorage.getItem('vox_usuario');
+        let saldoAtual = 0;
 
         if (!usuarioLogado) { window.location.href = 'index.html'; }
 
@@ -64,7 +67,8 @@
             try {
                 const { data: membro } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
                 if (membro) {
-                    document.getElementById('txt-saldo').innerText = parseFloat(membro.saldo).toFixed(2) + " Moedas";
+                    saldoAtual = parseFloat(membro.saldo);
+                    document.getElementById('txt-saldo').innerText = saldoAtual.toFixed(2) + " Moedas";
                 }
 
                 const { data: enquetes } = await clientSupabase.from('enquetes').select('*');
@@ -77,16 +81,29 @@
                 }
 
                 enquetes.forEach(enq => {
-                    const chaves = Object.keys(enq).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at' && k !== 'duracao');
-                    const o1 = enq[chaves[0]] || "Opção 1";
-                    const o2 = enq[chaves[1]] || "Opção 2";
+                    let o1 = "Opção 1", o2 = "Opção 2";
+                    let perguntaExibida = enq.pergunta;
+
+                    if (enq.pergunta.includes("[") && enq.pergunta.includes("vs")) {
+                        try {
+                            const partes = enq.pergunta.split(" [");
+                            perguntaExibida = partes[0];
+                            const opcoesRaw = partes[1].replace("]", "").split(" vs ");
+                            o1 = opcoesRaw[0]; o2 = opcoesRaw[1];
+                        } catch(e){}
+                    }
 
                     lista.innerHTML += `
                         <div class="enquete-card">
-                            <h3 style="margin-bottom:15px;">${enq.pergunta}</h3>
+                            <h3 style="margin-bottom:15px;">${perguntaExibida}</h3>
                             <div class="botoes-voto">
-                                <button class="btn-voto" onclick="votar('${enq.id}', '${o1}')">${o1}</button>
-                                <button class="btn-voto" onclick="votar('${enq.id}', '${o2}')">${o2}</button>
+                                <button class="btn-voto" onclick="abrirPainelAposta('${enq.id}', '1', '${o1}')">${o1}</button>
+                                <button class="btn-voto" onclick="abrirPainelAposta('${enq.id}', '2', '${o2}')">${o2}</button>
+                            </div>
+                            <div class="painel-aposta" id="painel-${enq.id}">
+                                <p style="margin-bottom: 10px; color: var(--text-muted);">Injetar moedas em: <b id="nome-op-${enq.id}" style="color:white;"></b></p>
+                                <input type="number" class="input-moedas" id="input-${enq.id}" min="1" placeholder="Qtd">
+                                <button class="btn-confirmar" onclick="confirmarAposta('${enq.id}')">Confirmar Injeção</button>
                             </div>
                         </div>
                     `;
@@ -94,14 +111,47 @@
             } catch (err) { console.error(err); }
         }
 
-        async function votar(enqueteId, nomeOpcao) {
-            alert("Voto registrado com sucesso em: " + nomeOpcao);
+        let apostaSelecionada = {};
+
+        function abrirPainelAposta(enqueteId, opcaoNum, nomeOpcao) {
+            document.getElementById(`painel-${enqueteId}`).style.display = "block";
+            document.getElementById(`nome-op-${enqueteId}`).innerText = nomeOpcao;
+            apostaSelecionada[enqueteId] = { opcaoNum: opcaoNum, nome: nomeOpcao };
+        }
+
+        async function confirmarAposta(enqueteId) {
+            const qtdInput = document.getElementById(`input-${enqueteId}`).value;
+            const qtd = parseFloat(qtdInput);
+
+            if (isNaN(qtd) || qtd <= 0) { alert("Digite um valor válido!"); return; }
+            if (qtd > saldoAtual) { alert("Saldo insuficiente!"); return; }
+
+            const opInfo = apostaSelecionada[enqueteId];
+            
+            // Registra a aposta no banco flexível
+            const { error } = await clientSupabase.from('historico_apostas').insert([{
+                membro_id: usuarioLogado,
+                enquete_id: enqueteId,
+                opcao_escolhida: opInfo.opcaoNum,
+                valor_total: qtd
+            }]);
+
+            if (error) {
+                // Caso não tenha a tabela historico_apostas estruturada ainda, faremos direto via simulação local
+                alert("Erro ao computar dados no servidor. Verifique suas tabelas.");
+                return;
+            }
+
+            // Deduz o saldo do usuário imediatamente
+            const novoSaldo = saldoAtual - qtd;
+            await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
+
+            alert(`Injeção de ${qtd} moedas realizada com sucesso!\n70% alocado em: ${opInfo.nome}\n30% alocado na opção oposta.`);
+            document.getElementById(`painel-${enqueteId}`).style.display = "none";
+            carregarDados();
         }
 
         carregarDados();
-        clientSupabase.channel('custom-all-channel')
-            .on('postgres_changes', { event: '*', pattern: 'public' }, () => { carregarDados(); })
-            .subscribe();
     </script>
 </body>
 </html>
