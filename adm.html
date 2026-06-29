@@ -41,7 +41,6 @@
 
     <div style="max-width: 1100px; margin: 0 auto;">
         
-        <!-- CONTROLE DE DEPOSITOS -->
         <div class="secao-adm" style="border-color: var(--accent-green);">
             <h3 style="color: var(--accent-green);">💰 Aprovação de Depósitos (Recargas)</h3>
             <table>
@@ -58,7 +57,6 @@
             </table>
         </div>
 
-        <!-- SOLICITAÇÕES DE SAQUE -->
         <div class="secao-adm" style="border-color: #d97706;">
             <h3 style="color: #f59e0b;">📤 Pedidos de Saque dos Clientes</h3>
             <table>
@@ -74,7 +72,6 @@
             </table>
         </div>
         
-        <!-- INJETOR DE PREVISÕES -->
         <div class="secao-adm">
             <h3>📝 Injetar Nova Previsão por Categoria</h3>
             <div class="form-row">
@@ -97,7 +94,6 @@
             <button class="btn-adm" onclick="injetarEnquete()">Injetar Previsão</button>
         </div>
 
-        <!-- APURAÇÃO -->
         <div class="secao-adm" style="border-color: var(--primary-blue);">
             <h3 style="color: #60a5fa;">🎲 Encerramento e Apuração</h3>
             <table>
@@ -105,7 +101,7 @@
                     <tr>
                         <th>Categoria</th>
                         <th>Previsão</th>
-                        <th>Referência</th>
+                        <th>Referência / Opções</th>
                         <th>Definir Vencedor</th>
                     </tr>
                 </thead>
@@ -113,7 +109,6 @@
             </table>
         </div>
 
-        <!-- GERENCIADOR DE MEMBROS (Roda-pé solicitado) -->
         <div class="secao-adm" style="border-color: #6b7280;">
             <h3 style="color: #9ca3af;">👥 Controle Geral de Membros Cadastrados</h3>
             <table>
@@ -204,19 +199,43 @@
                     });
                 }
 
-                // 4. LISTAR ENQUETES PARA APURAÇÃO
+                // 4. LISTAR ENQUETES PARA APURAÇÃO (CORRIGIDO PARA MERCADO FINANCEIRO)
                 const { data: enquetes } = await clientSupabase.from('enquetes').select('*');
                 const tabela = document.getElementById('tabela-enquetes'); tabela.innerHTML = "";
                 if(enquetes) {
                     enquetes.forEach(enq => {
                         let o1 = "Opção 1", o2 = "Opção 2"; let ex = enq.pergunta;
-                        if (enq.pergunta.includes("[") && enq.pergunta.includes("vs")) {
-                            try { const partes = enq.pergunta.split(" ["); ex = partes[0]; const opcoesRaw = partes[1].replace("]", "").split(" vs "); o1 = opcoesRaw[0]; o2 = opcoesRaw[1]; } catch(e){}
+                        
+                        if (enq.categoria === "Mercado Financeiro") {
+                            o1 = "ACIMA";
+                            o2 = "ABAIXO";
+                            try {
+                                // Limpa a exibição tirando a parte do 'vs ACIMA vs ABAIXO' para o ADM ver o preço antigo
+                                if (enq.pergunta.includes(" vs ")) {
+                                    ex = enq.pergunta.split(" vs ")[0] + "]";
+                                }
+                            } catch(e){}
+                        } else {
+                            if (enq.pergunta.includes("[") && enq.pergunta.includes("vs")) {
+                                try { 
+                                    const partes = enq.pergunta.split(" ["); 
+                                    ex = partes[0]; 
+                                    const opcoesRaw = partes[1].replace("]", "").split(" vs "); 
+                                    o1 = opcoesRaw[0]; 
+                                    o2 = opcoesRaw[1]; 
+                                } catch(e){}
+                            }
                         }
-                        tabela.innerHTML += `<tr><td><span class="badge">${enq.categoria}</span></td><td><b>${ex}</b></td><td>1: ${o1}<br>2: ${o2}</td><td>
-                            <button class="btn-resolver" onclick="apurarEnquete('${enq.id}', '1')">${o1}</button>
-                            <button class="btn-resolver" onclick="apurarEnquete('${enq.id}', '2')" style="background:#3b82f6;">${o2}</button>
-                        </td></tr>`;
+
+                        tabela.innerHTML += `<tr>
+                            <td><span class="badge">${enq.categoria}</span></td>
+                            <td><b>${ex}</b></td>
+                            <td>1: ${o1}<br>2: ${o2}</td>
+                            <td>
+                                <button class="btn-resolver" onclick="apurarEnquete('${enq.id}', '1')">${o1}</button>
+                                <button class="btn-resolver" onclick="apurarEnquete('${enq.id}', '2')" style="background:#3b82f6;">${o2}</button>
+                            </td>
+                        </tr>`;
                     });
                 }
             } catch(e) { console.error(e); }
@@ -249,7 +268,7 @@
             if(isNaN(valNum)) { alert("Valor inválido"); return; }
             
             await clientSupabase.from('membros').update({ saldo: valNum }).eq('id', membroId);
-            alert("Saldo atualizado manualmente!");
+            alert("Saldo updated manualmente!");
             carregarAdmin();
         }
 
@@ -283,7 +302,7 @@
         function ajustarFormulario() {
             const cat = document.getElementById('enq-categoria').value; const container = document.getElementById('campos-dinamicos');
             if (cat === "Mercado Financeiro") {
-                container.innerHTML = `<select id="enq-ativo"><option value="GOLD">🏆 GOLD</option><option value="BTCUSD">🪙 BITCOIN</option></select><input type="text" id="enq-fechamento" placeholder="Preço de Ontem">`;
+                container.innerHTML = `<select id="enq-ativo"><option value="GOLD">🏆 GOLD</option><option value="BTCUSD">🪙 BITCOIN</option><option value="EURUSD">💱 EUR/USD</option></select><input type="text" id="enq-fechamento" placeholder="Preço de Ontem">`;
             } else {
                 container.innerHTML = `<input type="text" id="enq-pergunta" placeholder="Pergunta"><input type="text" id="enq-op1" placeholder="Opção 1"><input type="text" id="enq-op2" placeholder="Opção 2">`;
             }
