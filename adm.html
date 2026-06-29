@@ -11,6 +11,7 @@
             --bg-input: #1f2937;
             --primary-blue: #2563eb;
             --accent-red: #ef4444;
+            --accent-green: #10b981;
             --text-main: #f3f4f6;
             --border-color: #374151;
         }
@@ -26,6 +27,7 @@
         .btn-adm { width: 100%; padding: 12px; background: var(--primary-blue); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border-bottom: 1px solid var(--border-color); padding: 12px; text-align: left; }
+        .btn-resolver { background: var(--accent-green); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
         .btn-del { background: var(--accent-red); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -40,7 +42,7 @@
     <div style="max-width: 900px; margin: 0 auto;">
         
         <div class="secao-adm">
-            <h3>📝 Injetar Nova Enquete</h3>
+            <h3>📝 Injetar Nova Enquete Diária</h3>
             <div class="form-row">
                 <input type="text" id="enq-pergunta" placeholder="Pergunta da enquete">
                 <input type="text" id="enq-op1" placeholder="Opção 1">
@@ -49,14 +51,14 @@
             <button class="btn-adm" onclick="injetarEnquete()">Injetar Enquete na Nuvem</button>
         </div>
 
-        <div class="secao-adm" style="border-color: var(--accent-red);">
-            <h3 style="color: #f87171;">🎲 Controle de Enquetes Injetadas</h3>
+        <div class="secao-adm" style="border-color: var(--primary-blue);">
+            <h3 style="color: #60a5fa;">🎲 Encerramento e Apuração do Dia</h3>
             <table>
                 <thead>
                     <tr>
                         <th>Pergunta</th>
-                        <th>Opções</th>
-                        <th>Ações</th>
+                        <th>Opções Registradas</th>
+                        <th>Definir Resposta Certa (Pagar Membros)</th>
                     </tr>
                 </thead>
                 <tbody id="tabela-enquetes"></tbody>
@@ -83,20 +85,32 @@
                 tabela.innerHTML = "";
 
                 if(!enquetes || enquetes.length === 0) {
-                    tabela.innerHTML = "<tr><td colspan='3' style='text-align:center; color:gray;'>Nenhuma enquete cadastrada.</td></tr>";
+                    tabela.innerHTML = "<tr><td colspan='3' style='text-align:center; color:gray;'>Nenhuma enquete aberta para apuração.</td></tr>";
                     return;
                 }
 
                 enquetes.forEach(enq => {
-                    const chaves = Object.keys(enq).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at' && k !== 'duracao');
-                    const o1 = enq[chaves[0]] || "Opção 1";
-                    const o2 = enq[chaves[1]] || "Opção 2";
+                    let o1 = "Opção 1", o2 = "Opção 2";
+                    let perguntaExibida = enq.pergunta;
+
+                    if (enq.pergunta.includes("[") && enq.pergunta.includes("vs")) {
+                        try {
+                            const partes = enq.pergunta.split(" [");
+                            perguntaExibida = partes[0];
+                            const opcoesRaw = partes[1].replace("]", "").split(" vs ");
+                            o1 = opcoesRaw[0]; o2 = opcoesRaw[1];
+                        } catch(e){}
+                    }
 
                     tabela.innerHTML += `
                         <tr>
-                            <td><b>${enq.pergunta}</b></td>
-                            <td>${o1} vs ${o2}</td>
-                            <td><button class="btn-del" onclick="deletarEnquete('${enq.id}')">Excluir</button></td>
+                            <td><b>${perguntaExibida}</b></td>
+                            <td>1: ${o1} <br> 2: ${o2}</td>
+                            <td>
+                                <button class="btn-resolver" onclick="encerrarComVencedor('${enq.id}', '1')">Opção 1 Certa</button>
+                                <button class="btn-resolver" onclick="encerrarComVencedor('${enq.id}', '2')" style="background:#3b82f6;">Opção 2 Certa</button>
+                                <button class="btn-del" onclick="deletarEnquete('${enq.id}')">Excluir</button>
+                            </td>
                         </tr>
                     `;
                 });
@@ -110,54 +124,60 @@
 
             if(!p || !o1 || !o2) { alert("Preencha todos os campos!"); return; }
 
+            const { error } = await clientSupabase.from('enquetes').insert([{ pergunta: `${p} [${o1} vs ${o2}]` }]);
+            
+            if(error) { alert("Erro: " + error.message); return; }
+
+            alert("Enquete injetada!");
+            document.getElementById('enq-pergunta').value = "";
+            document.getElementById('enq-op1').value = "";
+            document.getElementById('enq-op2').value = "";
+            carregarAdmin();
+        }
+
+        async function encerrarComVencedor(enqueteId, opcaoVencedora) {
+            if(!confirm("Confirma a apuração desta resposta certa? Os saldos serão recalculados agora.")) return;
+
             try {
-                // Força o Supabase a nos dizer a estrutura correta enviando uma inserção nula simulada
-                const { data: infoTabela, error: errSchema } = await clientSupabase.from('enquetes').select('*').limit(1);
-                
-                let col1 = "opcao1";
-                let col2 = "opcao2";
+                // Busca todas as apostas feitas nesta enquete
+                const { data: apostas } = await clientSupabase.from('historico_apostas').select('*').eq('enquete_id', enqueteId);
 
-                if (infoTabela && infoTabela.length > 0) {
-                    const chaves = Object.keys(infoTabela[0]).filter(k => k !== 'id' && k !== 'pergunta' && k !== 'created_at' && k !== 'duracao');
-                    if(chaves[0]) col1 = chaves[0];
-                    if(chaves[1]) col2 = chaves[1];
-                } else {
-                    // Se a tabela estiver 100% vazia, tenta criar colunas padrão baseadas no seu erro anterior
-                    // Mas para garantir, tentamos puxar chaves existentes.
-                    const keys = Object.keys(infoTabela || {});
-                }
+                if(apostas && apostas.length > 0) {
+                    for(let aposta of apostas) {
+                        const valorTotal = parseFloat(aposta.valor_total);
+                        let valorRetorno = 0;
 
-                // Monta o payload dinamicamente usando os nomes de coluna descobertos
-                const item = { pergunta: p };
-                item[col1] = o1;
-                item[col2] = o2;
+                        if (aposta.opcao_escolhida == opcaoVencedora) {
+                            // ACERTOU: Ganha 1.49 por moeda investida (0.19 centavos de lucro puro)
+                            valorRetorno = valorTotal * 1.49;
+                        } else {
+                            // ERROU: Ganha 0.39 por moeda investida (0.61 centavos de perda do valor total)
+                            valorRetorno = valorTotal * 0.39;
+                        }
 
-                const { error } = await clientSupabase.from('enquetes').insert([item]);
-
-                if(error) { 
-                    // Se falhar de primeira por tabela vazia, tenta o formato alternativo estrutural comum
-                    const fallbackItem = { pergunta: p, opcao_1: o1, opcao_2: o2 };
-                    const { error: err2 } = await clientSupabase.from('enquetes').insert([fallbackItem]);
-                    if(err2) {
-                         alert("Erro estrutural: " + error.message);
-                         return;
+                        // Busca o saldo atual do membro
+                        const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', aposta.membro_id).maybeSingle();
+                        if(m) {
+                            const novoSaldo = parseFloat(m.saldo) + valorRetorno;
+                            // Devolve os rendimentos calculados para o saldo do membro
+                            await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', aposta.membro_id);
+                        }
                     }
                 }
-                
-                alert("Enquete enviada com sucesso!");
-                document.getElementById('enq-pergunta').value = "";
-                document.getElementById('enq-op1').value = "";
-                document.getElementById('enq-op2').value = "";
+
+                // Deleta a enquete finalizada para tirá-la do painel
+                await clientSupabase.from('enquetes').delete().eq('id', enqueteId);
+                alert("Apuração diária concluída e saldos atualizados com sucesso!");
                 carregarAdmin();
-                
-            } catch (err) {
-                alert("Erro: " + err.message);
+
+            } catch(err) {
+                alert("Erro na apuração: " + err.message);
             }
         }
 
         async function deletarEnquete(id) {
-            const { error } = await clientSupabase.from('enquetes').delete().eq('id', id);
-            if(error) { alert("Erro ao deletar"); } else { carregarAdmin(); }
+            await clientSupabase.from('enquetes').delete().eq('id', id);
+            carregarAdmin();
         }
 
         carregarAdmin();
