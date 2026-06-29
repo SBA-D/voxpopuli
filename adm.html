@@ -28,11 +28,12 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border-bottom: 1px solid var(--border-color); padding: 12px; text-align: left; }
         .btn-resolver { background: var(--accent-green); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
-        .btn-del { background: var(--accent-red); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-recusar { background: #d97706; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-right: 5px; }
+        .btn-del { background: var(--accent-red); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
         .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #374151; }
         
-        /* Destaque para PIX que o usuário já confirmou envio */
         .linha-paga { background: rgba(16, 185, 129, 0.12) !important; border: 2px solid var(--accent-green); }
+        .linha-recusada { background: rgba(217, 119, 6, 0.1) !important; }
         .status-badge { padding: 3px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -155,7 +156,6 @@
 
         async function carregarAdmin() {
             try {
-                // 1. Busca todos os pedidos que NÃO estão aprovados/concluídos
                 const { data: recargas } = await clientSupabase.from('pedidos_recarga')
                     .select('*')
                     .neq('status', 'aprovado');
@@ -171,10 +171,12 @@
                         let classeLinha = "";
                         let statusHtml = "";
 
-                        // Verifica se o usuário já notificou o envio do PIX
                         if (rec.status === "envio_confirmado_usuario") {
                             classeLinha = "class='linha-paga'";
                             statusHtml = `<span class="status-badge" style="background: var(--accent-green); color: black;">💰 PIX ENVIADO</span>`;
+                        } else if (rec.status === "pix_nao_recebido") {
+                            classeLinha = "class='linha-recusada'";
+                            statusHtml = `<span class="status-badge" style="background: var(--accent-red); color: white;">❌ NÃO LOGADO / REJEITADO</span>`;
                         } else {
                             statusHtml = `<span class="status-badge" style="background: #4b5563; color: white;">⏳ AGUARDANDO</span>`;
                         }
@@ -187,13 +189,14 @@
                                 <td>${statusHtml}</td>
                                 <td>
                                     <button class="btn-resolver" onclick="aprovarRecarga('${rec.id}', '${rec.membro_id}', ${valor})">Liberar Saldo</button>
-                                    <button class="btn-del" onclick="rejeitarRecarga('${rec.id}')">Excluir</button>
+                                    <button class="btn-recusar" onclick="notificarNaoRecebido('${rec.id}')">Avisar Erro</button>
+                                    <button class="btn-del" onclick="deletarRecargaPermanente('${rec.id}')">Excluir</button>
                                 </td>
                             </tr>`;
                     });
                 }
 
-                // 2. Previsões Ativas para Apuração
+                // Previsões Ativas para Apuração
                 const { data: enquetes } = await clientSupabase.from('enquetes').select('*');
                 const tabela = document.getElementById('tabela-enquetes');
                 tabela.innerHTML = "";
@@ -265,19 +268,39 @@
             const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', membroId).maybeSingle();
             let saldoAtual = m ? parseFloat(m.saldo) : 0;
             
-            // Credita as moedas na conta do membro
             await clientSupabase.from('membros').update({ saldo: saldoAtual + valorMoedas }).eq('id', membroId);
-            // Altera o status para aprovado para sumir da lista de pendentes
             await clientSupabase.from('pedidos_recarga').update({ status: 'aprovado' }).eq('id', pedidoId);
             
-            alert("Saldo creditado e liberado com sucesso para o membro!");
+            alert("Saldo creditado e liberado com sucesso!");
             carregarAdmin();
         }
 
-        async function BlacklistRecarga(pedidoId) {
-            if (confirm("Remover solicitação de crédito?")) {
-                await clientSupabase.from('pedidos_recarga').delete().eq('id', pedidoId);
+        // NOVO RECURSO: Notifica o membro que o PIX não caiu sem deletar a linha do painel
+        async function notificarNaoRecebido(pedidoId) {
+            if(confirm("Deseja avisar o membro que o PIX deste pedido não foi computado?")) {
+                const { error } = await clientSupabase.from('pedidos_recarga')
+                    .update({ status: 'pix_nao_recebido' })
+                    .eq('id', pedidoId);
+                    
+                if(error) alert("Erro: " + error.message);
+                alert("Aviso enviado ao painel do membro!");
                 carregarAdmin();
+            }
+        }
+
+        // CORREÇÃO DEFINITIVA: O botão de excluir agora deleta permanentemente do banco
+        async function deletarRecargaPermanente(pedidoId) {
+            if (confirm("⚠️ Tem certeza que deseja DELETAR permanentemente este pedido da sua lista? Essa ação não pode ser desfeita.")) {
+                const { error } = await clientSupabase.from('pedidos_recarga')
+                    .delete()
+                    .eq('id', pedidoId);
+                    
+                if (error) {
+                    alert("Erro ao deletar do banco de dados: " + error.message);
+                } else {
+                    alert("Pedido excluído permanentemente com sucesso!");
+                    carregarAdmin();
+                }
             }
         }
 
@@ -309,9 +332,7 @@
             }
         }
 
-        // Executa atualização automática a cada 15 segundos para pegar novos PIX enviados sem precisar atualizar a página manual
         setInterval(carregarAdmin, 15000);
-
         carregarAdmin();
     </script>
 </body>
