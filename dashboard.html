@@ -12,10 +12,11 @@
             --green: #10b981; 
             --text: #f3f4f6; 
             --border: #374151;
+            --red: #ef4444;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
         .tabs { display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 5px; }
         .tab-btn { background: #1f2937; border: none; padding: 10px 15px; color: white; border-radius: 6px; cursor: pointer; white-space: nowrap; font-weight: bold; }
@@ -27,6 +28,11 @@
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
         .modal-content { background: #1f2937; padding: 25px; border-radius: 12px; max-width: 450px; width: 100%; border: 1px solid var(--border); text-align: center; }
         .pix-box { background: #111827; padding: 12px; border-radius: 6px; word-break: break-all; margin: 15px 0; font-family: monospace; color: #9ca3af; font-size: 13px; border: 1px solid var(--border); text-align: left; max-height: 100px; overflow-y: auto; }
+        
+        /* Estilo do aviso de erro de carga */
+        .alerta-erro { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red); padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .alerta-erro h5 { color: #fca5a5; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
+        .alerta-erro p { font-size: 13px; color: #f3f4f6; margin-bottom: 10px; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -36,8 +42,8 @@
     <div class="logo">VoxPopuli 📈</div>
     <div>
         Saldo: <b id="txt-saldo" style="color:var(--green)">0.00</b> Moedas 
-        <button onclick="abrirModalRecarga()" style="margin-left:10px; padding: 4px 8px; cursor:pointer; font-weight: bold; border-radius: 4px;">+ Recarregar</button>
-        <button onclick="solicitarSaque()" style="margin-left:5px; padding: 4px 8px; cursor:pointer; font-weight: bold; border-radius: 4px; background:#d97706; color:white; border:none;">📤 Sacar</button>
+        <button onclick="abrirModalRecarga()" style="margin-left:10px; padding: 6px 10px; cursor:pointer; font-weight: bold; border-radius: 4px; border: 1px solid var(--border); background: #1f2937; color: white;">+ Recarregar</button>
+        <button onclick="solicitarSaque()" style="margin-left:5px; padding: 6px 10px; cursor:pointer; font-weight: bold; border-radius: 4px; background:#d97706; color:white; border:none;">📤 Sacar</button>
         <button class="btn-sair" onclick="deslogar()">Sair</button>
     </div>
 </header>
@@ -51,7 +57,6 @@
 
 <div id="lista-previsoes"></div>
 
-<!-- MODAL DO PIX COPIA E COLA -->
 <div class="modal" id="modalPix">
     <div class="modal-content">
         <h3 style="color: #60a5fa; margin-bottom: 10px;">Pagamento do Pedido</h3>
@@ -111,7 +116,7 @@
 
     async function carregarDados() {
         try {
-            // Verifica saldo e se a conta está ativa ou bloqueada
+            // 1. Busca dados do usuário logado
             const { data: m } = await clientSupabase.from('membros').select('saldo, status, chave_pix').eq('id', usuarioLogado).maybeSingle();
             
             if (m) {
@@ -125,17 +130,20 @@
                 document.getElementById('txt-saldo').innerText = saldoAtual.toFixed(2);
             }
 
+            // 2. Verifica se há recargas marcadas com erro
             const { data: recargasRecusadas } = await clientSupabase.from('pedidos_recarga').select('*').eq('membro_id', usuarioLogado.toString()).eq('status', 'pix_nao_recebido');
+            
             let alertaPixHtml = "";
             if (recargasRecusadas && recargasRecusadas.length > 0) {
                 alertaPixHtml = `
-                    <div style="background: rgba(239, 68, 68, 0.15); border: 2px solid #ef4444; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
-                        <h5 style="color: #fca5a5; margin-bottom: 5px; font-size: 14px; font-weight: bold;">⚠️ Retorno do Administrador: Erro na Carga!</h5>
-                        <p style="font-size: 13px; color: #f3f4f6; margin-bottom: 10px;">Sua solicitação de <b>${recargasRecusadas[0].quantidade_moedas} moedas</b> foi verificada pelo ADM, mas o seu PIX não foi localizado. Por favor, tente novamente.</p>
-                        <button onclick="limparAvisoPix('${recargasRecusadas[0].id}')" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;">Entendido</button>
+                    <div class="alerta-erro">
+                        <h5>⚠️ Retorno do Administrador: Erro na Carga!</h5>
+                        <p>Sua solicitação de <b>${recargasRecusadas[0].quantidade_moedas} moedas</b> foi verificada pelo ADM, mas o seu PIX não foi localizado. Por favor, tente novamente.</p>
+                        <button onclick="limparAvisoPix('${recargasRecusadas[0].id}')" style="background: var(--red); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;">Entendido</button>
                     </div>`;
             }
 
+            // 3. Busca enquetes da categoria ativa
             const { data: enq } = await clientSupabase.from('enquetes').select('*').eq('categoria', categoriaAtual);
             const lista = document.getElementById('lista-previsoes');
             lista.innerHTML = alertaPixHtml;
@@ -146,26 +154,43 @@
             }
 
             if (categoriaAtual === "Mercado Financeiro") {
-                lista.innerHTML += `<div style="background: rgba(37, 99, 235, 0.1); border: 1px dashed var(--blue); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;"><h4 style="color: #60a5fa; margin: 0; font-size: 16px;">🎯 PREVISÃO DIÁRIA: Hoje o ativo fecha ACIMA ou ABAIXO do preço de ontem?</h4></div>`;
+                lista.innerHTML += `
+                    <div style="background: rgba(37, 99, 235, 0.1); border: 1px dashed var(--blue); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+                        <h4 style="color: #60a5fa; margin: 0; font-size: 16px;">🎯 PREVISÃO DIÁRIA: Hoje o ativo fecha ACIMA ou ABAIXO do preço de ontem?</h4>
+                    </div>`;
             }
 
+            // 4. Renderiza cada enquete na tela de forma limpa
             enq.forEach(e => {
                 if (categoriaAtual === "Mercado Financeiro") {
-                    const parts = e.pergunta.split(' [');
-                    const ativo = parts[0]; const info = parts[1].replace(']', '').split(' vs ');
-                    lista.innerHTML += `
-                        <div class="ativo-card">
-                            <div><b>${ativo}</b><br><small style="color:gray">Ontem: ${info[0]}</small></div>
-                            <div>
-                                <button class="btn-acao btn-analise" onclick="window.open('https://www.tradingview.com/symbols/${ativo.replace('/','').replace(' ','').replace('&','')}/', '_blank')">Analisar</button>
-                                <button class="btn-acao" style="background:var(--green)" onclick="apostar('${e.id}', '1', 'ACIMA - ${ativo}')">ACIMA</button>
-                                <button class="btn-acao" style="background:var(--blue)" onclick="apostar('${e.id}', '2', 'ABAIXO - ${ativo}')">ABAIXO</button>
-                            </div>
-                        </div>`;
+                    try {
+                        const parts = e.pergunta.split(' [');
+                        const ativo = parts[0]; 
+                        const info = parts[1].replace(']', '').split(' vs ');
+                        lista.innerHTML += `
+                            <div class="ativo-card">
+                                <div><b>${ativo}</b><br><small style="color:gray">Fechamento: f: ${info[0]}</small></div>
+                                <div>
+                                    <button class="btn-acao btn-analise" onclick="window.open('https://www.tradingview.com/symbols/${ativo.replace('/','').replace(' ','').replace('&','')}/', '_blank')">Analisar</button>
+                                    <button class="btn-acao" style="background:var(--green)" onclick="apostar('${e.id}', '1', 'ACIMA - ${ativo}')">ACIMA</button>
+                                    <button class="btn-acao" style="background:var(--blue)" onclick="apostar('${e.id}', '2', 'ABAIXO - ${ativo}')">ABAIXO</button>
+                                </div>
+                            </div>`;
+                    } catch(err) {
+                        // Caso a pergunta fuja do formato padrão do Mercado Financeiro
+                        lista.innerHTML += `<div class="ativo-card"><div><b>${e.pergunta}</b></div></div>`;
+                    }
                 } else {
-                    let o1 = "Opção 1", o2 = "Opção 2"; let perguntaExibida = e.pergunta;
+                    let o1 = "Opção 1", o2 = "Opção 2"; 
+                    let perguntaExibida = e.pergunta;
                     if (e.pergunta.includes("[") && e.pergunta.includes("vs")) {
-                        try { const partes = e.pergunta.split(" ["); perguntaExibida = partes[0]; const opcoesRaw = partes[1].replace("]", "").split(" vs "); o1 = opcoesRaw[0]; o2 = opcoesRaw[1]; } catch(err){}
+                        try { 
+                            const partes = e.pergunta.split(" ["); 
+                            perguntaExibida = partes[0]; 
+                            const opcoesRaw = partes[1].replace("]", "").split(" vs "); 
+                            o1 = opcoesRaw[0]; 
+                            o2 = opcoesRaw[1]; 
+                        } catch(err){}
                     }
                     lista.innerHTML += `
                         <div class="ativo-card" style="flex-direction: column; align-items: flex-start; gap: 15px;">
@@ -177,7 +202,9 @@
                         </div>`;
                 }
             });
-        } catch(err) { console.error(err); }
+        } catch(err) { 
+            console.error(err); 
+        }
     }
 
     async function solicitarSaque() {
@@ -194,11 +221,11 @@
             if(!chavePixAlvo) { alert("A chave PIX é estritamente necessária para processar o resgate!"); return; }
         }
 
-        // 1. Deduz o saldo do membro imediatamente por segurança
+        // Deduz do saldo local imediatamente por segurança
         const novoSaldo = saldoAtual - valorSaque;
         await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
 
-        // 2. Registra o pedido de saque para o ADM pagar
+        // Registra o pedido de saque
         await clientSupabase.from('pedidos_saque').insert([{
             membro_id: usuarioLogado.toString(),
             quantidade_moedas: valorSaque,
@@ -215,14 +242,22 @@
         const qtdNum = parseFloat(quantidade);
         if (isNaN(qtdNum) || qtdNum < 9) { alert("Valor inválido! Mínimo 9."); return; }
 
-        const { data } = await clientSupabase.from('pedidos_recarga').insert([{ membro_id: usuarioLogado.toString(), quantidade_moedas: qtdNum, status: 'pendente' ]}).select();
+        const { data, error } = await clientSupabase.from('pedidos_recarga').insert([{ membro_id: usuarioLogado.toString(), quantidade_moedas: qtdNum, status: 'pendente' }]).select();
+        
+        if(error || !data) {
+            alert("Erro ao gerar pedido de recarga.");
+            return;
+        }
+
         idPedidoAtual = data[0].id;
         document.getElementById('modalValor').innerText = `R$ ${qtdNum.toFixed(2)}`;
         document.getElementById('payloadPix').innerText = gerarPayloadPixEstatico(CHAVE_PIX, NOME_TITULAR, CIDADE_TITULAR, qtdNum);
         
         document.getElementById('btnConfirmarPagamento').onclick = async function() {
             await clientSupabase.from('pedidos_recarga').update({ status: 'envio_confirmado_usuario' }).eq('id', idPedidoAtual);
-            alert("Notificação de pagamento enviada!"); fecharModal(); carregarDados();
+            alert("Notificação de pagamento enviada!"); 
+            fecharModal(); 
+            carregarDados();
         };
         document.getElementById('modalPix').style.display = 'flex';
     }
@@ -230,16 +265,27 @@
     function fecharModal() { document.getElementById('modalPix').style.display = 'none'; idPedidoAtual = null; }
     function copiarPix() { navigator.clipboard.writeText(document.getElementById('payloadPix').innerText); alert("Copiado!"); }
     async function limparAvisoPix(id) { await clientSupabase.from('pedidos_recarga').delete().eq('id', id); carregarDados(); }
-    function filtrar(cat, btn) { categoriaAtual = cat; document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); carregarDados(); }
+    
+    function filtrar(cat, btn) { 
+        categoriaAtual = cat; 
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
+        btn.classList.add('active'); 
+        carregarDados(); 
+    }
     
     async function apostar(id, op, nomeOpcao) {
-        const qInput = prompt(`Quantas moedas deseja injetar em "${nomeOpcao}"?`); if(!qInput) return; const q = parseFloat(qInput);
+        const qInput = prompt(`Quantas moedas deseja injetar em "${nomeOpcao}"?`); 
+        if(!qInput) return; 
+        const q = parseFloat(qInput);
         if(isNaN(q) || q <= 0 || q > saldoAtual) { alert("Operação inválida ou saldo insuficiente."); return; }
+        
         await clientSupabase.from('historico_apostas').insert([{ membro_id: usuarioLogado, enquete_id: id.toString(), opcao_escolhida: op.toString(), valor_total: q }]);
         await clientSupabase.from('membros').update({ saldo: saldoAtual - q }).eq('id', usuarioLogado);
-        alert(`Operação realizada!`); carregarDados();
+        alert(`Operação realizada!`); 
+        carregarDados();
     }
 
+    // Inicialização da página
     carregarDados();
 </script>
 </body>
