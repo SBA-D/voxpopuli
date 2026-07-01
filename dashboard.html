@@ -1,55 +1,67 @@
-async function solicitarSaque() {
-    const inputValor = document.getElementById('input-valor-saque');
-    const inputPix = document.getElementById('input-pix-saque');
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Membro</title>
+</head>
+<body>
+    <h1>Painel do Membro</h1>
+    <input type="number" id="input-valor-saque" placeholder="Valor">
+    <input type="text" id="input-pix-saque" placeholder="Chave PIX">
+    <button onclick="solicitarSaque()">Solicitar Saque</button>
 
-    // Validação simples
-    if (!inputValor || !inputPix) {
-        alert("Erro: Campos de saque não encontrados na página.");
-        return;
-    }
+    <script>
+        async function solicitarSaque() {
+            const inputValor = document.getElementById('input-valor-saque');
+            const inputPix = document.getElementById('input-pix-saque');
+            
+            if (!inputValor || !inputPix) {
+                alert("Erro: Campos não encontrados.");
+                return;
+            }
 
-    const valorSaque = parseFloat(inputValor.value);
-    const pix = inputPix.value;
-    const usuarioId = String(localStorage.getItem('vox_usuario')).trim();
+            const valorSaque = parseFloat(inputValor.value);
+            const pix = inputPix.value;
+            const usuarioId = String(localStorage.getItem('vox_usuario') || '').trim();
 
-    if (!valorSaque || isNaN(valorSaque) || valorSaque <= 0) {
-        alert("Valor inválido.");
-        return;
-    }
+            if (!valorSaque || isNaN(valorSaque) || valorSaque <= 0) {
+                alert("Valor inválido.");
+                return;
+            }
 
-    try {
-        // Busca o membro e o saldo
-        const { data: membro, error: fetchError } = await clientSupabase
-            .from('membros')
-            .select('id, saldo')
-            .eq('id', usuarioId)
-            .maybeSingle();
+            try {
+                const { data: membro, error: fetchError } = await clientSupabase
+                    .from('membros')
+                    .select('id, saldo')
+                    .eq('id', usuarioId)
+                    .maybeSingle();
 
-        if (fetchError || !membro) {
-            alert("Erro: Usuário não localizado no banco.");
-            return;
+                if (fetchError || !membro) {
+                    alert("Erro: Usuário não localizado.");
+                    return;
+                }
+
+                const saldoAtual = parseFloat(membro.saldo || 0);
+
+                if (saldoAtual < valorSaque) {
+                    alert("Saldo insuficiente.");
+                    return;
+                }
+
+                const { error: updateError } = await clientSupabase
+                    .from('membros')
+                    .update({ saldo: (saldoAtual - valorSaque) })
+                    .eq('id', usuarioId);
+
+                if (updateError) throw updateError;
+
+                alert("Sucesso! Saque solicitado.");
+                location.reload();
+            } catch (err) {
+                console.error("Erro:", err);
+                alert("Erro técnico ao processar saque.");
+            }
         }
-
-        const saldoAtual = parseFloat(membro.saldo || 0);
-
-        if (saldoAtual < valorSaque) {
-            alert("Saldo insuficiente. Você tem: R$ " + saldoAtual);
-            return;
-        }
-
-        // Tenta atualizar
-        const { error: updateError } = await clientSupabase
-            .from('membros')
-            .update({ saldo: (saldoAtual - valorSaque) })
-            .eq('id', usuarioId);
-
-        if (updateError) throw updateError;
-
-        alert("Sucesso! Saldo atualizado.");
-        location.reload();
-
-    } catch (err) {
-        console.error("Erro ao processar:", err);
-        alert("Erro técnico ao atualizar saldo.");
-    }
-}
+    </script>
+</body>
+</html>
