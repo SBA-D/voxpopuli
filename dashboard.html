@@ -5,62 +5,176 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxPopuli - Trader Painel</title>
     <style>
-        :root { --bg: #0b0f19; --card: #111827; --blue: #2563eb; --green: #10b981; --text: #f3f4f6; --border: #374151; --red: #ef4444; --yellow: #f59e0b; }
+        :root {
+            --bg-main: #0b0f19; --bg-card: #111827; --bg-input: #1f2937;
+            --primary-blue: #2563eb; --accent-green: #10b981;
+            --text-main: #f3f4f6; --border-color: #374151;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background: var(--bg); color: var(--text); padding: 20px; }
-        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
         .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
-        .tabs { display: flex; gap: 10px; margin: 20px 0; }
-        .tab-btn { background: #1f2937; border: none; padding: 10px 20px; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
-        .tab-btn.active { background: var(--blue); }
-        .ativo-card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); }
-        .btn-acao { padding: 8px 14px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; }
-        .btn-sair { background: #374151; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        /* Tabela de histórico e modal omitidos para brevidade, mantenha os seus originais */
+        .user-nav { display: flex; align-items: center; gap: 15px; }
+        .saldo-box { font-size: 16px; }
+        .btn-sair { background: #374151; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-sair:hover { background: #4b5563; }
+        .tabs { display: flex; gap: 15px; margin-bottom: 25px; }
+        .tab-btn { flex: 1; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); color: white; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .tab-btn.active { background: var(--primary-blue); border-color: #60a5fa; }
+        .container-enquetes { display: flex; flex-direction: column; gap: 15px; }
+        .card-enquete { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #9ca3af; }
+        .card-pergunta { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .grupo-botoes { display: flex; gap: 10px; margin-bottom: 12px; }
+        .btn-opcao { flex: 1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: white; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-opcao:hover { border-color: #60a5fa; }
+        .btn-opcao.selecionado { background: var(--primary-blue); border-color: #60a5fa; }
+        .input-aposta { width: 100%; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 6px; color: white; margin-bottom: 10px; }
+        .btn-confirmar { width: 100%; padding: 12px; background: var(--accent-green); color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<header>
-    <div class="logo">VoxPopuli 📈</div>
-    <div>
-        Saldo: <b id="txt-saldo" style="color:var(--green)">0.00</b> Moedas 
-        <button class="btn-sair" onclick="deslogar()">Sair</button>
+    <header>
+        <div class="logo">VoxPopuli 📈</div>
+        <div class="user-nav">
+            <span class="saldo-box">Saldo: <span id="txt-saldo" style="color: var(--accent-green); font-weight: bold;">0.00</span> Moedas</span>
+            <button class="btn-sair" onclick="deslogarUsuario()">Sair</button>
+        </div>
+    </header>
+
+    <div style="max-width: 800px; margin: 0 auto;">
+        <!-- Abas de Navegação -->
+        <div class="tabs">
+            <button class="tab-btn active" id="btn-tab-financeiro" onclick="mudarAba('Mercado Financeiro')">📈 Mercado Financeiro</button>
+            <button class="tab-btn" id="btn-tab-esporte" onclick="mudarAba('Esporte')">⚽ Esporte</button>
+        </div>
+
+        <!-- Lista de Previsões Ativas -->
+        <div class="container-enquetes" id="lista-enquetes">
+            <!-- Injetado dinamicamente via JS -->
+        </div>
     </div>
-</header>
 
-<div class="tabs">
-    <button class="tab-btn active" onclick="filtrar('Mercado Financeiro', this)">📈 Mercado Financeiro</button>
-    <button class="tab-btn" onclick="filtrar('Esporte', this)">⚽ Esporte</button>
-</div>
+    <script>
+        const SUPABASE_URL = "https://xxxzluqjgqwkpzjjxpbj.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eHpsdXFqZ3F3a3B6amp4cGJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTA2NjcsImV4cCI6MjA5ODE4NjY2N30.VzGPY5L8EhKt7-ARJaShpM6mMl8kA2tlRG_S4dtUPzc";
+        const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-<div id="lista-previsoes"></div>
+        let usuarioLogado = localStorage.getItem('vox_usuario') || "teste_user"; 
+        let abaAtual = "Mercado Financeiro";
+        let selecoesModificadas = {};
 
-<!-- ... (Mantenha o resto do seu HTML original de Histórico e Modal aqui embaixo) ... -->
+        // --- FUNÇÃO DE LOGOUT (CORRIGIDA) ---
+        function deslogarUsuario() {
+            localStorage.removeItem('vox_usuario');
+            window.location.href = 'index.html';
+        }
 
-<script>
-    // ... (Mantenha suas variáveis de configuração e funções Supabase) ...
+        async function carregarPainel() {
+            // Atualiza Saldo do Usuário
+            const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+            if(m) { document.getElementById('txt-saldo').innerText = parseFloat(m.saldo).toFixed(2); }
 
-    function filtrar(cat, btn) { 
-        categoriaAtual = cat; 
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
-        btn.classList.add('active'); 
-        carregarDados(); 
-    }
+            // Puxa Enquetes do Banco
+            const { data: enquetes } = await clientSupabase.from('enquetes').select('*').eq('categoria', abaAtual);
+            const container = document.getElementById('lista-enquetes');
+            container.innerHTML = "";
 
-    // A lógica de carregar e apostar permanece a mesma, pois o backend (Supabase) 
-    // é quem vai processar o rateio do prêmio depois.
-    async function apostar(id, op, nomeOpcao) {
-        const qInput = prompt(`Quantas moedas deseja injetar em "${nomeOpcao}"?`); 
-        const q = parseFloat(qInput);
-        if(!q || q > saldoAtual) { alert("Saldo insuficiente ou valor inválido."); return; }
-        
-        await clientSupabase.from('historico_apostas').insert([{ membro_id: usuarioLogado, enquete_id: id.toString(), opcao_escolhida: op.toString(), valor_total: q }]);
-        await clientSupabase.from('membros').update({ saldo: saldoAtual - q }).eq('id', usuarioLogado);
-        alert(`Aposta confirmada!`); 
-        carregarDados();
-    }
-</script>
+            if(!enquetes || enquetes.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:gray; padding:4px;">Nenhuma previsão disponível nesta categoria no momento.</div>`;
+                return;
+            }
+
+            enquetes.forEach(enq => {
+                let tituloLimpo = enq.pergunta;
+                let op1 = "Opção 1", op2 = "Opção 2";
+
+                // Tratamento e separação da string injetada pelo ADM
+                if (enq.pergunta.includes("[")) {
+                    try {
+                        const partes = enq.pergunta.split(" [");
+                        tituloLimpo = partes[0];
+                        const opcoesRaw = partes[1].replace("]", "").split(" vs ");
+                        if(enq.categoria === "Mercado Financeiro") {
+                            // Exemplo: WIN1! [f: 125300 vs ACIMA vs ABAIXO]
+                            tituloLimpo = `${partes[0]} (Ref: ${opcoesRaw[0].replace('f: ', '')})`;
+                            op1 = opcoesRaw[1] || "ACIMA";
+                            op2 = opcoesRaw[2] || "ABAIXO";
+                        } else {
+                            op1 = opcoesRaw[0];
+                            op2 = opcoesRaw[1];
+                        }
+                    } catch(e) { console.error("Erro no parse da pergunta", e); }
+                }
+
+                let idUnico = enq.id;
+                let sel = selecoesModificadas[idUnico] || "";
+
+                container.innerHTML += `
+                    <div class="card-enquete">
+                        <div class="card-header">
+                            <span>MERCADO ATIVO</span>
+                            <span style="color:#60a5fa;">Pote Coletivo Dinâmico</span>
+                        </div>
+                        <div class="card-pergunta">${tituloLimpo}</div>
+                        <div class="grupo-botoes">
+                            <button class="btn-opcao ${sel === '1' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '1')">${op1}</button>
+                            <button class="btn-opcao ${sel === '2' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '2')">${op2}</button>
+                        </div>
+                        <input type="number" id="val-${idUnico}" class="input-aposta" placeholder="Quantidade de moedas para alocar..." min="1">
+                        <button class="btn-confirmar" onclick="enviarOrdemPrevisao('${idUnico}')">Confirmar Operação</button>
+                    </div>
+                `;
+            });
+        }
+
+        function selecionarLado(id, opcao) {
+            selecoesModificadas[id] = opcao.toString();
+            carregarPainel();
+        }
+
+        async function enviarOrdemPrevisao(idEnquete) {
+            let escolha = selecoesModificadas[idEnquete];
+            let valorInput = document.getElementById(`val-${idEnquete}`).value;
+
+            if(!escolha) { alert("Por favor, selecione uma das opções antes de confirmar!"); return; }
+            if(!valorInput || parseFloat(valorInput) <= 0) { alert("Insira uma quantidade de moedas válida!"); return; }
+
+            let valorAlocado = parseFloat(valorInput);
+
+            // Validação de saldo
+            const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+            if(!m || parseFloat(m.saldo) < valorAlocado) { alert("Saldo insuficiente para realizar essa operação!"); return; }
+
+            // Deduz o saldo do usuário
+            let novoSaldo = parseFloat(m.saldo) - valorAlocado;
+            await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
+
+            // Insere no histórico de apostas para o cálculo do rateio do pote
+            await clientSupabase.from('historico_apostas').insert([{
+                enquete_id: idEnquete.toString(),
+                membro_id: usuarioLogado,
+                opcao_escolhida: escolha,
+                valor_total: valorAlocado
+            }]);
+
+            alert("Operação realizada com sucesso! Suas moedas foram alocadas no pote desta previsão.");
+            delete selecoesModificadas[idEnquete];
+            carregarPainel();
+        }
+
+        function mudarAba(novaAba) {
+            abaAtual = novaAba;
+            document.getElementById('btn-tab-financeiro').classList.toggle('active', novaAba === 'Mercado Financeiro');
+            document.getElementById('btn-tab-esporte').classList.toggle('active', novaAba === 'Esporte');
+            carregarPainel();
+        }
+
+        // Inicialização e atualização em tempo real
+        carregarPainel();
+        setInterval(carregarPainel, 10000);
+    </script>
 </body>
 </html>
