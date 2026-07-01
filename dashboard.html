@@ -1,46 +1,33 @@
 async function solicitarSaque() {
     const inputValor = document.getElementById('input-valor-saque');
     const inputPix = document.getElementById('input-pix-saque');
-
     if (!inputValor || !inputPix) {
         alert("Erro no formulário: Campos não encontrados.");
         return;
     }
-
     const valorSaque = parseFloat(inputValor.value);
     const pix = inputPix.value;
-    // Garante que o ID é uma string limpa
     const usuarioId = String(localStorage.getItem('vox_usuario')).trim();
-
     if (!valorSaque || isNaN(valorSaque) || valorSaque <= 0) {
         alert("Valor inválido.");
         return;
     }
-
     try {
-        // 1. Busca saldo atual do membro
         const { data: membro, error: fetchError } = await clientSupabase
             .from('membros')
             .select('id, saldo')
             .eq('id', usuarioId)
             .maybeSingle();
-
         if (fetchError || !membro) {
             alert("Erro: Usuário não localizado.");
             return;
         }
-
         const saldoAtual = parseFloat(membro.saldo || 0);
-
-        // 2. Valida saldo
         if (saldoAtual < valorSaque) {
             alert("Saldo insuficiente.");
             return;
         }
-
         const novoSaldo = saldoAtual - valorSaque;
-
-        // 3. Regista o pedido
         const { error: insertError } = await clientSupabase
             .from('saques')
             .insert([{ 
@@ -49,20 +36,14 @@ async function solicitarSaque() {
                 chave_pix: pix, 
                 status: 'PENDENTE' 
             }]);
-
         if (insertError) throw insertError;
-
-        // 4. Deduz o saldo imediatamente
         const { error: updateError } = await clientSupabase
             .from('membros')
             .update({ saldo: novoSaldo })
             .eq('id', usuarioId);
-
         if (updateError) throw updateError;
-
         alert("Sucesso! Saque solicitado e saldo atualizado.");
         location.reload();
-
     } catch (err) {
         console.error("Erro técnico:", err);
         alert("Ocorreu um erro técnico. Verifique o console F12.");
