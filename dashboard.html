@@ -1,35 +1,90 @@
-async function solicitarSaque() {
-    try {
-        const inputValor = document.getElementById('input-valor-saque');
-        const inputPix = document.getElementById('input-pix-saque');
-        
-        if (!inputValor || !inputPix) throw new Error("Campos não encontrados no HTML");
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Membro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Painel do Membro</h1>
+    
+    <div>
+        <input type="number" id="input-valor-saque" placeholder="Valor para sacar">
+        <input type="text" id="input-pix-saque" placeholder="Sua chave PIX">
+        <button onclick="solicitarSaque()">Solicitar Saque</button>
+    </div>
 
-        const valorSaque = parseFloat(inputValor.value);
-        const pix = inputPix.value;
-        const usuarioId = String(localStorage.getItem('vox_usuario') || '').trim();
+    <script>
+        // Configuração idêntica à do seu adm.html
+        const SUPABASE_URL = "https://xxxzluqjgqwkpzjjxpbj.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eHpsdXFqZ3F3a3B6amp4cGJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTA2NjcsImV4cCI6MjA5ODE4NjY2N30.VzGPY5L8EhKt7-ARJaShpM6mMl8kA2tlRG_S4dtUPzc";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        console.log("Debug - ID do Usuário:", usuarioId);
-        if (!usuarioId || usuarioId === "null") throw new Error("Usuário não logado (vox_usuario vazio)");
+        async function solicitarSaque() {
+            const inputValor = document.getElementById('input-valor-saque');
+            const inputPix = document.getElementById('input-pix-saque');
+            
+            const valorSaque = parseFloat(inputValor.value);
+            const pix = inputPix.value;
+            const usuarioId = String(localStorage.getItem('vox_usuario') || '').trim();
 
-        // Verifica a conexão
-        if (typeof clientSupabase === 'undefined') throw new Error("clientSupabase não carregado");
+            if (!usuarioId || usuarioId === "null") {
+                alert("Erro: Usuário não logado.");
+                return;
+            }
 
-        // Busca
-        const { data: membro, error: fetchError } = await clientSupabase
-            .from('membros')
-            .select('id, saldo')
-            .eq('id', usuarioId)
-            .maybeSingle();
+            if (!valorSaque || valorSaque <= 0) {
+                alert("Valor inválido.");
+                return;
+            }
 
-        if (fetchError) throw fetchError;
-        if (!membro) throw new Error("Membro não encontrado no banco");
+            try {
+                // 1. Busca saldo
+                const { data: membro, error: fetchError } = await db
+                    .from('membros')
+                    .select('saldo')
+                    .eq('id', usuarioId)
+                    .maybeSingle();
 
-        console.log("Membro encontrado:", membro);
-        alert("Sucesso! O sistema conectou ao banco. Veja o console F12 para os dados.");
+                if (fetchError) throw fetchError;
+                if (!membro) throw new Error("Usuário não encontrado.");
 
-    } catch (err) {
-        console.error("ERRO DETALHADO:", err);
-        alert("Erro: " + err.message);
-    }
-}
+                const saldoAtual = parseFloat(membro.saldo || 0);
+
+                // 2. Valida saldo
+                if (saldoAtual < valorSaque) {
+                    alert("Saldo insuficiente. Você possui: R$ " + saldoAtual.toFixed(2));
+                    return;
+                }
+
+                // 3. Insere pedido
+                const { error: insertError } = await db
+                    .from('saques')
+                    .insert([{ 
+                        membro_id: usuarioId, 
+                        moedas_sacar: valorSaque, 
+                        chave_pix: pix, 
+                        status: 'PENDENTE' 
+                    }]);
+
+                if (insertError) throw insertError;
+
+                // 4. Deduz saldo
+                const { error: updateError } = await db
+                    .from('membros')
+                    .update({ saldo: (saldoAtual - valorSaque) })
+                    .eq('id', usuarioId);
+
+                if (updateError) throw updateError;
+
+                alert("Sucesso! Saque solicitado.");
+                location.reload();
+
+            } catch (err) {
+                console.error("Erro técnico:", err);
+                alert("Erro ao processar: " + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
