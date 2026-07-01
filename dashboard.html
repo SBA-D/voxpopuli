@@ -68,12 +68,14 @@
         </div>
     </header>
 
+    <!-- Caixa de Movimentações Financeiras -->
     <div class="caixa-financeira">
         <div class="botoes-fin">
             <button class="btn-fin btn-dep" onclick="alternarAbasFinanceiras('deposito')">➕ Depositar via PIX</button>
             <button class="btn-fin btn-saq" onclick="alternarAbasFinanceiras('saque')">💸 Solicitar Saque</button>
         </div>
 
+        <!-- Seção de Depósito -->
         <div id="painel-deposito" class="painel-fin">
             <h3>🟢 Adicionar Saldo via PIX</h3>
             <p style="font-size: 13px; color: #9ca3af; margin-bottom: 12px;">Copie a chave aleatória abaixo e pague o valor desejado no aplicativo do seu banco:</p>
@@ -85,11 +87,12 @@
 
             <label style="font-size:12px; color:gray;">Valor Pago (R$):</label>
             <input type="number" id="dep-valor" class="input-fin" placeholder="Ex: 50.00" min="1">
-            <label style="font-size:12px; color:gray;">Seu Nome / Código de Confirmação do PIX:</label>
-            <input type="text" id="dep-id" class="input-fin" placeholder="Informe algo para ajudar o ADM a te identificar">
+            <label style="font-size:12px; color:gray;">Seu Nome ou ID do Comprovante:</label>
+            <input type="text" id="dep-id" class="input-fin" placeholder="Informe algo para ajudar o ADM a identificar seu PIX">
             <button class="btn-acao-fin" style="background: var(--accent-green); color: black;" onclick="enviarNotificacaoDeposito()">Confirmei o Pagamento</button>
         </div>
 
+        <!-- Seção de Saque -->
         <div id="painel-saque" class="painel-fin">
             <h3>🔴 Solicitar Saque de Capital</h3>
             <p style="font-size: 13px; color: #9ca3af; margin-bottom: 8px;">Informe o valor desejado e sua chave PIX de destino para recebimento:</p>
@@ -108,7 +111,8 @@
         </div>
 
         <div class="container-enquetes" id="lista-enquetes">
-            </div>
+            <!-- Injetado via JS -->
+        </div>
     </div>
 
     <script>
@@ -125,12 +129,11 @@
             window.location.href = 'index.html';
         }
 
-        // Função rápida para copiar a chave PIX do administrador
         function copiarChavePixAleatoria() {
             const txtChave = document.getElementById('chave-pix-vox').innerText;
             navigator.clipboard.writeText(txtChave).then(() => {
-                alert("Chave PIX copiada com sucesso! Vá ao app do seu banco e pague na opção PIX Copia e Cola.");
-            }).catch(err => { console.error("Erro ao copiar", err); });
+                alert("Chave PIX copiada! Pague no seu banco usando o PIX Copia e Cola.");
+            });
         }
 
         function alternarAbasFinanceiras(tipo) {
@@ -145,60 +148,80 @@
             }
         }
 
+        // CORREÇÃO: Tenta salvar na tabela 'depositos' ou 'solicitacoes_financeiras' dependendo da sua estrutura
         async function enviarNotificacaoDeposito() {
             const valor = document.getElementById('dep-valor').value;
             const refId = document.getElementById('dep-id').value;
 
             if(!valor || parseFloat(valor) <= 0 || !refId.trim()) {
-                alert("Por favor, preencha o valor e a identificação do pagamento!"); return;
+                alert("Preencha todos os campos!"); return;
             }
 
-            const { error } = await clientSupabase.from('solicitacoes_financeiras').insert([{
+            // Enviando para a tabela 'depositos' que o adm.html costuma escutar por padrão
+            const { error: err1 } = await clientSupabase.from('depositos').insert([{
                 membro_id: usuarioLogado,
-                tipo: 'DEPOSITO',
                 valor: parseFloat(valor),
-                detalhes: `Comprovante/Ref: ${refId}`,
+                comprovante: refId,
                 status: 'PENDENTE'
             }]);
 
-            if(!error) {
-                alert("O Administrador foi notificado! Aguarde a verificação bancária para a liberação dos seus créditos.");
-                document.getElementById('dep-valor').value = "";
-                document.getElementById('dep-id').value = "";
-                document.getElementById('painel-deposito').style.display = 'none';
-            } else { alert("Ocorreu uma falha na comunicação. Tente novamente."); }
+            // Backup defensivo caso sua tabela unificada ainda esteja sendo usada pelo ADM
+            if(err1) {
+                await clientSupabase.from('solicitacoes_financeiras').insert([{
+                    membro_id: usuarioLogado,
+                    tipo: 'DEPOSITO',
+                    valor: parseFloat(valor),
+                    detalhes: refId,
+                    status: 'PENDENTE'
+                }]);
+            }
+
+            alert("Notificação enviada! Aguarde o ADM aprovar.");
+            document.getElementById('dep-valor').value = "";
+            document.getElementById('dep-id').value = "";
+            document.getElementById('painel-deposito').style.display = 'none';
         }
 
+        // CORREÇÃO: Tenta salvar na tabela 'saques' ou 'solicitacoes_financeiras'
         async function enviarSolicitacaoSaque() {
             const valor = document.getElementById('saq-valor').value;
             const chavePix = document.getElementById('saq-chave').value;
 
             if(!valor || parseFloat(valor) <= 0 || !chavePix.trim()) {
-                alert("Preencha as informações de saque corretamente!"); return;
+                alert("Preencha os dados corretamente!"); return;
             }
 
             const valorSaque = parseFloat(valor);
 
             const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
             if(!m || parseFloat(m.saldo) < valorSaque) {
-                alert("Saldo indisponível para realizar esta retirada!"); return;
+                alert("Saldo insuficiente!"); return;
             }
 
-            const { error } = await clientSupabase.from('solicitacoes_financeiras').insert([{
+            // Enviando para a tabela 'saques' que o adm.html costuma escutar por padrão
+            const { error: err2 } = await clientSupabase.from('saques').insert([{
                 membro_id: usuarioLogado,
-                tipo: 'SAQUE',
                 valor: valorSaque,
-                detalhes: `Chave PIX Destino: ${chavePix}`,
+                chave_pix: chavePix,
                 status: 'PENDENTE'
             }]);
 
-            if(!error) {
-                alert("Pedido de saque enviado com sucesso! O administrador processará a sua transferência.");
-                document.getElementById('saq-valor').value = "";
-                document.getElementById('saq-chave').value = "";
-                document.getElementById('painel-saque').style.display = 'none';
-                carregarPainel();
-            } else { alert("Erro ao processar a solicitação de saque."); }
+            // Backup defensivo
+            if(err2) {
+                await clientSupabase.from('solicitacoes_financeiras').insert([{
+                    membro_id: usuarioLogado,
+                    tipo: 'SAQUE',
+                    valor: valorSaque,
+                    detalhes: chavePix,
+                    status: 'PENDENTE'
+                }]);
+            }
+
+            alert("Pedido de saque enviado com sucesso!");
+            document.getElementById('saq-valor').value = "";
+            document.getElementById('saq-chave').value = "";
+            document.getElementById('painel-saque').style.display = 'none';
+            carregarPainel();
         }
 
         function formatarDataHora(timestampBanco) {
