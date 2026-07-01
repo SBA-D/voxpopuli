@@ -61,7 +61,7 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eHpsdXFqZ3F3a3B6amp4cGJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTA2NjcsImV4cCI6MjA5ODE4NjY2N30.VzGPY5L8EhKt7-ARJaShpM6mMl8kA2tlRG_S4dtUPzc";
         const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let usuarioLogado = localStorage.getItem('vox_usuario') || "teste_user"; 
+        let usuarioLogado = localStorage.getItem('vox_usuario') || "thiagohelth@gmail.com"; 
         let abaAtual = "Mercado Financeiro";
         let selecoesModificadas = {};
 
@@ -70,12 +70,14 @@
             window.location.href = 'index.html';
         }
 
-        // Nova função interna para processar e formatar o timestamp do Supabase
         function formatarDataHora(timestampBanco) {
-            if(!timestampBanco) return "Ativo Agora";
-            const dataObjeto = new Date(timestampBanco);
+            // Se o timestamp vier vazio ou corrompido, gera a data/hora atual para evitar falhas de renderização
+            const dataObjeto = timestampBanco ? new Date(timestampBanco) : new Date();
             
-            // Converte para DD/MM/AAAA e pega hora/minuto local
+            if (isNaN(dataObjeto.getTime())) {
+                return `📅 Operação Ativa`;
+            }
+
             const dataFormatada = dataObjeto.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
             const horaFormatada = dataObjeto.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
             
@@ -83,66 +85,75 @@
         }
 
         async function carregarPainel() {
-            const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
-            if(m) { document.getElementById('txt-saldo').innerText = parseFloat(m.saldo).toFixed(2); }
+            try {
+                const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+                if(m) { document.getElementById('txt-saldo').innerText = parseFloat(m.saldo).toFixed(2); }
 
-            // Puxa as enquetes ordenando automaticamente pelas mais recentes (created_at desc)
-            const { data: enquetes } = await clientSupabase.from('enquetes').select('*').eq('categoria', abaAtual).order('created_at', { ascending: false });
-            const container = document.getElementById('lista-enquetes');
-            container.innerHTML = "";
+                // Puxamos os dados de forma estável. Caso queira reordenar, fazemos direto no array para evitar travas do banco
+                let { data: enquetes, error } = await clientSupabase.from('enquetes').select('*').eq('categoria', abaAtual);
+                
+                if (error) { console.error("Erro na busca:", error); return; }
 
-            if(!enquetes || enquetes.length === 0) {
-                container.innerHTML = `<div style="text-align:center; color:gray; padding:4px;">Nenhuma previsão disponível nesta categoria no momento.</div>`;
-                return;
-            }
+                const container = document.getElementById('lista-enquetes');
+                container.innerHTML = "";
 
-            enquetes.forEach(enq => {
-                let tituloLimpo = enq.pergunta;
-                let op1 = "Opção 1", op2 = "Opção 2";
-                let textoContexto = "";
-
-                // Geração da string de tempo formatada para o card atual
-                let stringTempo = formatarDataHora(enq.created_at);
-
-                if (enq.pergunta.includes("[")) {
-                    try {
-                        const partes = enq.pergunta.split(" [");
-                        tituloLimpo = partes[0];
-                        const opcoesRaw = partes[1].replace("]", "").split(" vs ");
-                        
-                        if(enq.categoria === "Mercado Financeiro") {
-                            tituloLimpo = `${partes[0]} <span style="color:var(--accent-green);">(Ref: ${opcoesRaw[0].replace('f: ', '')})</span>`;
-                            op1 = opcoesRaw[1] || "ACIMA";
-                            op2 = opcoesRaw[2] || "ABAIXO";
-                            textoContexto = "📊 <b>Análise Diária:</b> O fechamento oficial deste ativo no pregão de hoje terminará <b>ACIMA</b> ou <b>ABAIXO</b> da referência base?";
-                        } else {
-                            op1 = opcoesRaw[0];
-                            op2 = opcoesRaw[1];
-                            textoContexto = "🏆 <b>Palpite Esportivo:</b> Faça sua análise e defina qual será o desfecho deste confronto na vida real.";
-                        }
-                    } catch(e) { console.error("Erro no parse da pergunta", e); }
+                if(!enquetes || enquetes.length === 0) {
+                    container.innerHTML = `<div style="text-align:center; color:gray; padding:20px;">Nenhuma previsão disponível nesta categoria no momento.</div>`;
+                    return;
                 }
 
-                let idUnico = enq.id;
-                let sel = selecoesModificadas[idUnico] || "";
+                // Ordenação manual no Front-end para garantir segurança absoluta contra campos vazios
+                enquetes.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
 
-                container.innerHTML += `
-                    <div class="card-enquete">
-                        <div class="card-header">
-                            <span>MERCADO ATIVO</span>
-                            <span class="data-enquete">${stringTempo}</span>
+                enquetes.forEach(enq => {
+                    let tituloLimpo = enq.pergunta;
+                    let op1 = "Opção 1", op2 = "Opção 2";
+                    let textoContexto = "";
+
+                    let stringTempo = formatarDataHora(enq.created_at);
+
+                    if (enq.pergunta.includes("[")) {
+                        try {
+                            const partes = enq.pergunta.split(" [");
+                            tituloLimpo = partes[0];
+                            const opcoesRaw = partes[1].replace("]", "").split(" vs ");
+                            
+                            if(enq.categoria === "Mercado Financeiro") {
+                                tituloLimpo = `${partes[0]} <span style="color:var(--accent-green);">(Ref: ${opcoesRaw[0].replace('f: ', '')})</span>`;
+                                op1 = opcoesRaw[1] || "ACIMA";
+                                op2 = opcoesRaw[2] || "ABAIXO";
+                                textoContexto = "📊 <b>Análise Diária:</b> O fechamento oficial deste ativo no pregão de hoje terminará <b>ACIMA</b> ou <b>ABAIXO</b> da referência base?";
+                            } else {
+                                op1 = opcoesRaw[0];
+                                op2 = opcoesRaw[1];
+                                textoContexto = "🏆 <b>Palpite Esportivo:</b> Faça sua análise e defina qual será o desfecho deste confronto na vida real.";
+                            }
+                        } catch(e) { console.error("Erro no parse da pergunta", e); }
+                    }
+
+                    let idUnico = enq.id;
+                    let sel = selecoesModificadas[idUnico] || "";
+
+                    container.innerHTML += `
+                        <div class="card-enquete">
+                            <div class="card-header">
+                                <span>MERCADO ATIVO</span>
+                                <span class="data-enquete">${stringTempo}</span>
+                            </div>
+                            <div class="card-pergunta">${tituloLimpo}</div>
+                            <div class="texto-contexto">${textoContexto}</div>
+                            <div class="grupo-botoes">
+                                <button class="btn-opcao ${sel === '1' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '1')">${op1}</button>
+                                <button class="btn-opcao ${sel === '2' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '2')">${op2}</button>
+                            </div>
+                            <input type="number" id="val-${idUnico}" class="input-aposta" placeholder="Quantidade de moedas para alocar..." min="1">
+                            <button class="btn-confirmar" onclick="enviarOrdemPrevisao('${idUnico}')">Confirmar Operação</button>
                         </div>
-                        <div class="card-pergunta">${tituloLimpo}</div>
-                        <div class="texto-contexto">${textoContexto}</div>
-                        <div class="grupo-botoes">
-                            <button class="btn-opcao ${sel === '1' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '1')">${op1}</button>
-                            <button class="btn-opcao ${sel === '2' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '2')">${op2}</button>
-                        </div>
-                        <input type="number" id="val-${idUnico}" class="input-aposta" placeholder="Quantidade de moedas para alocar..." min="1">
-                        <button class="btn-confirmar" onclick="enviarOrdemPrevisao('${idUnico}')">Confirmar Operação</button>
-                    </div>
-                `;
-            });
+                    `;
+                });
+            } catch (err) {
+                console.error("Erro crítico de execução:", err);
+            }
         }
 
         function selecionarLado(id, opcao) {
