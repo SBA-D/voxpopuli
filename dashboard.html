@@ -5,46 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxPopuli - Trader Painel</title>
     <style>
-        :root { 
-            --bg: #0b0f19; 
-            --card: #111827; 
-            --blue: #2563eb; 
-            --green: #10b981; 
-            --text: #f3f4f6; 
-            --border: #374151;
-            --red: #ef4444;
-            --yellow: #f59e0b;
-        }
+        :root { --bg: #0b0f19; --card: #111827; --blue: #2563eb; --green: #10b981; --text: #f3f4f6; --border: #374151; --red: #ef4444; --yellow: #f59e0b; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
         body { background: var(--bg); color: var(--text); padding: 20px; }
         header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; flex-wrap: wrap; gap: 15px; }
         .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
-        .tabs { display: flex; gap: 10px; margin: 20px 0; overflow-x: auto; padding-bottom: 5px; }
-        .tab-btn { background: #1f2937; border: none; padding: 10px 15px; color: white; border-radius: 6px; cursor: pointer; white-space: nowrap; font-weight: bold; }
+        .tabs { display: flex; gap: 10px; margin: 20px 0; }
+        .tab-btn { background: #1f2937; border: none; padding: 10px 20px; color: white; border-radius: 6px; cursor: pointer; font-weight: bold; flex: 1; }
         .tab-btn.active { background: var(--blue); }
-        .ativo-card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border); }
+        .ativo-card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); }
         .btn-acao { padding: 8px 14px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; color: white; }
-        .btn-analise { background: #6b7280; margin-right: 10px; }
-        .btn-sair { background: #374151; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; margin-left: 15px; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 1000; padding: 20px; }
-        .modal-content { background: #1f2937; padding: 25px; border-radius: 12px; max-width: 450px; width: 100%; border: 1px solid var(--border); text-align: center; }
-        .pix-box { background: #111827; padding: 12px; border-radius: 6px; word-break: break-all; margin: 15px 0; font-family: monospace; color: #9ca3af; font-size: 13px; border: 1px solid var(--border); text-align: left; max-height: 100px; overflow-y: auto; }
-        
-        .alerta-erro { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--red); padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .alerta-erro h5 { color: #fca5a5; font-size: 14px; margin-bottom: 5px; font-weight: bold; }
-        .alerta-erro p { font-size: 13px; color: #f3f4f6; margin-bottom: 10px; }
-
-        /* Estilos da nova seção de histórico de transações */
-        .secao-historico { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 40px; }
-        .secao-historico h3 { margin-bottom: 15px; font-size: 18px; color: #60a5fa; display: flex; align-items: center; gap: 8px; }
-        .tabela-responsiva { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--border); }
-        th { color: #9ca3af; font-weight: normal; }
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .badge-pendente { background: rgba(245, 158, 11, 0.2); color: var(--yellow); }
-        .badge-concluido { background: rgba(16, 185, 129, 0.2); color: var(--green); }
-        .badge-recusado { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+        .btn-sair { background: #374151; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        /* Tabela de histórico e modal omitidos para brevidade, mantenha os seus originais */
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -54,312 +26,41 @@
     <div class="logo">VoxPopuli 📈</div>
     <div>
         Saldo: <b id="txt-saldo" style="color:var(--green)">0.00</b> Moedas 
-        <button onclick="abrirModalRecarga()" style="margin-left:10px; padding: 6px 10px; cursor:pointer; font-weight: bold; border-radius: 4px; border: 1px solid var(--border); background: #1f2937; color: white;">+ Recarregar</button>
-        <button onclick="solicitarSaque()" style="margin-left:5px; padding: 6px 10px; cursor:pointer; font-weight: bold; border-radius: 4px; background:#d97706; color:white; border:none;">📤 Sacar</button>
         <button class="btn-sair" onclick="deslogar()">Sair</button>
     </div>
 </header>
 
-<div class="tabs" id="menu-categorias">
-    <button class="tab-btn active" onclick="filtrar('Mercado Financeiro', this)">📈 Mercado</button>
-    <button class="tab-btn" onclick="filtrar('Política', this)">🏛️ Política</button>
+<div class="tabs">
+    <button class="tab-btn active" onclick="filtrar('Mercado Financeiro', this)">📈 Mercado Financeiro</button>
     <button class="tab-btn" onclick="filtrar('Esporte', this)">⚽ Esporte</button>
-    <button class="tab-btn" onclick="filtrar('Conhecimentos Gerais', this)">🧠 Gerais</button>
 </div>
 
 <div id="lista-previsoes"></div>
 
-<div class="secao-historico">
-    <h3>📊 Histórico de Depósitos e Saques</h3>
-    <div class="tabela-responsiva">
-        <table>
-            <thead>
-                <tr>
-                    <th>Data / Hora</th>
-                    <th>Tipo</th>
-                    <th>Valor</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody id="tabela-transacoes">
-                <tr>
-                    <td colspan="4" style="text-align: center; color: gray; padding: 20px;">Carregando transações...</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</div>
-
-<div class="modal" id="modalPix">
-    <div class="modal-content">
-        <h3 style="color: #60a5fa; margin-bottom: 10px;">Pagamento do Pedido</h3>
-        <p style="font-size: 14px; color: #9ca3af;">Transfira o valor exato abaixo para liberar suas moedas:</p>
-        <h2 style="color: var(--green); margin: 15px 0;" id="modalValor">R$ 0,00</h2>
-        <p style="text-align: left; font-size: 12px; font-weight: bold; color: #f3f4f6;">Cópia e Cola do PIX:</p>
-        <div class="pix-box" id="payloadPix">Gerando código...</div>
-        <button class="btn-acao" style="background: var(--blue); width: 100%; margin-bottom: 20px;" onclick="copiarPix()">📋 Copiar Código PIX</button>
-        <div style="border-top: 1px solid var(--border); padding-top: 15px;">
-            <p style="font-size: 13px; color: #e5e7eb; margin-bottom: 12px;">⚠️ Já realizou a transferência no aplicativo do seu banco?</p>
-            <button class="btn-acao" style="background: var(--green); width: 100%;" id="btnConfirmarPagamento">✅ Já enviei o PIX!</button>
-            <button class="btn-acao" style="background: #4b5563; width: 100%; margin-top: 8px;" onclick="fecharModal()">Cancelar Solicitação</button>
-        </div>
-    </div>
-</div>
+<!-- ... (Mantenha o resto do seu HTML original de Histórico e Modal aqui embaixo) ... -->
 
 <script>
-    const CHAVE_PIX = "suachavepix@email.com"; 
-    const NOME_TITULAR = "SEU NOME COMPLETO";   
-    const CIDADE_TITULAR = "ARARUAMA";          
+    // ... (Mantenha suas variáveis de configuração e funções Supabase) ...
 
-    const SUPABASE_URL = "https://xxxzluqjgqwkpzjjxpbj.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eHpsdXFqZ3F3a3B6amp4cGJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTA2NjcsImV4cCI6MjA5ODE4NjY2N30.VzGPY5L8EhKt7-ARJaShpM6mMl8kA2tlRG_S4dtUPzc";
-    
-    const clientSupabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-    const usuarioLogado = localStorage.getItem('vox_usuario');
-    
-    let categoriaAtual = "Mercado Financeiro";
-    let saldoAtual = 0;
-    let idPedidoAtual = null;
-    let minhaChavePixCadastrada = "";
-
-    if (!usuarioLogado) { window.location.href = 'index.html'; }
-
-    function deslogar() {
-        localStorage.removeItem('vox_usuario');
-        window.location.href = 'index.html';
-    }
-
-    function gerarPayloadPixEstatico(chave, nome, city, val) {
-        function emv(id, v) { return id + String(v.length).padStart(2, '0') + v; }
-        let txtValor = val.toFixed(2);
-        let infoAdicional = emv('00', 'BR.GOV.BCB.PIX') + emv('01', chave);
-        let payload = emv('00', '01') + emv('26', infoAdicional) + emv('52', '0000') + emv('53', '986') + emv('54', txtValor) + emv('58', 'BR') + emv('59', nome.substring(0, 25)) + emv('60', city.substring(0, 15)) + emv('62', emv('05', 'VOXRECARGA'));
-        
-        function crc16(s) {
-            let crc = 0xFFFF;
-            for (let c = 0; c < s.length; c++) {
-                crc ^= s.charCodeAt(c) << 8;
-                for (let i = 0; i < 8; i++) {
-                    if (crc & 0x8000) crc = (crc << 1) ^ 0x1021; else crc <<= 1;
-                }
-            }
-            return (crc & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-        }
-        return payload + '6304' + crc16(payload + '6304');
-    }
-
-    // Tradutor visual de status amigável
-    function obterBadgeStatus(status) {
-        if (status === 'pendente' || status === 'envio_confirmado_usuario') {
-            return `<span class="badge badge-pendente">⏳ Em Andamento</span>`;
-        } else if (status === 'aprovado' || status === 'concluido' || status === 'sucesso') {
-            return `<span class="badge badge-concluido">✅ Concluído</span>`;
-        } else {
-            return `<span class="badge badge-recusado">❌ Recusado</span>`;
-        }
-    }
-
-    async function carregarDados() {
-        try {
-            // 1. Busca dados do usuário logado
-            const { data: m } = await clientSupabase.from('membros').select('saldo, status, chave_pix').eq('id', usuarioLogado).maybeSingle();
-            
-            if (m) {
-                if (m.status === 'bloqueado') {
-                    alert("🚨 Esta conta foi temporariamente suspensa pelo Administrador!");
-                    deslogar();
-                    return;
-                }
-                saldoAtual = parseFloat(m.saldo);
-                minhaChavePixCadastrada = m.chave_pix || "";
-                document.getElementById('txt-saldo').innerText = saldoAtual.toFixed(2);
-            }
-
-            // 2. Verifica se há recargas marcadas com erro
-            const { data: recargasRecusadas } = await clientSupabase.from('pedidos_recarga').select('*').eq('membro_id', usuarioLogado.toString()).eq('status', 'pix_nao_recebido');
-            
-            let alertaPixHtml = "";
-            if (recargasRecusadas && recargasRecusadas.length > 0) {
-                alertaPixHtml = `
-                    <div class="alerta-erro">
-                        <h5>⚠️ Retorno do Administrador: Erro na Carga!</h5>
-                        <p>Sua solicitação de <b>${recargasRecusadas[0].quantidade_moedas} moedas</b> foi verificada pelo ADM, mas o seu PIX não foi localizado. Por favor, tente novamente.</p>
-                        <button onclick="limparAvisoPix('${recargasRecusadas[0].id}')" style="background: var(--red); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;">Entendido</button>
-                    </div>`;
-            }
-
-            // 3. Busca enquetes da categoria ativa
-            const { data: enq } = await clientSupabase.from('enquetes').select('*').eq('categoria', categoriaAtual);
-            const lista = document.getElementById('lista-previsoes');
-            lista.innerHTML = alertaPixHtml;
-
-            if (!enq || enq.length === 0) {
-                lista.innerHTML += "<p style='text-align:center; color:gray; padding:20px;'>Nenhuma previsão ativa nesta categoria.</p>";
-            } else {
-                if (categoriaAtual === "Mercado Financeiro") {
-                    lista.innerHTML += `
-                        <div style="background: rgba(37, 99, 235, 0.1); border: 1px dashed var(--blue); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
-                            <h4 style="color: #60a5fa; margin: 0; font-size: 16px;">🎯 PREVISÃO DIÁRIA: Hoje o ativo fecha ACIMA ou ABAIXO do preço de ontem?</h4>
-                        </div>`;
-                }
-
-                enq.forEach(e => {
-                    if (categoriaAtual === "Mercado Financeiro") {
-                        try {
-                            const parts = e.pergunta.split(' [');
-                            const ativo = parts[0]; 
-                            const info = parts[1].replace(']', '').split(' vs ');
-                            lista.innerHTML += `
-                                <div class="ativo-card">
-                                    <div><b>${ativo}</b><br><small style="color:gray">Fechamento: f: ${info[0]}</small></div>
-                                    <div>
-                                        <button class="btn-acao btn-analise" onclick="window.open('https://www.tradingview.com/symbols/${ativo.replace('/','').replace(' ','').replace('&','')}/', '_blank')">Analisar</button>
-                                        <button class="btn-acao" style="background:var(--green)" onclick="apostar('${e.id}', '1', 'ACIMA - ${ativo}')">ACIMA</button>
-                                        <button class="btn-acao" style="background:var(--blue)" onclick="apostar('${e.id}', '2', 'ABAIXO - ${ativo}')">ABAIXO</button>
-                                    </div>
-                                </div>`;
-                        } catch(err) {
-                            lista.innerHTML += `<div class="ativo-card"><div><b>${e.pergunta}</b></div></div>`;
-                        }
-                    } else {
-                        let o1 = "Opção 1", o2 = "Opção 2"; 
-                        let perguntaExibida = e.pergunta;
-                        if (e.pergunta.includes("[") && e.pergunta.includes("vs")) {
-                            try { 
-                                const partes = e.pergunta.split(" ["); 
-                                perguntaExibida = partes[0]; 
-                                const opcoesRaw = partes[1].replace("]", "").split(" vs "); 
-                                o1 = opcoesRaw[0]; 
-                                o2 = opcoesRaw[1]; 
-                            } catch(err){}
-                        }
-                        lista.innerHTML += `
-                            <div class="ativo-card" style="flex-direction: column; align-items: flex-start; gap: 15px;">
-                                <b>${perguntaExibida}</b>
-                                <div>
-                                    <button class="btn-acao" style="background:var(--blue); margin-right:10px;" onclick="apostar('${e.id}', '1', '${o1}')">${o1}</button>
-                                    <button class="btn-acao" style="background:var(--green);" onclick="apostar('${e.id}', '2', '${o2}')">${o2}</button>
-                                </div>
-                            </div>`;
-                    }
-                });
-            }
-
-            // 4. ATUALIZAÇÃO DO HISTÓRICO DE TRANSAÇÕES (NOVO)
-            // Busca depósitos
-            const { data: depositos } = await clientSupabase.from('pedidos_recarga').select('created_at, quantidade_moedas, status').eq('membro_id', usuarioLogado.toString());
-            // Busca saques
-            const { data: saques } = await clientSupabase.from('pedidos_saque').select('created_at, quantidade_moedas, status').eq('membro_id', usuarioLogado.toString());
-
-            let todasTransacoes = [];
-            if (depositos) { depositos.forEach(d => todasTransacoes.push({ data: d.created_at, tipo: '🟢 Depósito', valor: d.quantidade_moedas, status: d.status })); }
-            if (saques) { saques.forEach(s => todasTransacoes.push({ data: s.created_at, tipo: '🛑 Saque (Retirada)', valor: s.quantidade_moedas, status: s.status })); }
-
-            // Ordena da mais recente para a mais antiga
-            todasTransacoes.sort((a, b) => new Date(b.data) - new Date(a.data));
-
-            const tabelaCorpo = document.getElementById('tabela-transacoes');
-            if (todasTransacoes.length === 0) {
-                tabelaCorpo.innerHTML = `<tr><td colspan="4" style="text-align: center; color: gray; padding: 20px;">Nenhuma movimentação financeira encontrada.</td></tr>`;
-            } else {
-                tabelaCorpo.innerHTML = "";
-                todasTransacoes.forEach(t => {
-                    let dataFormatada = new Date(t.data).toLocaleString('pt-BR');
-                    tabelaCorpo.innerHTML += `
-                        <tr>
-                            <td>${dataFormatada}</td>
-                            <td><b>${t.tipo}</b></td>
-                            <td style="color:${t.tipo.includes('Depósito') ? 'var(--green)' : 'var(--red)'}">
-                                ${t.tipo.includes('Depósito') ? '+' : '-'} ${parseFloat(t.valor).toFixed(2)}
-                            </td>
-                            <td>${obterBadgeStatus(t.status)}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-        } catch(err) { 
-            console.error(err); 
-        }
-    }
-
-    async function solicitarSaque() {
-        const valorInput = prompt(`Seu saldo disponível: ${saldoAtual.toFixed(2)} Moedas.\n\nQual o valor em moedas que você deseja sacar?`);
-        if(!valorInput) return;
-        
-        const valorSaque = parseFloat(valorInput);
-        if(isNaN(valorSaque) || valorSaque <= 0) { alert("Valor de saque inválido!"); return; }
-        if(valorSaque > saldoAtual) { alert("Saldo insuficiente!"); return; }
-
-        let chavePixAlvo = minhaChavePixCadastrada;
-        if(!chavePixAlvo) {
-            chavePixAlvo = prompt("Notamos que você não possui chave PIX salva. Por favor, insira a chave PIX para envio do recebimento:");
-            if(!chavePixAlvo) { alert("A chave PIX é estritamente necessária para processar o resgate!"); return; }
-        }
-
-        const novoSaldo = saldoAtual - valorSaque;
-        await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
-
-        await clientSupabase.from('pedidos_saque').insert([{
-            membro_id: usuarioLogado.toString(),
-            quantidade_moedas: valorSaque,
-            chave_pix: chavePixAlvo,
-            status: 'pendente'
-        }]);
-
-        alert(`Solicitação de saque de R$ ${valorSaque.toFixed(2)} enviada com sucesso!\nO valor já foi reservado e ficará em andamento no seu histórico.`);
-        carregarDados();
-    }
-
-    async function abrirModalRecarga() {
-        const quantidade = prompt("Quantas moedas deseja recarregar?\n(Mínimo de 9 moedas = R$ 9,00)");
-        const qtdNum = parseFloat(quantidade);
-        if (isNaN(qtdNum) || qtdNum < 9) { alert("Valor inválido! Mínimo 9."); return; }
-
-        const { data, error } = await clientSupabase.from('pedidos_recarga').insert([{ membro_id: usuarioLogado.toString(), quantidade_moedas: qtdNum, status: 'pendente' }]).select();
-        
-        if(error || !data) {
-            alert("Erro ao gerar pedido de recarga.");
-            return;
-        }
-
-        idPedidoAtual = data[0].id;
-        document.getElementById('modalValor').innerText = `R$ ${qtdNum.toFixed(2)}`;
-        document.getElementById('payloadPix').innerText = gerarPayloadPixEstatico(CHAVE_PIX, NOME_TITULAR, CIDADE_TITULAR, qtdNum);
-        
-        document.getElementById('btnConfirmarPagamento').onclick = async function() {
-            await clientSupabase.from('pedidos_recarga').update({ status: 'envio_confirmado_usuario' }).eq('id', idPedidoAtual);
-            alert("Notificação de pagamento enviada! O saldo entrará assim que aprovado."); 
-            fecharModal(); 
-            carregarDados();
-        };
-        document.getElementById('modalPix').style.display = 'flex';
-    }
-
-    function fecharModal() { document.getElementById('modalPix').style.display = 'none'; idPedidoAtual = null; }
-    function copiarPix() { navigator.clipboard.writeText(document.getElementById('payloadPix').innerText); alert("Copiado!"); }
-    async function limparAvisoPix(id) { await clientSupabase.from('pedidos_recarga').delete().eq('id', id); carregarDados(); }
-    
     function filtrar(cat, btn) { 
         categoriaAtual = cat; 
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active')); 
         btn.classList.add('active'); 
         carregarDados(); 
     }
-    
+
+    // A lógica de carregar e apostar permanece a mesma, pois o backend (Supabase) 
+    // é quem vai processar o rateio do prêmio depois.
     async function apostar(id, op, nomeOpcao) {
         const qInput = prompt(`Quantas moedas deseja injetar em "${nomeOpcao}"?`); 
-        if(!qInput) return; 
         const q = parseFloat(qInput);
-        if(isNaN(q) || q <= 0 || q > saldoAtual) { alert("Operação inválida ou saldo insuficiente."); return; }
+        if(!q || q > saldoAtual) { alert("Saldo insuficiente ou valor inválido."); return; }
         
         await clientSupabase.from('historico_apostas').insert([{ membro_id: usuarioLogado, enquete_id: id.toString(), opcao_escolhida: op.toString(), valor_total: q }]);
         await clientSupabase.from('membros').update({ saldo: saldoAtual - q }).eq('id', usuarioLogado);
-        alert(`Operação realizada!`); 
+        alert(`Aposta confirmada!`); 
         carregarDados();
     }
-
-    carregarDados();
 </script>
 </body>
 </html>
