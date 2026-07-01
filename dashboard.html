@@ -1,67 +1,67 @@
-async function solicitarSaque() {
-    // 1. Obter valores dos campos
-    const inputValor = document.getElementById('input-valor-saque');
-    const inputPix = document.getElementById('input-pix-saque');
-    const valorSaque = parseFloat(inputValor.value);
-    const pix = inputPix.value;
-    const usuarioId = String(localStorage.getItem('vox_usuario') || '').trim();
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel do Membro</title>
+</head>
+<body>
+    <h1>Painel do Membro</h1>
+    <input type="number" id="input-valor-saque" placeholder="Valor">
+    <input type="text" id="input-pix-saque" placeholder="Chave PIX">
+    <button onclick="solicitarSaque()">Solicitar Saque</button>
 
-    // 2. Validações básicas
-    if (!valorSaque || isNaN(valorSaque) || valorSaque <= 0) {
-        alert("Valor inválido.");
-        return;
-    }
-    if (!pix) {
-        alert("Informe sua chave PIX.");
-        return;
-    }
+    <script>
+        async function solicitarSaque() {
+            const inputValor = document.getElementById('input-valor-saque');
+            const inputPix = document.getElementById('input-pix-saque');
+            
+            if (!inputValor || !inputPix) {
+                alert("Erro: Campos não encontrados.");
+                return;
+            }
 
-    try {
-        // 3. Busca saldo atual
-        const { data: membro, error: fetchError } = await clientSupabase
-            .from('membros')
-            .select('id, saldo')
-            .eq('id', usuarioId)
-            .maybeSingle();
+            const valorSaque = parseFloat(inputValor.value);
+            const pix = inputPix.value;
+            const usuarioId = String(localStorage.getItem('vox_usuario') || '').trim();
 
-        if (fetchError || !membro) {
-            alert("Erro: Usuário não localizado.");
-            return;
+            if (!valorSaque || isNaN(valorSaque) || valorSaque <= 0) {
+                alert("Valor inválido.");
+                return;
+            }
+
+            try {
+                const { data: membro, error: fetchError } = await clientSupabase
+                    .from('membros')
+                    .select('id, saldo')
+                    .eq('id', usuarioId)
+                    .maybeSingle();
+
+                if (fetchError || !membro) {
+                    alert("Erro: Usuário não localizado.");
+                    return;
+                }
+
+                const saldoAtual = parseFloat(membro.saldo || 0);
+
+                if (saldoAtual < valorSaque) {
+                    alert("Saldo insuficiente.");
+                    return;
+                }
+
+                const { error: updateError } = await clientSupabase
+                    .from('membros')
+                    .update({ saldo: (saldoAtual - valorSaque) })
+                    .eq('id', usuarioId);
+
+                if (updateError) throw updateError;
+
+                alert("Sucesso! Saque solicitado.");
+                location.reload();
+            } catch (err) {
+                console.error("Erro:", err);
+                alert("Erro técnico ao processar saque.");
+            }
         }
-
-        const saldoAtual = parseFloat(membro.saldo || 0);
-
-        // 4. Valida saldo
-        if (saldoAtual < valorSaque) {
-            alert("Saldo insuficiente. Você possui: R$ " + saldoAtual.toFixed(2));
-            return;
-        }
-
-        // 5. Insere pedido na tabela 'saques'
-        const { error: insertError } = await clientSupabase
-            .from('saques')
-            .insert([{ 
-                membro_id: usuarioId, 
-                moedas_sacar: valorSaque, 
-                chave_pix: pix, 
-                status: 'PENDENTE' 
-            }]);
-
-        if (insertError) throw insertError;
-
-        // 6. Atualiza saldo do membro
-        const { error: updateError } = await clientSupabase
-            .from('membros')
-            .update({ saldo: (saldoAtual - valorSaque) })
-            .eq('id', usuarioId);
-
-        if (updateError) throw updateError;
-
-        alert("Sucesso! Saque solicitado e saldo atualizado.");
-        location.reload();
-
-    } catch (err) {
-        console.error("Erro técnico:", err);
-        alert("Ocorreu um erro ao processar o saque. Verifique o console F12.");
-    }
-}
+    </script>
+</body>
+</html>
