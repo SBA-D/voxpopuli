@@ -1,73 +1,36 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Trader Painel</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        :root { --bg-main: #0b0f19; --bg-card: #111827; --accent-green: #10b981; --accent-red: #ef4444; --text-main: #f3f4f6; --border-color: #374151; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background-color: var(--bg-main); color: var(--text-main); padding: 20px; }
-        
-        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
-        
-        .caixa-financeira { max-width: 800px; margin: 0 auto 25px auto; display: flex; gap: 15px; }
-        .btn-fin { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
-        .btn-dep { background: #065f46; } .btn-saq { background: #991b1b; }
-        
-        .painel-fin { display: none; max-width: 800px; margin: 0 auto 25px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
-        .input-fin { width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); color: white; margin: 10px 0; border-radius: 6px; }
-        .btn-confirmar { width: 100%; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: black; }
-        
-        .container-enquetes { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
-        .card-enquete { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
-    </style>
-</head>
-<body>
-    <header>
-        <div class="logo">VoxPopuli 📈</div>
-        <div>Saldo: <span id="txt-saldo" style="color: var(--accent-green);">0.00</span></div>
-    </header>
+<!-- Insira este bloco dentro do seu <script> no dashboard.html -->
+<script>
+    // 1. Inicializa o cliente Supabase (usando suas credenciais)
+    const db = supabase.createClient("https://xxxzluqjgqwkpzjjxpbj.supabase.co", "SUA_CHAVE_ANON_AQUI");
 
-    <div class="caixa-financeira">
-        <button class="btn-fin btn-dep" onclick="alternar('painel-deposito')">➕ Depositar via PIX</button>
-        <button class="btn-fin btn-saq" onclick="alternar('painel-saque')">💸 Solicitar Saque</button>
-    </div>
-
-    <!-- Painéis de Ação -->
-    <div id="painel-deposito" class="painel-fin">
-        <h3>Depósito PIX</h3>
-        <input type="number" id="dep-valor" class="input-fin" placeholder="Valor">
-        <button class="btn-confirmar" style="background:var(--accent-green)" onclick="alert('Funcionalidade de Depósito')">Confirmar Depósito</button>
-    </div>
-
-    <div id="painel-saque" class="painel-fin">
-        <h3>Solicitar Saque</h3>
-        <input type="number" id="saq-valor" class="input-fin" placeholder="Valor">
-        <input type="text" id="saq-chave" class="input-fin" placeholder="Chave PIX">
-        <button class="btn-confirmar" style="background:var(--accent-red); color:white;" onclick="enviarSaque()">Confirmar Saque</button>
-    </div>
-
-    <!-- Área das Enquetes -->
-    <div class="container-enquetes" id="lista-enquetes">
-        <div class="card-enquete">
-            <h3>Enquete em Destaque</h3>
-            <p>O mercado vai subir ou descer hoje?</p>
-        </div>
-    </div>
-
-    <script>
-        function alternar(id) {
-            const el = document.getElementById(id);
-            el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+    // 2. Função para carregar e exibir a enquete ativa
+    async function carregarEnquete() {
+        const { data, error } = await db.from('enquetes').select('*').eq('status', 'ativa').single();
+        if (data) {
+            document.getElementById('lista-enquetes').innerHTML = `
+                <div class="card-enquete">
+                    <h3>${data.pergunta}</h3>
+                    <button onclick="apostar('${data.id}', 'opcao1')">Subir</button>
+                    <button onclick="apostar('${data.id}', 'opcao2')">Descer</button>
+                </div>
+            `;
         }
+    }
 
-        async function enviarSaque() {
-            // Lógica de envio para o Supabase aqui
-            alert("Solicitação de saque enviada!");
-        }
-    </script>
-</body>
-</html>
+    // 3. Integração Realtime: o painel atualiza sozinho quando o ADM inserir algo
+    db.channel('schema-db-changes')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'enquetes' }, payload => {
+        carregarEnquete();
+      })
+      .subscribe();
+
+    // 4. Lógica de aposta do membro
+    async function apostar(enqueteId, escolha) {
+        const { error } = await db.from('apostas').insert([{ enquete_id: enqueteId, escolha: escolha, usuario: localStorage.getItem('vox_usuario') }]);
+        if (error) alert("Erro ao apostar.");
+        else alert("Aposta registrada!");
+    }
+
+    // Carrega a enquete ao abrir a página
+    carregarEnquete();
+</script>
