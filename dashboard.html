@@ -1,61 +1,89 @@
-async function enviarSolicitacaoSaque() {
-    try {
-        const valor = document.getElementById('saq-valor').value;
-        const chavePix = document.getElementById('saq-chave').value;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxPopuli - Trader Painel</title>
+    <style>
+        :root { --bg-main: #0b0f19; --bg-card: #111827; --bg-input: #1f2937; --primary-blue: #2563eb; --accent-green: #10b981; --accent-red: #ef4444; --text-main: #f3f4f6; --border-color: #374151; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-main); padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: bold; color: #3b82f6; }
+        .user-nav { display: flex; align-items: center; gap: 15px; }
+        .btn-sair { background: #374151; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+        .caixa-financeira { max-width: 800px; margin: 0 auto 25px auto; display: flex; gap: 15px; }
+        .btn-fin { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        .btn-dep { background: #065f46; } .btn-saq { background: #991b1b; }
+        .painel-fin { display: none; max-width: 800px; margin: -15px auto 25px auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+        .input-fin { width: 100%; padding: 12px; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 6px; color: white; margin: 10px 0; }
+        .btn-confirmar { width: 100%; padding: 12px; background: var(--accent-green); color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .tabs { max-width: 800px; margin: 0 auto 25px auto; display: flex; gap: 15px; }
+        .tab-btn { flex: 1; padding: 12px; background: var(--bg-card); border: 1px solid var(--border-color); color: white; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        .container-enquetes { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 15px; }
+        .card-enquete { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">VoxPopuli 📈</div>
+        <div class="user-nav">
+            <span>Saldo: <span id="txt-saldo" style="color: var(--accent-green);">0.00</span></span>
+            <button class="btn-sair" onclick="deslogar()">Sair</button>
+        </div>
+    </header>
 
-        if(!valor || !chavePix.trim()) {
-            alert("Preencha todos os campos do saque!");
-            return;
+    <div class="caixa-financeira">
+        <button class="btn-fin btn-dep" onclick="alternar('painel-deposito')">➕ Depositar</button>
+        <button class="btn-fin btn-saq" onclick="alternar('painel-saque')">💸 Sacar</button>
+    </div>
+
+    <div id="painel-deposito" class="painel-fin">
+        <h3>Adicionar Saldo</h3>
+        <input type="number" id="dep-valor" class="input-fin" placeholder="Valor">
+        <input type="text" id="dep-id" class="input-fin" placeholder="ID/Comprovante">
+        <button class="btn-confirmar" onclick="enviarDeposito()">Confirmar</button>
+    </div>
+
+    <div id="painel-saque" class="painel-fin">
+        <h3>Solicitar Saque</h3>
+        <input type="number" id="saq-valor" class="input-fin" placeholder="Valor (Moedas)">
+        <input type="text" id="saq-chave" class="input-fin" placeholder="Chave PIX">
+        <button class="btn-confirmar" style="background:var(--accent-red); color:white;" onclick="enviarSaque()">Confirmar Saque</button>
+    </div>
+
+    <div class="container-enquetes" id="lista-enquetes"></div>
+
+    <script>
+        const clientSupabase = supabase.createClient("https://xxxzluqjgqwkpzjjxpbj.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eHpsdXFqZ3F3a3B6amp4cGJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2MTA2NjcsImV4cCI6MjA5ODE4NjY2N30.VzGPY5L8EhKt7-ARJaShpM6mMl8kA2tlRG_S4dtUPzc");
+        let usuarioLogado = localStorage.getItem('vox_usuario') || "thiagohelth@gmail.com";
+
+        async function enviarSaque() {
+            try {
+                const valor = parseFloat(document.getElementById('saq-valor').value);
+                const chave = document.getElementById('saq-chave').value;
+                if (!valor || !chave) return alert("Preencha tudo!");
+
+                const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).single();
+                if (m.saldo < valor) return alert("Saldo insuficiente.");
+
+                const { error: err1 } = await clientSupabase.from('saques').insert([{ membro_id: usuarioLogado, moedas_sacar: valor, chave_pix: chave, status: 'PENDENTE' }]);
+                if (err1) throw err1;
+
+                const { error: err2 } = await clientSupabase.from('membros').update({ saldo: m.saldo - valor }).eq('id', usuarioLogado);
+                if (err2) throw err2;
+
+                alert("Sucesso!");
+                location.reload();
+            } catch (e) {
+                console.error(e);
+                alert("Erro ao sacar. Verifique o console (F12).");
+            }
         }
 
-        const valorSaque = parseFloat(valor);
-        let saldoAtual = 0;
-
-        // Busca o saldo atual do usuário para validar
-        const { data: m, error: mErr } = await clientSupabase
-            .from('membros')
-            .select('saldo')
-            .eq('id', usuarioLogado)
-            .maybeSingle();
-            
-        if (mErr) throw mErr;
-        saldoAtual = parseFloat(m.saldo || 0);
-
-        if(saldoAtual < valorSaque) {
-            alert("Saldo insuficiente! Você possui: R$ " + saldoAtual.toFixed(2));
-            return;
-        }
-
-        // 1. Insere o pedido de saque
-        const { error: insertError } = await clientSupabase
-            .from('saques')
-            .insert([{ 
-                membro_id: usuarioLogado, 
-                moedas_sacar: valorSaque, 
-                chave_pix: chavePix, 
-                status: 'PENDENTE' 
-            }]);
-
-        if (insertError) throw insertError;
-
-        // 2. Deduz o saldo do usuário
-        const { error: updateError } = await clientSupabase
-            .from('membros')
-            .update({ saldo: (saldoAtual - valorSaque) })
-            .eq('id', usuarioLogado);
-
-        if (updateError) throw updateError;
-
-        alert("Pedido de saque enviado com sucesso! O saldo foi atualizado.");
-        document.getElementById('saq-valor').value = "";
-        document.getElementById('saq-chave').value = "";
-        document.getElementById('painel-saque').style.display = 'none';
-        
-        // Recarrega o saldo na tela
-        carregarPainel();
-
-    } catch (err) { 
-        console.error("Erro técnico:", err);
-        alert("Erro ao processar saque: " + err.message); 
-    }
-}
+        function alternar(id) { document.getElementById(id).style.display = document.getElementById(id).style.display === 'block' ? 'none' : 'block'; }
+        function deslogar() { localStorage.removeItem('vox_usuario'); window.location.href = 'index.html'; }
+    </script>
+</body>
+</html>
