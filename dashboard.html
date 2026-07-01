@@ -24,7 +24,8 @@
         .container-enquetes { display: flex; flex-direction: column; gap: 15px; }
         .card-enquete { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; }
         .card-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 12px; color: #9ca3af; }
-        .card-pergunta { font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+        .card-pergunta { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+        .texto-contexto { font-size: 14px; color: #9ca3af; margin-bottom: 15px; line-height: 1.4; }
         .grupo-botoes { display: flex; gap: 10px; margin-bottom: 12px; }
         .btn-opcao { flex: 1; padding: 10px; background: var(--bg-input); border: 1px solid var(--border-color); color: white; border-radius: 6px; cursor: pointer; font-weight: bold; }
         .btn-opcao:hover { border-color: #60a5fa; }
@@ -66,7 +67,6 @@
         let abaAtual = "Mercado Financeiro";
         let selecoesModificadas = {};
 
-        // --- FUNÇÃO DE LOGOUT (CORRIGIDA) ---
         function deslogarUsuario() {
             localStorage.removeItem('vox_usuario');
             window.location.href = 'index.html';
@@ -90,6 +90,7 @@
             enquetes.forEach(enq => {
                 let tituloLimpo = enq.pergunta;
                 let op1 = "Opção 1", op2 = "Opção 2";
+                let textoContexto = ""; // Variável para armazenar a nova pergunta dinâmica
 
                 // Tratamento e separação da string injetada pelo ADM
                 if (enq.pergunta.includes("[")) {
@@ -97,14 +98,21 @@
                         const partes = enq.pergunta.split(" [");
                         tituloLimpo = partes[0];
                         const opcoesRaw = partes[1].replace("]", "").split(" vs ");
+                        
                         if(enq.categoria === "Mercado Financeiro") {
                             // Exemplo: WIN1! [f: 125300 vs ACIMA vs ABAIXO]
-                            tituloLimpo = `${partes[0]} (Ref: ${opcoesRaw[0].replace('f: ', '')})`;
+                            tituloLimpo = `${partes[0]} <span style="color:var(--accent-green);">(Ref: ${opcoesRaw[0].replace('f: ', '')})</span>`;
                             op1 = opcoesRaw[1] || "ACIMA";
                             op2 = opcoesRaw[2] || "ABAIXO";
+                            
+                            // Nova pergunta criativa para Mercado Financeiro
+                            textoContexto = "📊 <b>Análise Diária:</b> O fechamento oficial deste ativo no pregão de hoje terminará <b>ACIMA</b> ou <b>ABAIXO</b> da referência base?";
                         } else {
                             op1 = opcoesRaw[0];
                             op2 = opcoesRaw[1];
+                            
+                            // Nova pergunta para Esportes
+                            textoContexto = "🏆 <b>Palpite Esportivo:</b> Faça sua análise e defina qual será o desfecho deste confronto na vida real.";
                         }
                     } catch(e) { console.error("Erro no parse da pergunta", e); }
                 }
@@ -119,6 +127,7 @@
                             <span style="color:#60a5fa;">Pote Coletivo Dinâmico</span>
                         </div>
                         <div class="card-pergunta">${tituloLimpo}</div>
+                        <div class="texto-contexto">${textoContexto}</div>
                         <div class="grupo-botoes">
                             <button class="btn-opcao ${sel === '1' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '1')">${op1}</button>
                             <button class="btn-opcao ${sel === '2' ? 'selecionado' : ''}" onclick="selecionarLado('${idUnico}', '2')">${op2}</button>
@@ -144,15 +153,12 @@
 
             let valorAlocado = parseFloat(valorInput);
 
-            // Validação de saldo
             const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
             if(!m || parseFloat(m.saldo) < valorAlocado) { alert("Saldo insuficiente para realizar essa operação!"); return; }
 
-            // Deduz o saldo do usuário
             let novoSaldo = parseFloat(m.saldo) - valorAlocado;
             await clientSupabase.from('membros').update({ saldo: novoSaldo }).eq('id', usuarioLogado);
 
-            // Insere no histórico de apostas para o cálculo do rateio do pote
             await clientSupabase.from('historico_apostas').insert([{
                 enquete_id: idEnquete.toString(),
                 membro_id: usuarioLogado,
@@ -172,7 +178,6 @@
             carregarPainel();
         }
 
-        // Inicialização e atualização em tempo real
         carregarPainel();
         setInterval(carregarPainel, 10000);
     </script>
