@@ -64,7 +64,7 @@
     </header>
 
     <div class="caixa-financeira">
-        <button class="btn-fin btn-dep" onclick="alternarAbasFinanceiras('deposito')">➕ Depositar via PIX</button>
+        <button class="btn-fin btn-dep" onclick="alternarAbasFinanceiras('depositar')">➕ Depositar via PIX</button>
         <button class="btn-fin btn-saq" onclick="alternarAbasFinanceiras('saque')">💸 Solicitar Saque</button>
     </div>
 
@@ -104,8 +104,7 @@
         <button class="tab-btn" id="btn-tab-esporte" onclick="mudarAba('Esporte')">⚽ Esporte</button>
     </div>
 
-    <div class="container-enquetes" id="lista-enquetes">
-        </div>
+    <div class="container-enquetes" id="lista-enquetes"></div>
 
     <script>
         const SUPABASE_URL = "https://xxxzluqjgqwkpzjjxpbj.supabase.co";
@@ -129,7 +128,7 @@
         function alternarAbasFinanceiras(tipo) {
             const pDep = document.getElementById('painel-deposito');
             const pSaq = document.getElementById('painel-saque');
-            if(tipo === 'deposito') {
+            if(tipo === 'depositar') {
                 pSaq.style.display = 'none';
                 pDep.style.display = pDep.style.display === 'block' ? 'none' : 'block';
             } else {
@@ -148,16 +147,14 @@
                     return;
                 }
 
-                // Payload casado exatamente com o que o ADM lê
                 const payload = {
                     membro: usuarioLogado,
                     membro_id: usuarioLogado,
                     valor: parseFloat(valorRs),
-                    valor_rs: parseFloat(valorRs),
-                    moedas: parseFloat(valorRs), // 1 pra 1 automático
+                    moedas: parseFloat(valorRs),
                     comprovante: refId,
                     detalhes: refId,
-                    status: 'PENDENTE'
+                    status: 'pendente'
                 };
 
                 let { error } = await clientSupabase.from('depositos').insert([payload]);
@@ -186,9 +183,14 @@
                 }
 
                 const valorSaque = parseFloat(valor);
-                const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+                let saldoAtual = 0;
 
-                if(!m || parseFloat(m.saldo) < valorSaque) {
+                const { data: m, error: mErr } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+                if (m) {
+                    saldoAtual = parseFloat(m.saldo);
+                }
+
+                if(saldoAtual < valorSaque) {
                     alert("Saldo insuficiente para efetuar este saque!");
                     return;
                 }
@@ -198,9 +200,8 @@
                     membro_id: usuarioLogado,
                     valor: valorSaque,
                     moedas: valorSaque,
-                    moedas_sacar: valorSaque,
                     chave_pix: chavePix,
-                    status: 'PENDENTE'
+                    status: 'pendente'
                 };
 
                 let { error } = await clientSupabase.from('saques').insert([payloadSaque]);
@@ -228,9 +229,21 @@
         async function carregarPainel() {
             try {
                 const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
-                if(m) { document.getElementById('txt-saldo').innerText = parseFloat(m.saldo).toFixed(2); }
+                if(m) { 
+                    document.getElementById('txt-saldo').innerText = parseFloat(m.saldo).toFixed(2); 
+                } else {
+                    document.getElementById('txt-saldo').innerText = "0.00";
+                }
 
-                let { data: enquetes } = await clientSupabase.from('enquetes').select('*').eq('categoria', abaAtual);
+                // Busca dados de enquetes de forma compatível
+                let { data: enquetes, error } = await clientSupabase.from('enquetes').select('*').eq('categoria', abaAtual).eq('status', 'ativa');
+                
+                // Se a tabela 'enquetes' falhar ou vir vazia, tenta ler da tabela 'previsoes'
+                if (!enquetes || enquetes.length === 0) {
+                    let { data: prevs } = await clientSupabase.from('previsoes').select('*').eq('categoria', abaAtual).eq('status', 'ativa');
+                    if (prevs) enquetes = prevs;
+                }
+
                 const container = document.getElementById('lista-enquetes');
                 container.innerHTML = "";
 
@@ -240,16 +253,20 @@
                 }
 
                 enquetes.forEach(enq => {
-                    let tituloLimpo = enq.pergunta;
-                    let op1 = "ACIMA", op2 = "ABAIXO";
-                    let textoContexto = "📊 Defina se o fechamento será acima ou abaixo.";
+                    // Mapeia de forma dinâmica se o banco usar 'titulo' ou 'pergunta'
+                    let perguntaOriginal = enq.titulo || enq.pergunta || "Previsão sem Título";
+                    let tituloLimpo = perguntaOriginal;
+                    
+                    // Tratamento dinâmico das opções configuradas
+                    let op1 = enq.opcao_a || "SIM / ACIMA"; 
+                    let op2 = enq.opcao_b || "NÃO / ABAIXO";
 
-                    if (enq.pergunta.includes("[")) {
+                    if (perguntaOriginal.includes("[")) {
                         try {
-                            const partes = enq.pergunta.split(" [");
+                            const partes = perguntaOriginal.split(" [");
                             tituloLimpo = partes[0];
                             const opcoesRaw = partes[1].replace("]", "").split(" vs ");
-                            if(enq.categoria === "Mercado Financeiro") {
+                            if(abaAtual === "Mercado Financeiro") {
                                 tituloLimpo = `${partes[0]} <span style="color:var(--accent-green);">(Ref: ${opcoesRaw[0].replace('f: ', '')})</span>`;
                                 op1 = opcoesRaw[1] || "ACIMA"; op2 = opcoesRaw[2] || "ABAIXO";
                             } else {
@@ -274,7 +291,7 @@
                         </div>
                     `;
                 });
-            } catch (err) {}
+            } catch (err) { console.error("Erro no painel do membro:", err); }
         }
 
         function selecionarLado(id, opcao) { selecoesModificadas[id] = opcao.toString(); carregarPainel(); }
@@ -285,10 +302,15 @@
             if(!escolha || !valorInput || parseFloat(valorInput) <= 0) { alert("Selecione a opção e insira um valor!"); return; }
 
             let valorAlocado = parseFloat(valorInput);
-            const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
-            if(!m || parseFloat(m.saldo) < valorAlocado) { alert("Saldo insuficiente!"); return; }
+            let saldoAtual = 0;
 
-            await clientSupabase.from('membros').update({ saldo: parseFloat(m.saldo) - valorAlocado }).eq('id', usuarioLogado);
+            const { data: m } = await clientSupabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+            if (m) saldoAtual = parseFloat(m.saldo);
+
+            if(saldoAtual < valorAlocado) { alert("Saldo insuficiente!"); return; }
+
+            // Salva a transação e atualiza o saldo
+            await clientSupabase.from('membros').update({ saldo: saldoAtual - valorAlocado }).eq('id', usuarioLogado);
             await clientSupabase.from('historico_apostas').insert([{ enquete_id: idEnquete.toString(), membro_id: usuarioLogado, opcao_escolhida: escolha, valor_total: valorAlocado }]);
 
             alert("Operação realizada!");
@@ -297,6 +319,8 @@
         }
 
         function mudarAba(novaAba) { abaAtual = novaAba; carregarPainel(); }
+        
+        // Inicialização primária
         carregarPainel();
         setInterval(carregarPainel, 12000);
     </script>
