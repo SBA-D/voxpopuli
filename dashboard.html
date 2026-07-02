@@ -1,36 +1,68 @@
-<!-- Insira este bloco dentro do seu <script> no dashboard.html -->
-<script>
-    // 1. Inicializa o cliente Supabase (usando suas credenciais)
-    const db = supabase.createClient("https://xxxzluqjgqwkpzjjxpbj.supabase.co", "SUA_CHAVE_ANON_AQUI");
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>VoxPopuli - Trader Painel</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --bg-main: #0b0f19; --bg-card: #111827; --primary-blue: #2563eb; --accent-green: #10b981; --accent-red: #ef4444; }
+        body { background-color: var(--bg-main); color: #f3f4f6; font-family: sans-serif; padding: 20px; }
+        .card-enquete { background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #374151; }
+        .btn-opcao { padding: 10px; border: 1px solid #374151; background: #1f2937; color: white; cursor: pointer; border-radius: 6px; }
+        .btn-opcao.selecionado { background: var(--primary-blue); border: 1px solid #60a5fa; }
+        .input-aposta { width: 100%; padding: 10px; background: #111827; border: 1px solid #374151; color: white; margin: 10px 0; border-radius: 6px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">VoxPopuli 📈</div>
+        <div>Saldo: <span id="txt-saldo" style="color:var(--accent-green)">0.00</span></div>
+    </header>
 
-    // 2. Função para carregar e exibir a enquete ativa
-    async function carregarEnquete() {
-        const { data, error } = await db.from('enquetes').select('*').eq('status', 'ativa').single();
-        if (data) {
-            document.getElementById('lista-enquetes').innerHTML = `
+    <div id="lista-enquetes" class="container-enquetes"></div>
+
+    <script>
+        const SUPABASE_URL = "https://xxxzluqjgqwkpzjjxpbj.supabase.co";
+        const SUPABASE_KEY = "SUA_CHAVE_ANON_AQUI"; 
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let usuarioLogado = localStorage.getItem('vox_usuario') || "thiagohelth@gmail.com";
+        let selecoes = {};
+
+        async function carregarPainel() {
+            const { data: m } = await supabase.from('membros').select('saldo').eq('id', usuarioLogado).maybeSingle();
+            if(m) document.getElementById('txt-saldo').innerText = parseFloat(m.saldo).toFixed(2);
+
+            const { data: enquetes } = await supabase.from('enquetes').select('*');
+            const container = document.getElementById('lista-enquetes');
+            container.innerHTML = enquetes ? enquetes.map(enq => `
                 <div class="card-enquete">
-                    <h3>${data.pergunta}</h3>
-                    <button onclick="apostar('${data.id}', 'opcao1')">Subir</button>
-                    <button onclick="apostar('${data.id}', 'opcao2')">Descer</button>
+                    <p><b>${enq.pergunta}</b></p>
+                    <button class="btn-opcao ${selecoes[enq.id] == '1' ? 'selecionado' : ''}" onclick="selecionar('${enq.id}', '1')">ACIMA</button>
+                    <button class="btn-opcao ${selecoes[enq.id] == '2' ? 'selecionado' : ''}" onclick="selecionar('${enq.id}', '2')">ABAIXO</button>
+                    <input type="number" id="val-${enq.id}" class="input-aposta" placeholder="Valor em moedas">
+                    <button onclick="enviarOrdem('${enq.id}')" style="background:var(--accent-green);border:none;padding:10px;width:100%;color:black;border-radius:6px;font-weight:bold;">Confirmar</button>
                 </div>
-            `;
+            `).join('') : '<p>Nenhuma previsão no momento.</p>';
         }
-    }
 
-    // 3. Integração Realtime: o painel atualiza sozinho quando o ADM inserir algo
-    db.channel('schema-db-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'enquetes' }, payload => {
-        carregarEnquete();
-      })
-      .subscribe();
+        function selecionar(id, op) { selecoes[id] = op; carregarPainel(); }
 
-    // 4. Lógica de aposta do membro
-    async function apostar(enqueteId, escolha) {
-        const { error } = await db.from('apostas').insert([{ enquete_id: enqueteId, escolha: escolha, usuario: localStorage.getItem('vox_usuario') }]);
-        if (error) alert("Erro ao apostar.");
-        else alert("Aposta registrada!");
-    }
+        async function enviarOrdem(id) {
+            const valor = parseFloat(document.getElementById(`val-${id}`).value);
+            const escolha = selecoes[id];
+            if(!valor || !escolha) return alert("Selecione uma opção e insira um valor!");
+            
+            const { data: m } = await supabase.from('membros').select('saldo').eq('id', usuarioLogado).single();
+            if(m.saldo < valor) return alert("Saldo insuficiente!");
 
-    // Carrega a enquete ao abrir a página
-    carregarEnquete();
-</script>
+            await supabase.from('membros').update({ saldo: m.saldo - valor }).eq('id', usuarioLogado);
+            await supabase.from('historico_apostas').insert([{ enquete_id: id, membro_id: usuarioLogado, opcao_escolhida: escolha, valor_total: valor }]);
+            
+            alert("Operação realizada!");
+            carregarPainel();
+        }
+
+        carregarPainel();
+    </script>
+</body>
+</html>
