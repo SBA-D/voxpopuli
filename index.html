@@ -103,6 +103,7 @@
             text-decoration: underline; 
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -149,12 +150,10 @@
 </div>
 
 <script>
-    // Inicializa as contas se o banco no navegador estiver vazio
-    if (!localStorage.getItem('users')) {
-        localStorage.setItem('users', JSON.stringify({ 
-            'adm': { senha: 'adm', saldo: 0, adm: true } 
-        }));
-    }
+    // 🔑 Conexão em Nuvem Configurada
+    const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // Alternar para a aba de cadastro
     function mostrarCadastro() {
@@ -168,46 +167,61 @@
         document.getElementById('loginBox').style.display = 'block';
     }
 
-    // Salva o novo usuário no LocalStorage do navegador
-    function fazerCadastro() {
-        const user = document.getElementById('cadUser').value.trim();
+    // Salva o novo usuário direto na Nuvem do Supabase
+    async function fazerCadastro() {
+        const user = document.getElementById('cadUser').value.trim().toLowerCase();
         const pass = document.getElementById('cadPass').value.trim();
         
         if (!user || !pass) {
             return alert('Preencha todos os campos para se cadastrar!');
         }
 
-        let users = JSON.parse(localStorage.getItem('users')) || {};
+        if (user === 'adm') {
+            return alert('Este nome de usuário é reservado para o sistema.');
+        }
+
+        // Verifica se o usuário já existe na nuvem
+        let { data: existe } = await _supabase.from('usuarios').select('username').eq('username', user).maybeSingle();
         
-        if (users[user]) {
+        if (existe) {
             return alert('Esse nome de usuário já está sendo usado.');
         }
 
-        // Cria o membro com saldo 0
-        users[user] = { senha: pass, saldo: 0, adm: false };
-        localStorage.setItem('users', JSON.stringify(users));
+        // Insere na tabela 'usuarios' com saldo inicial 0
+        const { error } = await _supabase.from('usuarios').insert([{ username: user, password: pass, saldo: 0 }]);
         
-        alert('Cadastro realizado com sucesso! Use seus dados para logar.');
+        if(error) {
+            return alert('Erro ao salvar no banco: ' + error.message);
+        }
+        
+        alert('Cadastro realizado com sucesso na nuvem! Use seus dados para logar.');
         mostrarLogin();
     }
 
-    // Faz a verificação e manda para a página certa
-    function fazerLogin() {
-        const user = document.getElementById('loginUser').value.trim();
+    // Faz a verificação na nuvem e manda para a página certa
+    async function fazerLogin() {
+        const user = document.getElementById('loginUser').value.trim().toLowerCase();
         const pass = document.getElementById('loginPass').value.trim();
-        let users = JSON.parse(localStorage.getItem('users')) || {};
 
-        if (users[user] && users[user].senha === pass) {
+        if (!user || !pass) {
+            return alert('Preencha todos os campos!');
+        }
+
+        // Regra de segurança/atalho para a sua conta Admin padrão
+        if (user === 'adm' && pass === 'adm') {
+            localStorage.setItem('usuarioLogado', 'adm');
+            window.location.href = 'adm.html';
+            return;
+        }
+
+        // Busca o usuário na nuvem do Supabase
+        let { data: usuario, error } = await _supabase.from('usuarios').select('*').eq('username', user).maybeSingle();
+
+        if (usuario && usuario.password === pass) {
             localStorage.setItem('usuarioLogado', user);
-            
-            // Redirecionamento correto conforme o tipo de conta
-            if (users[user].adm === true) {
-                window.location.href = 'adm.html';
-            } else {
-                window.location.href = 'dashboard.html';
-            }
+            window.location.href = 'dashboard.html';
         } else {
-            alert('Usuário ou senha incorretos!');
+            alert('Usuário ou senha incorretos na nuvem!');
         }
     }
 </script>
