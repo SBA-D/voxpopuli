@@ -54,8 +54,8 @@
         }
         .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
         .btn-blue:hover { background: #2651d4; }
-        .btn-success { background: var(--accent-green); color: #0d1222; padding: 6px 12px; font-size: 12px; }
-        .btn-danger { background: var(--accent-red); color: white; padding: 6px 12px; font-size: 12px; }
+        .btn-success { background: var(--accent-green); color: #0d1222; padding: 6px 12px; font-size: 12px; font-weight: 700; }
+        .btn-danger { background: var(--accent-red); color: white; padding: 6px 12px; font-size: 12px; font-weight: 700; }
         
         .btn-exit {
             background: #202431; color: var(--text-muted); padding: 10px 18px;
@@ -74,11 +74,7 @@
         .badge-blocked { background: #3a1619; color: var(--accent-red); }
 
         .busca-box {
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
+            background: var(--bg-input); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-top: 15px;
         }
     </style>
 </head>
@@ -88,16 +84,16 @@
     
     <div class="admin-header">
         <div class="header-left">
-            <h1>VoxPopuli 控制台 Engine v3</h1>
-            <div class="subtitle">Área de Administração Avançada - Moderação de Usuários e Controle Financeiro</div>
+            <h1>VoxPopuli 控制台 Engine v4</h1>
+            <div class="subtitle">Mesa de Operações e Moderação - Gestão de Ativos e Arbitragem Financeira</div>
         </div>
         <button class="btn-exit" onclick="logoutAdmin()">Sair do Painel</button>
     </div>
 
-    <!-- 🛡️ SEÇÃO NOVA: MODERAÇÃO DE MEMBROS E DADOS -->
+    <!-- 🛡️ SEÇÃO DE MODERAÇÃO DE MEMBROS E DADOS -->
     <div class="card">
         <h2>🛡️ Painel de Controle e Moderação de Membros</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Gerencie saldos manuais, visualize dados cadastrais e aplique bloqueios/desbloqueios imediatamente.</p>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Gerencie saldos manuais (Moedas), dados cadastrais e aplique bloqueios de conduta imediatamente.</p>
         
         <div class="grid-2" style="grid-template-columns: 1fr auto;">
             <div>
@@ -130,7 +126,7 @@
 
             <div class="grid-2" style="align-items: flex-end; background: var(--bg-main); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
                 <div>
-                    <label>Saldo Atual (R$)</label>
+                    <label>Saldo de Moedas Manual (R$)</label>
                     <input type="number" step="0.01" id="modSaldoUser" style="font-weight: bold; color: var(--accent-green); font-size: 16px;">
                 </div>
                 <div>
@@ -142,6 +138,25 @@
                 <button class="btn btn-danger" id="btnBloquearUser" style="flex: 1;" onclick="alterarStatusBloqueio(true)">🚫 Bloquear Membro por Má Conduta</button>
                 <button class="btn btn-blue" id="btnDesbloquearUser" style="flex: 1; background: #202431;" onclick="alterarStatusBloqueio(false)">✅ Remover Bloqueio / Liberar Acesso</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 🎯 NOVA SEÇÃO: FINALIZAR ENQUETES / ARBITRAGEM -->
+    <div class="card">
+        <h2>🎯 Declarar Resultados e Finalizar Enquetes (Distribuição de Lucros)</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Encerre rodadas distribuindo proporcionalmente todo o dinheiro arrecadado dos perdedores entre os vencedores.</p>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ativo / Evento</th>
+                        <th>Tipo de Mercado</th>
+                        <th>Opção 1</th>
+                        <th>Opção 2</th>
+                    </tr>
+                </thead>
+                <tbody id="listaRodadasAbertas"></tbody>
+            </table>
         </div>
     </div>
 
@@ -246,13 +261,10 @@
     const usuarioLogado = localStorage.getItem('usuarioLogado');
     if(!usuarioLogado) window.location.href = 'index.html';
 
-    // Novas funções para gerenciamento e moderação manual de usuários
     function atualizarListaMembrosSelect() {
         const users = JSON.parse(localStorage.getItem('users')) || {};
         const select = document.getElementById('selectUsuariosModerar');
-        
         select.innerHTML = '<option value="">-- Selecione um Membro Cadastrado --</option>';
-        
         Object.keys(users).forEach(username => {
             if(username !== 'adm' && username !== 'admin') {
                 select.innerHTML += `<option value="${username}">${username}</option>`;
@@ -263,11 +275,7 @@
     function carregarDadosUsuarioModerar() {
         const username = document.getElementById('selectUsuariosModerar').value;
         const box = document.getElementById('dadosModeracaoUsuario');
-        
-        if(!username) {
-            box.style.display = 'none';
-            return;
-        }
+        if(!username) { box.style.display = 'none'; return; }
 
         const users = JSON.parse(localStorage.getItem('users')) || {};
         const user = users[username];
@@ -281,13 +289,11 @@
             
             const badge = document.getElementById('modStatusBadge');
             if(user.bloqueado) {
-                badge.className = "badge badge-blocked";
-                badge.innerText = "BLOQUEADO";
+                badge.className = "badge badge-blocked"; badge.innerText = "BLOQUEADO";
                 document.getElementById('btnBloquearUser').style.display = 'none';
                 document.getElementById('btnDesbloquearUser').style.display = 'block';
             } else {
-                badge.className = "badge badge-success";
-                badge.innerText = "ATIVO / NORMAL";
+                badge.className = "badge badge-success"; badge.innerText = "ATIVO / NORMAL";
                 document.getElementById('btnBloquearUser').style.display = 'block';
                 document.getElementById('btnDesbloquearUser').style.display = 'none';
             }
@@ -297,24 +303,13 @@
     function salvarSaldoManual() {
         const username = document.getElementById('selectUsuariosModerar').value;
         const novoSaldo = parseFloat(document.getElementById('modSaldoUser').value);
-        
         if(!username || isNaN(novoSaldo)) return alert("Dados inválidos.");
 
         let users = JSON.parse(localStorage.getItem('users'));
         if(users[username]) {
             users[username].saldo = novoSaldo;
             localStorage.setItem('users', JSON.stringify(users));
-            alert(`O saldo do usuário ${username} foi ajustado manualmente para R$ ${novoSaldo.toFixed(2)}`);
-            carregarDadosUsuarioModerar();
-        }
-    }
-
-    function determinarStatusBloqueio(username, bloquear) {
-        let users = JSON.parse(localStorage.getItem('users'));
-        if(users[username]) {
-            users[username].bloqueado = bloquear;
-            localStorage.setItem('users', JSON.stringify(users));
-            alert(bloquear ? `Usuário ${username} foi bloqueado com sucesso!` : `Acesso do usuário ${username} reativado!`);
+            alert(`Sucesso! Saldo de ${username} atualizado.`);
             carregarDadosUsuarioModerar();
         }
     }
@@ -322,7 +317,13 @@
     function alterarStatusBloqueio(bloquear) {
         const username = document.getElementById('selectUsuariosModerar').value;
         if(!username) return;
-        determinarStatusBloqueio(username, bloquear);
+        let users = JSON.parse(localStorage.getItem('users'));
+        if(users[username]) {
+            users[username].bloqueado = bloquear;
+            localStorage.setItem('users', JSON.stringify(users));
+            alert(bloquear ? "Membro bloqueado!" : "Membro reativado!");
+            carregarDadosUsuarioModerar();
+        }
     }
 
     function ajustarCamposFormulario() {
@@ -342,10 +343,9 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo || !dataFim || !horaFim) return alert("Preencha todos os campos da rodada!");
+        if(!ativo || !dataFim || !horaFim) return alert("Preencha todos os campos!");
 
         let op1 = "", op2 = "", precoAlvo = "";
-
         if(tipo === 'financeiro') {
             precoAlvo = document.getElementById('enqPrecoAlvo').value.trim();
             op1 = document.getElementById('enqOp1Fin').value;
@@ -353,15 +353,87 @@
         } else {
             op1 = document.getElementById('enqOp1Esp').value.trim();
             op2 = document.getElementById('enqOp2Esp').value.trim();
-            if(!op1 || !op2) return alert("Digite o nome dos dois competidores esportivos!");
+            if(!op1 || !op2) return alert("Insira os competidores esportivos!");
         }
 
         let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        enquetes.push({ tipo, ativo, precoAlvo, op1, op2, dataFim, horaFim });
+        enquetes.push({ id: Date.now(), tipo, ativo, precoAlvo, op1, op2, dataFim, horaFim, finalizada: false });
         localStorage.setItem('enquetes', JSON.stringify(enquetes));
 
-        alert("Sucesso! Enquete publicada globalmente.");
+        alert("Enquete publicada globalmente.");
         document.getElementById('enqAtivo').value = '';
+        renderizarRodadasAbertas();
+    }
+
+    function renderizarRodadasAbertas() {
+        const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
+        const tbody = document.getElementById('listaRodadasAbertas');
+        tbody.innerHTML = '';
+
+        enquetes.forEach((enq) => {
+            if (!enq.finalizada) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${enq.ativo}</b></td>
+                        <td><small style="text-transform:uppercase;">${enq.tipo}</small></td>
+                        <td><button class="btn btn-success" onclick="finalizarRodada(${enq.id}, '${enq.op1}')">Declarar Vencedor: ${enq.op1}</button></td>
+                        <td><button class="btn btn-danger" onclick="finalizarRodada(${enq.id}, '${enq.op2}')">Declarar Vencedor: ${enq.op2}</button></td>
+                    </tr>
+                `;
+            }
+        });
+    }
+
+    function finalizarRodada(enqueteId, opcaoVencedora) {
+        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
+        let apostas = JSON.parse(localStorage.getItem('apostas')) || [];
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+
+        let indexEnq = enquetes.findIndex(e => e.id === enqueteId);
+        if(indexEnq === -1) return;
+        const rodada = enquetes[indexEnq];
+
+        // Lógica de Rateio Pari-mutuel
+        let apostasDaRodada = apostas.filter(a => a.enqueteId === enqueteId && a.status === 'Pendente');
+        let totalPote = 0;
+        let totalVencedores = 0;
+
+        apostasDaRodada.forEach(a => {
+            totalPote += a.valor;
+            if(a.palpite === opcaoVencedora) totalVencedores += a.valor;
+        });
+
+        // Se ninguém jogou na vencedora, devolve às contas ou retém (aqui devolve aos perdedores para evitar bugs)
+        if(totalVencedores === 0 && apostasDaRodada.length > 0) {
+            apostasDaRodada.forEach(a => {
+                users[a.usuario].saldo += a.valor;
+                a.status = 'Devolvido';
+            });
+            alert("Nenhum usuário escolheu a resposta certa. Os valores apostados foram estornados.");
+        } else {
+            // Distribui os ganhos de forma proporcional às moedas jogadas
+            apostasDaRodada.forEach(a => {
+                if(a.palpite === opcaoVencedora) {
+                    let premioProporcional = (a.valor / totalVencedores) * totalPote;
+                    users[a.usuario].saldo += premioProporcional;
+                    a.status = 'Venceu';
+                    a.lucro = premioProporcional;
+                } else {
+                    a.status = 'Perdeu';
+                    a.lucro = 0;
+                }
+            });
+        }
+
+        rodada.finalizada = true;
+        rodada.vencedor = opcaoVencedora;
+
+        localStorage.setItem('enquetes', JSON.stringify(enquetes));
+        localStorage.setItem('apostas', JSON.stringify(apostas));
+        localStorage.setItem('users', JSON.stringify(users));
+
+        alert(`Rodada Liquidada! Vencedor: ${opcaoVencedora}. Lucros distribuídos.`);
+        renderizarRodadasAbertas();
     }
 
     function renderizarFinancas() {
@@ -372,17 +444,13 @@
         tbodyDep.innerHTML = '';
         depositos.forEach((dep, index) => {
             if(dep.status === 'Pendente') {
-                tbodyDep.innerHTML += `
-                    <tr>
-                        <td><b>${dep.usuario}</b></td>
-                        <td style="color:var(--accent-green)">R$ ${Number(dep.valor).toFixed(2)}</td>
-                        <td>${dep.data}</td>
-                        <td><span class="badge badge-pending">Pendente</span></td>
-                        <td>
-                            <button class="btn btn-success" onclick="aprovarDeposito(${index})">Aprovar Saldo</button>
-                        </td>
-                    </tr>
-                `;
+                tbodyDep.innerHTML += `<tr>
+                    <td><b>${dep.usuario}</b></td>
+                    <td style="color:var(--accent-green)">R$ ${Number(dep.valor).toFixed(2)}</td>
+                    <td>${dep.data}</td>
+                    <td><span class="badge badge-pending">Pendente</span></td>
+                    <td><button class="btn btn-success" onclick="aprovarDeposito(${index})">Aprovar Saldo</button></td>
+                </tr>`;
             }
         });
 
@@ -390,18 +458,14 @@
         tbodySaq.innerHTML = '';
         saques.forEach((saq, index) => {
             if(saq.status === 'Pendente') {
-                tbodySaq.innerHTML += `
-                    <tr>
-                        <td><b>${saq.usuario}</b></td>
-                        <td style="color:var(--accent-red)">R$ ${Number(saq.valor).toFixed(2)}</td>
-                        <td><small>${saq.tipoPix}</small></td>
-                        <td><code>${saq.chavePix}</code></td>
-                        <td><span class="badge badge-pending">Pendente</span></td>
-                        <td>
-                            <button class="btn btn-success" onclick="aprovarSaque(${index})">Marcar como Pago</button>
-                        </td>
-                    </tr>
-                `;
+                tbodySaq.innerHTML += `<tr>
+                    <td><b>${saq.usuario}</b></td>
+                    <td style="color:var(--accent-red)">R$ ${Number(saq.valor).toFixed(2)}</td>
+                    <td><small>${saq.tipoPix}</small></td>
+                    <td><code>${saq.chavePix}</code></td>
+                    <td><span class="badge badge-pending">Pendente</span></td>
+                    <td><button class="btn btn-success" onclick="aprovarSaque(${index})">Marcar como Pago</button></td>
+                </tr>`;
             }
         });
     }
@@ -410,13 +474,12 @@
         let depositos = JSON.parse(localStorage.getItem('depositos'));
         let users = JSON.parse(localStorage.getItem('users'));
         const dep = depositos[index];
-
         if(users[dep.usuario]) {
             users[dep.usuario].saldo += dep.valor;
             dep.status = 'Aprovado';
             localStorage.setItem('users', JSON.stringify(users));
             localStorage.setItem('depositos', JSON.stringify(depositos));
-            alert("Depósito aprovado e saldo injetado na conta do cliente!");
+            alert("Moedas injetadas na conta do usuário!");
             renderizarFinancas();
         }
     }
@@ -425,7 +488,7 @@
         let saques = JSON.parse(localStorage.getItem('saques'));
         saques[index].status = 'Pago';
         localStorage.setItem('saques', JSON.stringify(saques));
-        alert("Saque marcado como liquidado com sucesso.");
+        alert("Saque marcado como liquidado.");
         renderizarFinancas();
     }
 
@@ -434,8 +497,9 @@
         window.location.href = 'index.html';
     }
 
-    // Inicialização
+    // Inicialização Geral
     atualizarListaMembrosSelect();
+    renderizarRodadasAbertas();
     renderizarFinancas();
 </script>
 </body>
