@@ -67,7 +67,7 @@
             border: none;
             transition: all 0.2s ease-in-out;
         }
-        .btn-blue { background: #0640df; color: white; }
+        .btn-blue { background: #0640df; color: white; width: 100%; }
         .btn-blue:hover { background: #022cb3; transform: translateY(-1px); }
         .btn-green { background: var(--accent-green); color: #0d1222; }
         .btn-green:hover { background: #029669; transform: translateY(-1px); }
@@ -264,7 +264,7 @@
         <div class="moedas-badge">
             💵 R$ <span id="saldoUsuario">0.00</span>
         </div>
-        <button class="btn btn-blue" onclick="document.getElementById('depositoSection').scrollIntoView({behavior: 'smooth'})">+ Depositar</button>
+        <button class="btn btn-blue" style="width: auto;" onclick="document.getElementById('depositoSection').scrollIntoView({behavior: 'smooth'})">+ Depositar</button>
         <button class="btn btn-exit" onclick="logout()">Sair</button>
     </div>
 </div>
@@ -295,7 +295,7 @@
             <div style="font-weight: 700; color: #fff; margin-bottom: 5px;">PIX Copia e Cola Gerado!</div>
             <div style="font-size: 13px; color: var(--text-muted);">Clique no botão abaixo para copiar a chave e pague no app do seu banco.</div>
             <div class="pix-code" id="pixCopiaColaTexto">CHAVE_PIX_AQUI</div>
-            <button class="btn btn-blue" style="width:100%; margin-bottom:10px;" onclick="copiarChavePix()">📋 Copiar Código PIX</button>
+            <button class="btn btn-blue" style="margin-bottom:10px;" onclick="copiarChavePix()">📋 Copiar Código PIX</button>
             <button class="btn btn-green" style="width:100%; background: #00b37e;" onclick="confirmarPagamentoAoAdm()">✅ Já efetuei o pagamento! Notificar ADM</button>
         </div>
     </div>
@@ -314,14 +314,14 @@
             </select>
         </div>
         <input type="text" id="chavePixSaque" placeholder="Digite sua Chave PIX destino aqui" style="margin-bottom: 12px;">
-        <button class="btn btn-blue" style="background: var(--accent-red); width: 100%;" onclick="solicitarSaque()">Enviar Pedido de Saque</button>
+        <button class="btn btn-blue" style="background: var(--accent-red);" onclick="solicitarSaque()">Enviar Pedido de Saque</button>
     </div>
 
 </div>
 
 <script>
-    // Configurações Gerais
-    let suaChavePixDestino = "SUA_CHAVE_PIX_AQUI"; // Será atualizada dinamicamente por você
+    // Configurações Gerais - Sua chave PIX atualizada com sucesso pelo Programador
+    let suaChavePixDestino = "Ef0ce40a-5e1e-42ef-a2b6-a2d3664491bd"; 
     const usuarioLogado = localStorage.getItem('usuarioLogado');
     if(!usuarioLogado) window.location.href = 'index.html';
 
@@ -450,8 +450,8 @@
         }
         valorGeradoAtual = valor;
 
-        // Gera string PIX simulada contendo os metadados necessários
-        let stringPix = `00020101021126580014br.gov.bcb.pix0114${suChavePixDestino}5204000053039865405${valor.toFixed(2)}5802BR5910VoxPopuli6009Araruama62070503***6304`;
+        // Gera string PIX contendo os metadados necessários e a sua chave real
+        let stringPix = `00020101021126580014br.gov.bcb.pix0114${suaChavePixDestino}5204000053039865405${valor.toFixed(2)}5802BR5910VoxPopuli6009Araruama62070503***6304`;
         
         document.getElementById('pixCopiaColaTexto').innerText = stringPix;
         document.getElementById('pixArea').style.display = 'block';
@@ -469,7 +469,7 @@
             usuario: usuarioLogado,
             valor: valorGeradoAtual,
             status: 'Pendente',
-            data: new Date().toLocaleString()
+            data: new Date().toLocaleString('pt-BR')
         });
         localStorage.setItem('depositos', JSON.stringify(depositos));
         
@@ -492,7 +492,7 @@
         localStorage.setItem('users', JSON.stringify(users));
 
         let saques = JSON.parse(localStorage.getItem('saques')) || [];
-        saques.push({ usuario: usuarioLogado, valor: valor, tipoPix: tipoPix, chavePix: chavePix, status: 'Pendente', data: new Date().toLocaleString() });
+        saques.push({ usuario: usuarioLogado, valor: valor, tipoPix: tipoPix, chavePix: chavePix, status: 'Pendente', data: new Date().toLocaleString('pt-BR') });
         localStorage.setItem('saques', JSON.stringify(saques));
 
         alert("Seu pedido de saque foi encaminhado para a mesa financeira do ADM.");
