@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Super Admin Engine</title>
+    <title>VoxPopuli - Super Admin Engine (Cloud)</title>
     <style>
         :root {
             --bg-main: #060913;
@@ -35,6 +35,7 @@
         .caixa-box { background: #091a18; border: 1px solid var(--accent-green); padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; color: var(--accent-green); display: inline-block; margin-bottom: 15px; }
         .pote-badge { background: #1c253d; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #ff9f43; font-weight: bold; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="container">
@@ -47,7 +48,6 @@
 
     <div class="card">
         <h2>💰 Caixa Geral da Plataforma (Dinheiro de Clientes Custodiado)</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Monitoramento automático e consolidado de todas as moedas ativas nas carteiras dos membros.</p>
         <div class="caixa-box">🏦 Total em Custódia: R$ <span id="caixaPlataforma">0.00</span></div>
     </div>
 
@@ -126,139 +126,133 @@
 </div>
 
 <script>
-    function inicializarPainel() {
-        calcularCaixaGeral();
-        renderizarRodadasAbertas();
-        renderizarFinancas();
+    // 🔑 Conexão em Nuvem Configurada
+    const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function inicializarPainel() {
+        await calcularCaixaGeral();
+        await renderizarRodadasAbertas();
+        await renderizarFinancas();
     }
 
-    function calcularCaixaGeral() {
-        const users = JSON.parse(localStorage.getItem('users')) || {};
+    async function calcularCaixaGeral() {
+        let { data: users } = await _supabase.from('usuarios').select('saldo');
         let total = 0;
-        Object.keys(users).forEach(u => {
-            if(u !== 'adm' && u !== 'admin') {
-                total += parseFloat(users[u].saldo || 0);
-            }
-        });
+        if(users) {
+            users.forEach(u => total += parseFloat(u.saldo || 0));
+        }
         document.getElementById('caixaPlataforma').innerText = total.toFixed(2);
     }
 
-    function criarEnquete() {
+    async function criarEnquete() {
         const tipo = document.getElementById('enqTipo').value;
         const ativo = document.getElementById('enqAtivo').value.trim();
         const op1 = document.getElementById('enqOp1').value;
         const op2 = document.getElementById('enqOp2').value;
-        const dataFim = document.getElementById('enqDataFim').value;
-        const horaFim = document.getElementById('enqHoraFim').value;
-        const precoAlvo = document.getElementById('enqPrecoAlvo').value;
+        const data_fim = document.getElementById('enqDataFim').value;
+        const hora_fim = document.getElementById('enqHoraFim').value;
+        const preco_alvo = document.getElementById('enqPrecoAlvo').value;
 
-        if(!ativo || !dataFim || !horaFim) return alert("Preencha os dados básicos.");
+        if(!ativo || !data_fim || !hora_fim) return alert("Preencha os dados básicos.");
 
-        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        enquetes.push({ id: Date.now(), tipo, ativo, precoAlvo, op1, op2, dataFim, horaFim, finalizada: false, pausada: false });
-        localStorage.setItem('enquetes', JSON.stringify(enquetes));
-        alert("Publicada!");
+        await _supabase.from('enquetes').insert([{ tipo, ativo, preco_alvo, op1, op2, data_fim, hora_fim }]);
+        alert("Publicada na Nuvem!");
         inicializarPainel();
     }
 
-    function renderizarRodadasAbertas() {
-        const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
+    async function renderizarRodadasAbertas() {
+        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
+        let { data: apostas } = await _supabase.from('apostas').select('*');
         const tbody = document.getElementById('listaRodadasAbertas');
         tbody.innerHTML = '';
 
-        enquetes.forEach(enq => {
-            if(!enq.finalizada) {
-                // Calcular total acumulado neste pote específico pelas apostas dos membros
+        if(enquetes) {
+            enquetes.forEach(enq => {
                 let totalPoteRodada = 0;
-                apostas.forEach(a => { if(a.enqueteId === enq.id) totalPoteRodada += a.valor; });
+                if(apostas) {
+                    apostas.forEach(a => { if(a.enquete_id === enq.id) totalPoteRodada += parseFloat(a.valor); });
+                }
 
                 tbody.innerHTML += `<tr>
                     <td><b>${enq.ativo}</b><br><small>${enq.op1} vs ${enq.op2}</small></td>
                     <td><span class="pote-badge">🪙 Pote: R$ ${totalPoteRodada.toFixed(2)}</span></td>
-                    <td><button class="btn-warn" onclick="togglePausa(${enq.id})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
+                    <td><button class="btn-warn" onclick="togglePausa(${enq.id}, ${enq.pausada})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
                     <td>
                         <button class="btn btn-success" onclick="liquidarEnquete(${enq.id}, '${enq.op1}')">${enq.op1}</button>
                         <button class="btn btn-danger" onclick="liquidarEnquete(${enq.id}, '${enq.op2}')">${enq.op2}</button>
                     </td>
                 </tr>`;
-            }
-        });
+            });
+        }
     }
 
-    function togglePausa(id) {
-        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        let index = enquetes.findIndex(e => e.id === id);
-        if(index !== -1) { enquetes[index].pausada = !enquetes[index].pausada; localStorage.setItem('enquetes', JSON.stringify(enquetes)); renderizarRodadasAbertas(); }
+    async function togglePausa(id, statusAtual) {
+        await _supabase.from('enquetes').update({ pausada: !statusAtual }).eq('id', id);
+        renderizarRodadasAbertas();
     }
 
-    function liquidarEnquete(id, vencedor) {
-        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        let apostas = JSON.parse(localStorage.getItem('apostas')) || [];
-        let users = JSON.parse(localStorage.getItem('users')) || {};
+    async function liquidarEnquete(id, vencedor) {
+        let { data: apostas } = await _supabase.from('apostas').select('*').eq('enquete_id', id).eq('status', 'Pendente');
+        
+        if(!apostas || apostas.length === 0) {
+            await _supabase.from('enquetes').update({ finalizada: true }).eq('id', id);
+            alert("Enquete encerrada sem apostas.");
+            return inicializarPainel();
+        }
 
         let totalPote = 0; let totalVencedores = 0;
         apostas.forEach(a => {
-            if(a.enqueteId === id && a.status === 'Pendente') {
-                totalPote += a.valor;
-                if(a.palpite === vencedor) totalVencedores += a.valor;
-            }
+            totalPote += parseFloat(a.valor);
+            if(a.palpite === vencedor) totalVencedores += parseFloat(a.valor);
         });
 
-        apostas.forEach(a => {
-            if(a.enqueteId === id && a.status === 'Pendente') {
-                if(a.palpite === vencedor) {
-                    let ganho = (a.valor / totalVencedores) * totalPote;
-                    if(users[a.usuario]) users[a.usuario].saldo += ganho;
-                    a.status = 'Venceu'; a.lucro = ganho;
-                } else {
-                    a.status = 'Perdeu'; a.lucro = 0;
-                }
+        for(let a of apostas) {
+            if(a.palpite === vencedor) {
+                let ganho = (parseFloat(a.valor) / totalVencedores) * totalPote;
+                let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', a.usuario).single();
+                let novoSaldo = parseFloat(u.saldo || 0) + ganho;
+                
+                await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', a.usuario);
+                await _supabase.from('apostas').update({ status: 'Venceu', lucro: ganho }).eq('id', a.id);
+            } else {
+                await _supabase.from('apostas').update({ status: 'Perdeu', lucro: 0 }).eq('id', a.id);
             }
-        });
+        }
 
-        let idx = enquetes.findIndex(e => e.id === id);
-        if(idx !== -1) enquetes[idx].finalizada = true;
-
-        localStorage.setItem('enquetes', JSON.stringify(enquetes));
-        localStorage.setItem('apostas', JSON.stringify(apostas));
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        alert("Rodada liquidada!");
+        await _supabase.from('enquetes').update({ finalizada: true }).eq('id', id);
+        alert("Rodada liquidada e saldos atualizados na nuvem!");
         inicializarPainel();
     }
 
-    function renderizarFinancas() {
-        const depositos = JSON.parse(localStorage.getItem('depositos')) || [];
-        const saques = JSON.parse(localStorage.getItem('saques')) || [];
-        
+    async function renderizarFinancas() {
+        let { data: transacoes } = await _supabase.from('transacoes').select('*').eq('status', 'Pendente');
         const tbodyD = document.getElementById('listaDepositos'); tbodyD.innerHTML = '';
-        depositos.forEach((d, i) => {
-            if(d.status === 'Pendente') {
-                tbodyD.innerHTML += `<tr><td>${d.usuario}</td><td style="color:var(--accent-green)">R$ ${d.valor.toFixed(2)}</td><td><button class="btn btn-success" onclick="aprovarDep(${i})">Liberar</button></td></tr>`;
-            }
-        });
-
         const tbodyS = document.getElementById('listaSaques'); tbodyS.innerHTML = '';
-        saques.forEach((s, i) => {
-            if(s.status === 'Pendente') {
-                tbodyS.innerHTML += `<tr><td>${s.usuario}</td><td style="color:var(--accent-red)">R$ ${s.valor.toFixed(2)}</td><td><code>${s.chavePix}</code></td><td><button class="btn btn-success" onclick="pagarSaq(${i})">Pagar</button></td></tr>`;
-            }
-        });
+
+        if(transacoes) {
+            transacoes.forEach(t => {
+                if(t.tipo === 'deposito') {
+                    tbodyD.innerHTML += `<tr><td>${t.usuario}</td><td style="color:var(--accent-green)">R$ ${parseFloat(t.valor).toFixed(2)}</td><td><button class="btn btn-success" onclick="aprovarDep(${t.id}, '${t.usuario}', ${t.valor})">Liberar</button></td></tr>`;
+                } else {
+                    tbodyS.innerHTML += `<tr><td>${t.usuario}</td><td style="color:var(--accent-red)">R$ ${parseFloat(t.valor).toFixed(2)}</td><td><code>${t.chave_pix}</code></td><td><button class="btn btn-success" onclick="pagarSaq(${t.id})">Pagar</button></td></tr>`;
+                }
+            });
+        }
     }
 
-    function aprovarDep(i) {
-        let depositos = JSON.parse(localStorage.getItem('depositos')) || [];
-        let users = JSON.parse(localStorage.getItem('users')) || {};
-        let d = depositos[i];
-        if(users[d.usuario]) { users[d.usuario].saldo += d.valor; d.status = 'Aprovado'; }
-        localStorage.setItem('users', JSON.stringify(users)); localStorage.setItem('depositos', JSON.stringify(depositos));
+    async function aprovarDep(id, usuario, valor) {
+        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario).single();
+        let nuevoSaldo = parseFloat(u.saldo || 0) + parseFloat(valor);
+        
+        await _supabase.from('usuarios').update({ saldo: nuevoSaldo }).eq('username', usuario);
+        await _supabase.from('transacoes').update({ status: 'Aprovado' }).eq('id', id);
         inicializarPainel();
     }
 
-    function pagarSaq(i) {
-        let saques = JSON.parse(localStorage.getItem('saques')) || [];
-        saques[i].status = 'Pago'; localStorage.setItem('saques', JSON.stringify(saques));
+    async function pagarSaq(id) {
+        await _supabase.from('transacoes').update({ status: 'Pago' }).eq('id', id);
         inicializarPainel();
     }
 
