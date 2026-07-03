@@ -44,7 +44,7 @@
     if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
+    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olcLXasdaS21"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let categoriaAtual = 'financeiro';
@@ -69,7 +69,7 @@
         const container = document.getElementById('containerEnquetes');
         
         if(!enquetes || enquetes.length === 0) {
-            container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Nenhum mercado ativo no momento.</div>`;
+            container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Nenhum mercado ativo no momento nesta categoria.</div>`;
             return;
         }
 
@@ -79,7 +79,7 @@
             if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) volumePote += parseFloat(a.valor); });
 
             let corpoVotos = enq.pausada 
-                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:10px; border-radius:8px; text-align:center;">⏸️ Suspenso</div>`
+                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:10px; border-radius:8px; text-align:center;">⏸️ Mercado Suspenso Temporariamente</div>`
                 : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')">▲ ${enq.op1}</button>
                    <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')">▼ ${enq.op2}</button>`;
 
@@ -91,14 +91,14 @@
                     ${corpoVotos}
                 </div>
                 <div style="text-align:center; border-left:1px solid var(--border-color); padding-left:15px;">
-                    <div class="timer">${enq.data_fim}</div>
+                    <div class="timer">Expira em:<br>${enq.data_fim}</div>
                 </div>
             </div>`;
         });
     }
 
     async function apostar(id, palpite, ativo) {
-        let qte = prompt("Quantas moedas alocar?", "10");
+        let qte = prompt("Quantas moedas deseja alocar nesta opção?", "10");
         let val = parseFloat(qte);
         if(isNaN(val) || val <= 0) return;
 
@@ -108,7 +108,7 @@
         await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - val }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         
-        alert("Aposta confirmada!");
+        alert("Alocação realizada com sucesso!");
         atualizarDados();
     }
 
