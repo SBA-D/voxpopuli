@@ -19,7 +19,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; 
         }
-        .container { max-width: 900px; margin: 0 auto; }
+        .container { max-width: 950px; margin: 0 auto; }
         
         .admin-header {
             display: flex;
@@ -54,8 +54,9 @@
         }
         .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
         .btn-blue:hover { background: #2651d4; }
-        .btn-success { background: var(--accent-green); color: #0d1222; padding: 6px 12px; font-size: 12px; font-weight: 700; }
-        .btn-danger { background: var(--accent-red); color: white; padding: 6px 12px; font-size: 12px; font-weight: 700; }
+        .btn-success { background: var(--accent-green); color: #0d1222; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; }
+        .btn-danger { background: var(--accent-red); color: white; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; }
+        .btn-warn { background: #ff9f43; color: #0d1222; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; }
         
         .btn-exit {
             background: #202431; color: var(--text-muted); padding: 10px 18px;
@@ -64,7 +65,7 @@
         .btn-exit:hover { background: #2c3246; color: #fff; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
         th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: 700; }
         tr:hover { background: #13192e; }
 
@@ -84,16 +85,15 @@
     
     <div class="admin-header">
         <div class="header-left">
-            <h1>VoxPopuli 控制台 Engine v4</h1>
-            <div class="subtitle">Mesa de Operações e Moderação - Gestão de Ativos e Arbitragem Financeira</div>
+            <h1>VoxPopuli 控制台 Engine v5</h1>
+            <div class="subtitle">Mesa de Operações Avançada - Controle de Votações em Tempo Real e Arbitragem</div>
         </div>
         <button class="btn-exit" onclick="logoutAdmin()">Sair do Painel</button>
     </div>
 
-    <!-- 🛡️ SEÇÃO DE MODERAÇÃO DE MEMBROS E DADOS -->
     <div class="card">
         <h2>🛡️ Painel de Controle e Moderação de Membros</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Gerencie saldos manuais (Moedas), dados cadastrais e aplique bloqueios de conduta imediatamente.</p>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Gerencie saldos manuais, dados cadastrais e aplique bloqueios de conduta imediatamente.</p>
         
         <div class="grid-2" style="grid-template-columns: 1fr auto;">
             <div>
@@ -141,18 +141,17 @@
         </div>
     </div>
 
-    <!-- 🎯 NOVA SEÇÃO: FINALIZAR ENQUETES / ARBITRAGEM -->
     <div class="card">
-        <h2>🎯 Declarar Resultados e Finalizar Enquetes (Distribuição de Lucros)</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Encerre rodadas distribuindo proporcionalmente todo o dinheiro arrecadado dos perdedores entre os vencedores.</p>
+        <h2>🎯 Controle Interativo de Enquetes (Pausar e Encerrar de Forma Proporcional)</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Pause os palpites a qualquer momento mantendo o timer ativo, ou finalize definindo o vencedor.</p>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
                         <th>Ativo / Evento</th>
-                        <th>Tipo de Mercado</th>
-                        <th>Opção 1</th>
-                        <th>Opção 2</th>
+                        <th>Status Votação</th>
+                        <th>Trava Manual</th>
+                        <th>Declarar Resultado Final</th>
                     </tr>
                 </thead>
                 <tbody id="listaRodadasAbertas"></tbody>
@@ -160,7 +159,6 @@
         </div>
     </div>
 
-    <!-- INJETAR NOVA ENQUETE -->
     <div class="card">
         <h2>🚀 Injetar Nova Enquete / Rodada de Apostas</h2>
         <div class="grid-2">
@@ -217,7 +215,6 @@
         <button class="btn btn-blue" onclick="criarEnquete()">Disparar Enquete nos Painéis</button>
     </div>
 
-    <!-- GERENCIAR DEPÓSITOS -->
     <div class="card">
         <h2>📥 Aprovar Depósitos PIX Pendentes</h2>
         <div style="overflow-x:auto;">
@@ -236,7 +233,6 @@
         </div>
     </div>
 
-    <!-- GERENCIAR SAQUES -->
     <div class="card">
         <h2>📤 Analisar e Pagar Saques (Mín. R$150)</h2>
         <div style="overflow-x:auto;">
@@ -357,10 +353,21 @@
         }
 
         let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        enquetes.push({ id: Date.now(), tipo, ativo, precoAlvo, op1, op2, dataFim, horaFim, finalizada: false });
+        enquetes.push({ 
+            id: Date.now(), 
+            tipo, 
+            ativo, 
+            precoAlvo, 
+            op1, 
+            op2, 
+            dataFim, 
+            horaFim, 
+            finalizada: false,
+            pausada: false // Nova propriedade para travar as apostas individualmente
+        });
         localStorage.setItem('enquetes', JSON.stringify(enquetes));
 
-        alert("Enquete publicada globalmente.");
+        alert("Enquete publicada com sucesso!");
         document.getElementById('enqAtivo').value = '';
         renderizarRodadasAbertas();
     }
@@ -372,16 +379,36 @@
 
         enquetes.forEach((enq) => {
             if (!enq.finalizada) {
+                let txtPausa = enq.pausada ? "Apostas Pausadas" : "Liberada para Votos";
+                let corPausa = enq.pausada ? "color: var(--accent-red);" : "color: var(--accent-green);";
+                let btnPausaTxt = enq.pausada ? "▶️ Liberar Palpites" : "⏸️ Pausar Palpites";
+
                 tbody.innerHTML += `
                     <tr>
-                        <td><b>${enq.ativo}</b></td>
-                        <td><small style="text-transform:uppercase;">${enq.tipo}</small></td>
-                        <td><button class="btn btn-success" onclick="finalizarRodada(${enq.id}, '${enq.op1}')">Declarar Vencedor: ${enq.op1}</button></td>
-                        <td><button class="btn btn-danger" onclick="finalizarRodada(${enq.id}, '${enq.op2}')">Declarar Vencedor: ${enq.op2}</button></td>
+                        <td><b>${enq.ativo}</b> <br><small style="color:var(--text-muted)">${enq.op1} vs ${enq.op2}</small></td>
+                        <td style="${corPausa} font-weight:700; font-size:13px;">${txtPausa}</td>
+                        <td>
+                            <button class="btn-warn" onclick="alternarPausaEnquete(${enq.id})">${btnPausaTxt}</button>
+                        </td>
+                        <td>
+                            <button class="btn btn-success" onclick="finalizarRodada(${enq.id}, '${enq.op1}')">Venceu: ${enq.op1}</button>
+                            <button class="btn btn-danger" onclick="finalizarRodada(${enq.id}, '${enq.op2}')">Venceu: ${enq.op2}</button>
+                        </td>
                     </tr>
                 `;
             }
         });
+    }
+
+    function alternarPausaEnquete(enqueteId) {
+        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
+        let index = enquetes.findIndex(e => e.id === enqueteId);
+        if(index !== -1) {
+            enquetes[index].pausada = !enquetes[index].pausada;
+            localStorage.setItem('enquetes', JSON.stringify(enquetes));
+            alert(enquetes[index].pausada ? "Apostas suspensas nesta enquete!" : "Apostas liberadas novamente!");
+            renderizarRodadasAbertas();
+        }
     }
 
     function finalizarRodada(enqueteId, opcaoVencedora) {
@@ -393,7 +420,6 @@
         if(indexEnq === -1) return;
         const rodada = enquetes[indexEnq];
 
-        // Lógica de Rateio Pari-mutuel
         let apostasDaRodada = apostas.filter(a => a.enqueteId === enqueteId && a.status === 'Pendente');
         let totalPote = 0;
         let totalVencedores = 0;
@@ -403,15 +429,13 @@
             if(a.palpite === opcaoVencedora) totalVencedores += a.valor;
         });
 
-        // Se ninguém jogou na vencedora, devolve às contas ou retém (aqui devolve aos perdedores para evitar bugs)
         if(totalVencedores === 0 && apostasDaRodada.length > 0) {
             apostasDaRodada.forEach(a => {
                 users[a.usuario].saldo += a.valor;
                 a.status = 'Devolvido';
             });
-            alert("Nenhum usuário escolheu a resposta certa. Os valores apostados foram estornados.");
+            alert("Ninguém acertou. Moedas devolvidas aos participantes.");
         } else {
-            // Distribui os ganhos de forma proporcional às moedas jogadas
             apostasDaRodada.forEach(a => {
                 if(a.palpite === opcaoVencedora) {
                     let premioProporcional = (a.valor / totalVencedores) * totalPote;
@@ -432,7 +456,7 @@
         localStorage.setItem('apostas', JSON.stringify(apostas));
         localStorage.setItem('users', JSON.stringify(users));
 
-        alert(`Rodada Liquidada! Vencedor: ${opcaoVencedora}. Lucros distribuídos.`);
+        alert(`Rodada Encerrada! Resultado definitivo cadastrado.`);
         renderizarRodadasAbertas();
     }
 
@@ -488,7 +512,7 @@
         let saques = JSON.parse(localStorage.getItem('saques'));
         saques[index].status = 'Pago';
         localStorage.setItem('saques', JSON.stringify(saques));
-        alert("Saque marcado como liquidado.");
+        alert("Saque liquidado com sucesso.");
         renderizarFinancas();
     }
 
@@ -497,7 +521,7 @@
         window.location.href = 'index.html';
     }
 
-    // Inicialização Geral
+    // Inicialização
     atualizarListaMembrosSelect();
     renderizarRodadasAbertas();
     renderizarFinancas();
