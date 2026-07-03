@@ -93,7 +93,7 @@
 
     <div class="card">
         <h3>📊 Extrato Geral de Transações e Previsões (Depósitos, Saques e Apostas)</h3>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Acompanhe aqui o fluxo financeiro completo de depósitos, retiradas e o resultado de cada palpite.</p>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Acompanhe aqui o fluxo financeiro completo de depósitos, retiradas e o resultado detalhado dos palpites.</p>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
@@ -114,7 +114,7 @@
         <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Preço unitário fixado em: <b>1 Moeda = R$ 1,00</b>. Mínimo para recarga: R$ 9,00.</div>
         <div class="grid-inputs" style="grid-template-columns: 1fr auto;">
             <input type="number" id="valDeposito" placeholder="Quantidade de Moedas (Mínimo 9)">
-            <button class="btn btn-green" onclick="gerarPixDeposito()">Gerar PIX</button>
+            <button class="btn btn-green" onclick="generarPixDeposito()">Gerar PIX</button>
         </div>
         
         <div id="pixArea" style="display: none;" class="pix-modal-box">
@@ -173,7 +173,7 @@
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         const container = document.getElementById('containerEnquetes');
         
-        // REGRA IMPORTANTE: Filtra apenas enquetes da categoria, que não foram finalizadas E cujo tempo NÃO expirou
+        // Auto-exclusão visual instantânea caso o tempo acabe
         let filtradas = enquetes.filter(enq => {
             let tempoExpirado = new Date(`${enq.dataFim}T${enq.horaFim}`).getTime() - new Date().getTime() <= 0;
             return enq.tipo === categoriaAtual && !enq.finalizada && !tempoExpirado;
@@ -188,10 +188,9 @@
         filtradas.forEach((enq) => {
             let subtitulo = enq.tipo === 'financeiro' ? `O ativo fechará acima ou abaixo do preço alvo? (${enq.precoAlvo || '0.00'})` : "Quem vencerá o confronto?";
             
-            // Verifica se o Administrador travou/pausou a enquete manualmente
             let botoesOuAvisoHTML = "";
             if(enq.pausada) {
-                botoesOuAvisoHTML = `<div class="suspensas-aviso">⏸️ Apostas Suspensas pelo Administrador. Aguardando o encerramento do timer.</div>`;
+                botoesOuAvisoHTML = `<div class="suspensas-aviso">⏸️ Apostas Suspensas pelo Administrador. Aguardando o encerramento do tempo limite.</div>`;
             } else {
                 botoesOuAvisoHTML = `
                     <div class="opcoes-container">
@@ -227,8 +226,7 @@
             let dist = new Date(`${dataStr}T${horaStr}`).getTime() - new Date().getTime();
             if(dist <= 0) { 
                 el.innerText = "ENCERRADO"; 
-                // Atualiza a lista para remover a enquete expirada da tela imediatamente
-                carregarEnquetes();
+                carregarEnquetes(); // Força exclusão imediata do card na UI do membro
                 return; 
             }
             let h = Math.floor(dist / 3600000);
@@ -239,7 +237,7 @@
         setInterval(rodar, 1000); rodar();
     }
 
-    function executarApostaMoeda(enqueteId, palpiteEscolhido) {
+    function ejecutarApostaMoeda(enqueteId, palpiteEscolhido) {
         let users = JSON.parse(localStorage.getItem('users'));
         let qte = prompt("Quantas moedas (R$) deseja alocar nesta previsão?:", "10");
         let valorAposta = parseFloat(qte);
@@ -276,7 +274,7 @@
 
         let itensExtrato = [];
 
-        // 1. Coleta os depósitos feitos pelo usuário
+        // 1. Depósitos feitos pelo usuário
         const depositos = JSON.parse(localStorage.getItem('depositos')) || [];
         depositos.filter(d => d.usuario === usuarioLogado).forEach(d => {
             itensExtrato.push({
@@ -287,7 +285,7 @@
             });
         });
 
-        // 2. Coleta os saques solicitados pelo usuário
+        // 2. Saques solicitados pelo usuário
         const saques = JSON.parse(localStorage.getItem('saques')) || [];
         saques.filter(s => s.usuario === usuarioLogado).forEach(s => {
             itensExtrato.push({
@@ -298,26 +296,24 @@
             });
         });
 
-        // 3. Coleta as apostas/previsões
+        // 3. Apostas/Previsões
         const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
         apostas.filter(a => a.usuario === usuarioLogado).forEach(a => {
             let txtResultado = "";
             let valColor = "white";
 
-            if(a.status === 'Pendente') { txtResultado = "Aguardando Resultado"; valColor = "#ff9f43"; }
+            if(a.status === 'Pendente') { txtResultado = "Aguardando Painel"; valColor = "#ff9f43"; }
             else if(a.status === 'Venceu') { txtResultado = `Acertou! (Retorno Proporcional: +R$ ${Number(a.lucro).toFixed(2)})`; valColor = "var(--accent-green)"; }
             else if(a.status === 'Perdeu') { txtResultado = "Errou o Palpite (Perdeu a Entrada)"; valColor = "var(--accent-red)"; }
-            else if(a.status === 'Devolvido') { txtResultado = "Anulada (Moedas Estornadas)"; valColor = "gray"; }
 
             itensExtrato.push({
                 data: a.data || 'Recente',
                 tipo: '🎮 Palpite em Enquete',
-                desc: `Mercado: <b>${a.ativo}</b> | Palpite feito: <code>${a.palpite}</code> <br> <small style="color:${valColor}">Status: ${txtResultado}</small>`,
+                desc: `Mercado: <b>${a.ativo}</b> | Palpite: <code>${a.palpite}</code> <br> <small style="color:${valColor}">Status: ${txtResultado}</small>`,
                 valHTML: `<span style="color:var(--accent-red)">- 🪙 ${Number(a.valor).toFixed(2)}</span>`
             });
         });
 
-        // Ordena tudo por data decrescente (mais recentes no topo)
         itensExtrato.sort((a, b) => new Date(b.data) - new Date(a.data));
 
         if(itensExtrato.length === 0) {
@@ -387,9 +383,9 @@
         window.location.href = 'index.html';
     }
 
-    // Loop de Atualização Dinâmica das Informações e Timers
+    // Inicialização Geral
     atualizarDados();
-    setInterval(carregarEnquetes, 15000); // Filtra e limpa enquetes da tela a cada 15 segundos
+    setInterval(carregarEnquetes, 15000); // Polling a cada 15s para remover expiradas e validar UI
 </script>
 </body>
 </html>
