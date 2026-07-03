@@ -44,10 +44,10 @@
     if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olcLXasdaS21"; 
+    const SUPABASE_KEY = "sb_publishable_D35oaRAeby0oZmoUwfhl9A_guti3olc"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let categoriaAtual = 'financeiro';
+    let categoryAtual = 'financeiro';
 
     async function atualizarDados() {
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
@@ -56,7 +56,7 @@
     }
 
     function mudarCategoria(cat) {
-        categoriaAtual = cat;
+        categoryAtual = cat;
         document.getElementById('tabFinanceiro').classList.remove('active');
         document.getElementById('tabEsportes').classList.remove('active');
         document.getElementById(cat === 'financeiro' ? 'tabFinanceiro' : 'tabEsportes').classList.add('active');
@@ -64,7 +64,7 @@
     }
 
     async function carregarEnquetes() {
-        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('tipo', categoriaAtual).eq('finalizada', false);
+        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('tipo', categoryAtual).eq('finalizada', false);
         let { data: apostas } = await _supabase.from('apostas').select('*');
         const container = document.getElementById('containerEnquetes');
         
