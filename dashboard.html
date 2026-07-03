@@ -3,34 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Premium Member Dashboard (Cloud)</title>
+    <title>VoxPopuli - Premium Member Dashboard</title>
     <style>
-        :root {
-            --bg-main: #060913;
-            --bg-card: #0d1222;
-            --bg-input: #111728;
-            --border-color: #1a2238;
-            --accent-blue: #4371f7;
-            --accent-green: #00b37e;
-            --accent-red: #f75a68;
-            --text-muted: #7d859a;
-        }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 0; box-sizing: border-box; }
+        :root { --bg-main: #060913; --bg-card: #0d1222; --bg-input: #111728; --border-color: #1a2238; --accent-blue: #4371f7; --accent-green: #00b37e; --accent-red: #f75a68; --text-muted: #7d859a; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 0; }
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px 24px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
         .moedas-badge { background: #091a18; border: 1px solid var(--accent-green); padding: 10px 18px; border-radius: 30px; font-size: 14px; color: var(--accent-green); font-weight: 700; }
         .main-content { padding: 24px; max-width: 850px; margin: 0 auto; }
         .card { background: var(--bg-card); padding: 24px; margin-top: 20px; border-radius: 16px; border: 1px solid var(--border-color); }
-        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        input, select { width: 100%; padding: 14px; background: var(--bg-input); color: white; border: 1px solid #1c253d; border-radius: 8px; box-sizing: border-box; }
         .category-selector { display: flex; gap: 12px; margin-top: 24px; }
         .tab-btn { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
         .tab-btn.active { background: #0640df; color: white; }
         .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-top: 20px; display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: center; }
         .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px; border-radius: 8px; text-align: left; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; }
         .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 10px; background: #1c253d; display: inline-block; padding: 4px 10px; border-radius: 4px; }
-        .timer { font-size: 18px; font-weight: 700; font-family: monospace; color: var(--accent-red); }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        .timer { font-size: 18px; font-weight: 700; color: var(--accent-red); }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -49,50 +36,23 @@
         <button class="tab-btn active" id="tabFinanceiro" onclick="mudarCategoria('financeiro')">📊 Mercado Financeiro</button>
         <button class="tab-btn" id="tabEsportes" onclick="mudarCategoria('esportes')">⚽ Esportes</button>
     </div>
-
     <div id="containerEnquetes"></div>
-
-    <div class="card">
-        <h3>📊 Meu Extrato Histórico</h3>
-        <table>
-            <thead><tr><th>Ativo</th><th>Palpite</th><th>Valor</th><th>Resultado</th></tr></thead>
-            <tbody id="extratoGeralUsuario"></tbody>
-        </table>
-    </div>
-
-    <div class="card" id="depositoSection">
-        <h3>💳 Adicionar Saldo via PIX (Mínimo R$ 9,00)</h3>
-        <div class="grid-inputs" style="grid-template-columns: 1fr auto;">
-            <input type="number" id="valDeposito" placeholder="Quantidade">
-            <button style="padding:14px; background:var(--accent-green); border:none; border-radius:8px;" onclick="gerarPix()">Gerar PIX</button>
-        </div>
-        <div id="pixArea" style="display: none; background:#111a30; padding:15px; border-radius:8px; text-align:center; margin-top:10px;">
-            <div id="pixCopiaColaTexto" style="font-family:monospace; font-size:11px; word-break:break-all; background:#060913; padding:10px; margin-bottom:10px;"></div>
-            <button style="padding:8px; background:var(--accent-blue); color:white; border:none; border-radius:5px;" onclick="navigator.clipboard.writeText(document.getElementById('pixCopiaColaTexto').innerText); alert('Copiado!');">📋 Copiar Código</button>
-            <button style="padding:8px; background:var(--accent-green); border:none; border-radius:5px; width:100%; margin-top:10px;" onclick="notificarAdmDep()">✅ Já Paguei! Notificar ADM</button>
-        </div>
-    </div>
 </div>
 
 <script>
     const usuarioLogado = localStorage.getItem('usuarioLogado');
-    if(!usuarioLogado) window.location.href = './index.html';
+    if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
-    // 🔑 Conexão em Nuvem Configurada
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let categoriaAtual = 'financeiro';
-    let valorGeradoAtual = 0;
 
     async function atualizarDados() {
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(user) {
-            document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
-        }
+        if(user) document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
         await carregarEnquetes();
-        await renderizarExtrato();
     }
 
     function mudarCategoria(cat) {
@@ -116,70 +76,40 @@
         container.innerHTML = '';
         enquetes.forEach(enq => {
             let volumePote = 0;
-            if(apostas) {
-                apostas.forEach(a => { if(a.enquete_id === enq.id) volumePote += parseFloat(a.valor); });
-            }
+            if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) volumePote += parseFloat(a.valor); });
 
             let corpoVotos = enq.pausada 
-                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:10px; border-radius:8px; text-align:center;">⏸️ Suspenso Temporariamente</div>`
+                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:10px; border-radius:8px; text-align:center;">⏸️ Suspenso</div>`
                 : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')">▲ ${enq.op1}</button>
                    <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')">▼ ${enq.op2}</button>`;
 
             container.innerHTML += `<div class="enquete-box">
                 <div>
-                    <div class="pote-acumulado-marcador">💰 Lucro Acumulado Coletivo: R$ ${volumePote.toFixed(2)}</div>
+                    <div class="pote-acumulado-marcador">💰 Pote: R$ ${volumePote.toFixed(2)}</div>
                     <div style="font-size:22px; font-weight:800;">${enq.ativo}</div>
-                    <p style="color:var(--text-muted); font-size:13px;">Preço Ref: ${enq.preco_alvo || 'N/A'}</p>
+                    <p style="color:var(--text-muted); font-size:13px;">Alvo: ${enq.preco_alvo || 'N/A'}</p>
                     ${corpoVotos}
                 </div>
                 <div style="text-align:center; border-left:1px solid var(--border-color); padding-left:15px;">
-                    <small style="color:var(--text-muted)">FECHA EM</small>
-                    <div class="timer" id="t-${enq.id}">--:--:--</div>
+                    <div class="timer">${enq.data_fim}</div>
                 </div>
             </div>`;
         });
     }
 
     async function apostar(id, palpite, ativo) {
-        let qte = prompt("Quantas moedas deseja alocar nesta previsão?", "10");
+        let qte = prompt("Quantas moedas alocar?", "10");
         let val = parseFloat(qte);
         if(isNaN(val) || val <= 0) return;
 
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
         if(!user || parseFloat(user.saldo) < val) return alert("Saldo insuficiente.");
 
-        let novoSaldo = parseFloat(user.saldo) - val;
-        await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuarioLogado);
+        await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - val }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         
-        alert("Palpite registrado com sucesso em nuvem!");
+        alert("Aposta confirmada!");
         atualizarDados();
-    }
-
-    function gerarPix() {
-        const v = parseFloat(document.getElementById('valDeposito').value);
-        if(isNaN(v) || v < 9) return alert("Mínimo R$ 9,00.");
-        valorGeradoAtual = v;
-        document.getElementById('pixCopiaColaTexto').innerText = `00020101021126580014br.gov.bcb.pix0114Ef0ce40a-5e1e-42ef-a2b6-a2d3664491bd5204000053039865405${v.toFixed(2)}5802BR5910VoxPopuli6009Araruama62070503***6304`;
-        document.getElementById('pixArea').style.display = 'block';
-    }
-
-    async function notificarAdmDep() {
-        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, valor: valorGeradoAtual, tipo: 'deposito' }]);
-        alert("Notificação enviada ao administrador!");
-        document.getElementById('pixArea').style.display = 'none';
-        atualizarDados();
-    }
-
-    async function renderizarExtrato() {
-        let { data: apostas } = await _supabase.from('apostas').select('*').eq('usuario', usuarioLogado);
-        const tbody = document.getElementById('extratoGeralUsuario'); tbody.innerHTML = '';
-        if(apostas) {
-            apostas.forEach(a => {
-                let statusTexto = a.status === 'Pendente' ? 'Aguardando' : (a.status === 'Venceu' ? `Ganhou! R$ ${parseFloat(a.lucro).toFixed(2)}` : 'Errou');
-                tbody.innerHTML += `<tr><td>${a.ativo}</td><td>${a.palpite}</td><td>R$ ${parseFloat(a.valor).toFixed(2)}</td><td>${statusTexto}</td></tr>`;
-            });
-        }
     }
 
     atualizarDados();
