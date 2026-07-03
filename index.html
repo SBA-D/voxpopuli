@@ -13,8 +13,10 @@
         h2 { font-size: 20px; margin-top: 0; margin-bottom: 25px; font-weight: 600; }
         .input-group { text-align: left; margin-bottom: 18px; }
         .input-group label { display: block; font-size: 14px; color: #7d859a; margin-bottom: 8px; }
+        .password-wrapper { position: relative; display: flex; align-items: center; }
         input { width: 100%; padding: 14px; border: 1px solid #1c253d; background: #111728; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
         input:focus { outline: none; border-color: #4371f7; }
+        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #7d859a; font-size: 18px; user-select: none; }
         button { width: 100%; padding: 14px; background: #0640df; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; font-size: 16px; transition: background 0.2s; }
         button:hover { background: #022cb3; }
         .toggle-link { color: #7d859a; font-size: 13px; margin-top: 25px; display: block; cursor: pointer; text-decoration: none; }
@@ -37,7 +39,10 @@
     </div>
     <div class="input-group">
         <label>Senha</label>
-        <input type="password" id="loginPass" placeholder="Digite sua senha">
+        <div class="password-wrapper">
+            <input type="password" id="loginPass" placeholder="Digite sua senha">
+            <span class="toggle-password" onclick="toggleSenha('loginPass')">👁️</span>
+        </div>
     </div>
     <button onclick="fazerLogin()">Entrar no Painel</button>
     <div class="toggle-link" onclick="mostrarCadastro()">Não tem uma conta? <span>Cadastre-se aqui</span></div>
@@ -55,7 +60,10 @@
     </div>
     <div class="input-group">
         <label>Crie uma Senha</label>
-        <input type="password" id="cadPass" placeholder="Digite sua senha">
+        <div class="password-wrapper">
+            <input type="password" id="cadPass" placeholder="Digite sua senha">
+            <span class="toggle-password" onclick="toggleSenha('cadPass')">👁️</span>
+        </div>
     </div>
     <button onclick="fazerCadastro()">Criar Conta e Salvar</button>
     <div class="toggle-link" onclick="mostrarLogin()">Já tem uma conta? <span>Faça Login</span></div>
@@ -63,9 +71,20 @@
 
 <script>
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    // IMPORTANTE: Use a chave completa que copiou do botão de dois quadradinhos do painel
-    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olcLXasdaS21"; 
+    
+    // ⚠️ ATENÇÃO: Substitua o texto abaixo pela chave REAL copiada do botão oficial de duas folhas do Supabase!
+    const SUPABASE_KEY = "COLE_AQUI_A_SUA_CHAVE_COMPLETA_DO_SUPABASE"; 
+    
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function toggleSenha(inputId) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+        } else {
+            input.type = "password";
+        }
+    }
 
     function mostrarCadastro() {
         document.getElementById('loginBox').style.display = 'none';
@@ -100,7 +119,6 @@
 
         if (!user || !pass) return alert('Preencha os campos!');
 
-        // 🔒 CONTA ÚNICA DO ADMINISTRADOR EXCLUSIVA
         if (user === 'voxadmin' && pass === 'populi2026#') {
             localStorage.setItem('usuarioLogado', 'voxadmin');
             window.location.href = 'adm.html';
