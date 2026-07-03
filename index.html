@@ -3,74 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plataforma de Apostas - Login</title>
+    <title>VoxPopuli - Login</title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #121214; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { background: #202024; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); width: 320px; text-align: center; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #29292e; background: #121214; color: #fff; border-radius: 4px; box-sizing: border-box;}
-        button { width: 100%; padding: 10px; background: #00b37e; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px;}
+        .logo { font-size: 28px; font-weight: bold; color: #00b37e; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #29292e; background: #121214; color: #fff; border-radius: 4px; box-sizing: border-box;}
+        button { width: 100%; padding: 12px; background: #00b37e; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; font-size: 16px;}
         button:hover { background: #00875f; }
-        .toggle-link { color: #8d8d99; font-size: 14px; margin-top: 15px; display: inline-block; cursor: pointer; }
+        .toggle-link { color: #8d8d99; font-size: 14px; margin-top: 15px; display: block; cursor: pointer; text-decoration: underline; }
+        .toggle-link:hover { color: #fff; }
     </style>
 </head>
 <body>
 
 <div class="container" id="loginBox">
+    <div class="logo">VoxPopuli</div>
     <h2>Login</h2>
     <input type="text" id="loginUser" placeholder="Usuário">
     <input type="password" id="loginPass" placeholder="Senha">
     <button onclick="fazerLogin()">Entrar</button>
-    <span class="toggle-link" onclick="alternarTelas()">Não tem conta? Cadastre-se</span>
+    <span class="toggle-link" onclick="mostrarCadastro()">Não tem conta? Cadastre-se</span>
 </div>
 
 <div class="container" id="cadastroBox" style="display: none;">
-    <h2>Cadastro</h2>
+    <div class="logo">VoxPopuli</div>
+    <h2>Cadastro de Membro</h2>
     <input type="text" id="cadUser" placeholder="Escolha um Usuário">
     <input type="password" id="cadPass" placeholder="Escolha uma Senha">
-    <button onclick="fazerCadastro()">Cadastrar</button>
-    <span class="toggle-link" onclick="alternarTelas()">Já tem conta? Faça Login</span>
+    <button onclick="fazerCadastro()">Salvar Dados e Cadastrar</button>
+    <span class="toggle-link" onclick="mostrarLogin()">Já tem conta? Faça Login</span>
 </div>
 
 <script>
-    // Inicializa o Admin padrão se não existir
-    if(!localStorage.getItem('users')) {
-        localStorage.setItem('users', JSON.stringify({ 'admin': { senha: 'admin', saldo: 0, adm: true } }));
+    // Inicializa o banco de dados no navegador se não existir
+    if (!localStorage.getItem('users')) {
+        localStorage.setItem('users', JSON.stringify({ 
+            'adm': { senha: 'adm', saldo: 0, adm: true } 
+        }));
     }
 
-    function alternarTelas() {
-        const login = document.getElementById('loginBox');
-        const cadastro = document.getElementById('cadastroBox');
-        if(login.style.display === 'none') {
-            login.style.display = 'block';
-            cadastro.style.display = 'none';
-        } else {
-            login.style.display = 'none';
-            cadastro.style.display = 'block';
-        }
+    // Funções para alternar as telas (Corrigidas)
+    function mostrarCadastro() {
+        document.getElementById('loginBox').style.display = 'none';
+        document.getElementById('cadastroBox').style.display = 'block';
     }
 
+    document.write
+
+    function mostrarLogin() {
+        document.getElementById('cadastroBox').style.display = 'none';
+        document.getElementById('loginBox').style.display = 'block';
+    }
+
+    // Função de Cadastro
     function fazerCadastro() {
         const user = document.getElementById('cadUser').value.trim();
         const pass = document.getElementById('cadPass').value.trim();
-        if(!user || !pass) return alert('Preencha todos os campos!');
+        
+        if (!user || !pass) {
+            return alert('Por favor, preencha todos os campos!');
+        }
 
-        let users = JSON.parse(localStorage.getItem('users'));
-        if(users[user]) return alert('Usuário já existe!');
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        
+        if (users[user]) {
+            return alert('Este usuário já existe! Escolha outro nome.');
+        }
 
+        // Salva o novo membro com saldo inicial zero
         users[user] = { senha: pass, saldo: 0, adm: false };
         localStorage.setItem('users', JSON.stringify(users));
-        alert('Cadastro realizado com sucesso!');
-        alternarTelas();
+        
+        alert('Cadastro realizado com sucesso! Agora faça o seu login.');
+        mostrarLogin();
     }
 
+    // Função de Login
     function fazerLogin() {
         const user = document.getElementById('loginUser').value.trim();
         const pass = document.getElementById('loginPass').value.trim();
-        let users = JSON.parse(localStorage.getItem('users'));
+        let users = JSON.parse(localStorage.getItem('users')) || {};
 
-        if(users[user] && users[user].senha === pass) {
+        if (users[user] && users[user].senha === pass) {
             localStorage.setItem('usuarioLogado', user);
-            if(users[user].adm) {
+            
+            // Redireciona dependendo do tipo de conta
+            if (users[user].adm === true) {
                 window.location.href = 'adm.html';
             } else {
                 window.location.href = 'painel.html';
