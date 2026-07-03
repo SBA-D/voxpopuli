@@ -68,13 +68,13 @@
 </div>
 
 <script>
-    // Trava de segurança no ADM
+    // Trava rígida de segurança
     if(localStorage.getItem('usuarioLogado') !== 'voxadmin') {
         window.location.href = './index.html';
     }
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
+    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olcLXasdaS21"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function inicializarPainel() {
@@ -97,12 +97,13 @@
         const hora_fim = document.getElementById('enqHoraFim').value;
         const preco_alvo = document.getElementById('enqPrecoAlvo').value;
 
-        if(!ativo || !data_fim || !hora_fim) return alert("Preencha todos os campos.");
+        if(!ativo || !data_fim || !hora_fim) return alert("Preencha todos os campos obrigatórios.");
 
         const { error } = await _supabase.from('enquetes').insert([{ tipo, ativo, preco_alvo, op1, op2, data_fim, hora_fim, finalizada: false, pausada: false }]);
-        if(error) return alert("Erro ao criar: " + error.message);
+        if(error) return alert("Erro ao criar enquete: " + error.message);
         
-        alert("Enquete enviada com sucesso para a Nuvem!");
+        alert("Enquete publicada globalmente na Nuvem!");
+        document.getElementById('enqAtivo').value = '';
         inicializarPainel();
     }
 
@@ -135,8 +136,9 @@
     }
 
     async function liquidarEnquete(id, vencedor) {
+        if(!confirm(`Confirmar vitória da opção "${vencedor}"?`)) return;
         await _supabase.from('enquetes').update({ finalizada: true }).eq('id', id);
-        alert("Rodada encerrada!");
+        alert("Mercado finalizado com sucesso!");
         inicializarPainel();
     }
 
