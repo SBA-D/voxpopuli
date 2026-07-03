@@ -3,50 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Usuário</title>
+    <title>VoxPopuli - Dashboard do Membro</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121214; color: #fff; margin: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #202024; padding: 15px; border-radius: 8px; }
-        .card { background: #202024; padding: 20px; margin-top: 20px; border-radius: 8px; }
-        .enquete-item { background: #29292e; padding: 15px; margin: 10px 0; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-        button { padding: 8px 15px; background: #00b37e; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: bold;}
-        button.btn-sub { background: #f75a68; }
-        select, input { padding: 8px; background: #121214; color: white; border: 1px solid #29292e; border-radius: 4px; }
-        .flex-btn { display: flex; gap: 10px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #060913; 
+            color: #fff; 
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background: #0d1222; 
+            padding: 15px 20px; 
+            border-bottom: 1px solid #1a2238;
+        }
+        .logo-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4371f7;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .moedas-badge {
+            background: #091a18;
+            border: 1px solid #00b37e;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #00b37e;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-blue {
+            background: #0640df;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn-blue:hover { background: #022cb3; }
+        .btn-exit {
+            background: #202431;
+            color: #7d859a;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-exit:hover { background: #2c3246; color: #fff; }
+        
+        .main-content {
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card { 
+            background: #0d1222; 
+            padding: 20px; 
+            margin-top: 20px; 
+            border-radius: 12px; 
+            border: 1px solid #1a2238;
+        }
+        .card h3 {
+            margin-top: 0;
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #7d859a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-inline {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        input { 
+            flex: 1;
+            padding: 12px; 
+            background: #111728; 
+            color: white; 
+            border: 1px solid #1c253d; 
+            border-radius: 8px; 
+            font-size: 14px;
+        }
+        input:focus { outline: none; border-color: #4371f7; }
+        
+        .enquete-box {
+            background: #0d1222;
+            border: 1px solid #1a2238;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .enquete-badge {
+            color: #4371f7;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            display: block;
+        }
+        .enquete-pergunta {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .opcao-btn {
+            background: #111728;
+            border: 1px solid #1c253d;
+            color: white;
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            text-align: left;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            box-sizing: border-box;
+        }
+        .opcao-btn:hover {
+            border-color: #4371f7;
+            background: #151d33;
+        }
+        
+        .tempo-container {
+            border: 1px solid #f75a68;
+            background: #221114;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .tempo-titulo {
+            color: #f75a68;
+            font-size: 12px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .timer {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h2>Olá, <span id="nomeUsuario">...</span></h2>
-    <h3>Saldo: <span id="saldoUsuario">0</span> Moedas</h3>
-    <button onclick="logout()" style="background:#f75a68;">Sair</button>
+    <div class="logo-text">VoxPopuli <span>📈</span></div>
+    <div class="header-right">
+        <div class="moedas-badge">
+            🪙 <span id="saldoUsuario">0.00</span> Moedas
+        </div>
+        <button class="btn-blue" onclick="comprarMoedas()">+ Comprar Moedas</button>
+        <button class="btn-exit" onclick="logout()">Sair</button>
+    </div>
 </div>
 
-<div class="card">
-    <h3>Financeiro</h3>
-    <button onclick="comprarMoedas()">Comprar Moedas (Simular PIX)</button>
-    <input type="number" id="valSaque" placeholder="Valor Mínimo 10" style="width: 120px;">
-    <button class="btn-sub" onclick="solicitarSaque()">Solicitar Saque</button>
-</div>
+<div class="main-content">
 
-<div class="card">
-    <h3>📊 Enquetes Disponíveis (Custo: 1 Moeda por aposta)</h3>
-    <h4>Mercado Financeiro (Acima ou Abaixo do fechamento anterior)</h4>
-    <div id="listaFinancas"></div>
+    <div class="card">
+        <h3>💰 Solicitar Saque</h3>
+        <div class="input-inline">
+            <input type="number" id="valSaque" placeholder="Mínimo 10 moedas">
+            <button class="btn-blue" style="background: #df0618;" onclick="solicitarSaque()">Pedir Saque</button>
+        </div>
+    </div>
 
-    <h4 style="margin-top:30px;">⚽ Esportes (Quem vai vencer?)</h4>
-    <div id="listaEsportes"></div>
+    <h2 style="margin-top: 30px; font-size: 22px; font-weight: 600;">Previsões Ativas</h2>
+    
+    <div id="containerEnquetes">
+        </div>
+
 </div>
 
 <script>
+    // Segurança: se não estiver logado, volta pro index
     const usuarioLogado = localStorage.getItem('usuarioLogado');
     if(!usuarioLogado) window.location.href = 'index.html';
 
     function atualizarDados() {
-        document.getElementById('nomeUsuario').innerText = usuarioLogado;
-        let users = JSON.parse(localStorage.getItem('users'));
-        document.getElementById('saldoUsuario').innerText = users[usuarioLogado].saldo;
+        let users = JSON.parse(localStorage.getItem('users')) || {};
+        if(users[usuarioLogado]) {
+            document.getElementById('saldoUsuario').innerText = Number(users[usuarioLogado].saldo).toFixed(2);
+        }
         carregarEnquetes();
     }
 
@@ -55,7 +221,7 @@
         valor = parseInt(valor);
         if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
 
-        alert(`Chave Copia e Cola PIX Gerada para ${valor} moedas. Simulando pagamento realizado!`);
+        alert(`Chave Copia e Cola PIX Gerada para ${valor} moedas. Simulando aprovação de pagamento!`);
         let users = JSON.parse(localStorage.getItem('users'));
         users[usuarioLogado].saldo += valor;
         localStorage.setItem('users', JSON.stringify(users));
@@ -66,10 +232,9 @@
         const valor = parseInt(document.getElementById('valSaque').value);
         let users = JSON.parse(localStorage.getItem('users'));
         
-        if(isNaN(valor) || valor < 10) return alert("O valor mínimo estipulado para saque é 10 moedas.");
-        if(users[usuarioLogado].saldo < valor) return alert("Saldo insuficiente.");
+        if(isNaN(valor) || valor < 10) return alert("O valor mínimo para saque é de 10 moedas.");
+        if(users[usuarioLogado].saldo < valor) return alert("Saldo insuficiente para este saque.");
 
-        // Desconta provisoriamente do saldo e envia pedido ao ADM
         users[usuarioLogado].saldo -= valor;
         localStorage.setItem('users', JSON.stringify(users));
 
@@ -77,34 +242,59 @@
         saques.push({ usuario: usuarioLogado, valor: valor, status: 'Pendente' });
         localStorage.setItem('saques', JSON.stringify(saques));
 
-        alert("Solicitação de saque enviada para a administração!");
+        alert("Seu pedido de saque foi enviado com sucesso para aprovação do ADM!");
+        document.getElementById('valSaque').value = '';
         atualizarDados();
     }
 
     function carregarEnquetes() {
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        const finDiv = document.getElementById('listaFinancas');
-        const espDiv = document.getElementById('listaEsportes');
-        finDiv.innerHTML = ''; espDiv.innerHTML = '';
-
-        enquetes.forEach((enq, index) => {
-            const html = `
-                <div class="enquete-item">
-                    <span><strong>${enq.ativo}</strong> - ${enq.pergunta || 'Quem vence?'}</span>
-                    <div class="flex-btn">
-                        <button onclick="apostar(${index}, '${enq.op1}')">${enq.op1}</button>
-                        <button onclick="apostar(${index}, '${enq.op2}')">${enq.op2}</button>
+        const container = document.getElementById('containerEnquetes');
+        
+        if(enquetes.length === 0) {
+            container.innerHTML = `
+                <div class="enquete-box">
+                    <span class="enquete-badge">🔥 Enquete em andamento</span>
+                    <div class="enquete-pergunta">Aguardando palpites...</div>
+                    <div style="color: #7d859a; font-size: 15px; margin: 15px 0;">Quem é o melhor? Ronaldo ou Kaká?</div>
+                    <button class="opcao-btn"><span>Ronaldo</span> <span>--</span></button>
+                    <button class="opcao-btn"><span>Kaká</span> <span>--</span></button>
+                    <div class="tempo-container">
+                        <div class="tempo-titulo">⏱️ TEMPO ESGOTADO</div>
+                        <div class="timer">00:00:00</div>
                     </div>
                 </div>
             `;
-            if(enq.tipo === 'financeiro') finDiv.innerHTML += html;
-            else espDiv.innerHTML += html;
+            return;
+        }
+
+        container.innerHTML = '';
+        enquetes.forEach((enq, index) => {
+            container.innerHTML += `
+                <div class="enquete-box">
+                    <span class="enquete-badge">🔥 Enquete de ${enq.tipo === 'financeiro' ? 'Mercado' : 'Esportes'}</span>
+                    <div class="enquete-pergunta">${enq.ativo}</div>
+                    
+                    <button class="opcao-btn" onclick="apostar(${index}, '${enq.op1}')">
+                        <span>${enq.op1}</span> <span>--</span>
+                    </button>
+                    
+                    <button class="opcao-btn" onclick="apostar(${index}, '${enq.op2}')">
+                        <span>${enq.op2}</span> <span>--</span>
+                    </button>
+                    
+                    <div class="tempo-container">
+                        <div class="tempo-titulo">⏱️ TEMPO RESTANTE</div>
+                        <div class="timer">00:00:00</div>
+                    </div>
+                </div>
+            `;
         });
     }
 
     function apostar(index, opcao) {
         let users = JSON.parse(localStorage.getItem('users'));
-        if(users[usuarioLogado].saldo < 1) return alert("Você precisa de pelo menos 1 moeda para apostar!");
+        if(users[usuarioLogado].saldo < 1) return alert("Você precisa de pelo menos 1 moeda para votar!");
 
         users[usuarioLogado].saldo -= 1;
         localStorage.setItem('users', JSON.stringify(users));
@@ -115,7 +305,7 @@
         apostas.push({ usuario: usuarioLogado, ativo: enquetes[index].ativo, palpite: opcao });
         localStorage.setItem('apostas', JSON.stringify(apostas));
 
-        alert(`Aposta confirmada em ${opcao}!`);
+        alert(`Palpite confirmado em: ${opcao}!`);
         atualizarDados();
     }
 
