@@ -2,88 +2,96 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>VoxPopuli - ADM Central</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Administrador</title>
     <style>
-        :root { --bg-main: #0b0f19; --bg-card: #111827; --primary-blue: #2563eb; --accent-green: #10b981; --accent-red: #ef4444; }
-        body { background-color: var(--bg-main); color: #f3f4f6; font-family: sans-serif; padding: 20px; }
-        .secao-adm { background: var(--bg-card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #374151; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; border-bottom: 1px solid #374151; text-align: left; }
-        button { cursor: pointer; padding: 6px 12px; border-radius: 4px; border: none; color: white; }
+        body { font-family: Arial, sans-serif; background-color: #121214; color: #fff; margin: 20px; }
+        .card { background: #202024; padding: 20px; margin-top: 20px; border-radius: 8px; }
+        input, select { padding: 10px; margin: 10px 0; background: #121214; color: #fff; border: 1px solid #29292e; border-radius: 4px; width: 100%; box-sizing: border-box;}
+        button { padding: 10px 20px; background: #00b37e; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: bold;}
+        .notif-item { background: #29292e; padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between;}
     </style>
 </head>
 <body>
-    <header><h1>VoxPopuli Central [ADM]</h1></header>
-    <div style="max-width: 1100px; margin: 0 auto;">
+
+<h2>⚙️ Painel de Administração</h2>
+<button onclick="window.location.href='index.html'" style="background:#555;">Ir para o Login</button>
+
+<div class="card">
+    <h3>Criar Nova Enquete / Ativo</h3>
+    <label>Tipo de Mercado:</label>
+    <select id="tipoEnquete" onchange="mudarFormulario()">
+        <option value="financeiro">Mercado Financeiro (Forex, Cripto, Ações, Índices)</option>
+        <option value="esportes">Esportes (Futebol, Basquete, etc.)</option>
+    </select>
+
+    <label>Nome do Ativo ou Jogo (Ex: EUR/USD, BTC/USDT, PETR4, Mini Índice WIN, Real Madrid x Barcelona):</label>
+    <input type="text" id="nomeAtivo" placeholder="Digite o ativo ou confronto">
+
+    <button onclick="salvarEnquete()">Adicionar no Painel</button>
+</div>
+
+<div class="card">
+    <h3>🔔 Notificações de Pedidos de Saque</h3>
+    <div id="listaSaques">Nenhum pedido de saque pendente.</div>
+</div>
+
+<script>
+    function mudarFormulario() {
+        // Pode ser usado para customizar campos dinamicamente no futuro
+    }
+
+    function salvarEnquete() {
+        const tipo = document.getElementById('tipoEnquete').value;
+        const ativo = document.getElementById('nomeAtivo').value.trim();
+
+        if(!ativo) return alert("Insira o nome do ativo ou do jogo.");
+
+        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         
-        <div class="secao-adm">
-            <h3>💰 Aprovação de Depósitos</h3>
-            <table id="tabela-recargas"></table>
-        </div>
+        let novaEnquete = {
+            tipo: tipo,
+            ativo: ativo,
+            op1: tipo === 'financeiro' ? 'Subir (Acima)' : 'Time A/Casa',
+            op2: tipo === 'financeiro' ? 'Descer (Abaixo)' : 'Time B/Visitante',
+            pergunta: tipo === 'financeiro' ? 'Fechará acima ou abaixo do fechamento anterior?' : 'Quem vencerá a partida?'
+        };
 
-        <div class="secao-adm">
-            <h3>📤 Pedidos de Saque</h3>
-            <table id="tabela-saques"></table>
-        </div>
+        enquetes.push(novaEnquete);
+        localStorage.setItem('enquetes', JSON.stringify(enquetes));
+        alert("Enquete adicionada com sucesso!");
+        document.getElementById('nomeAtivo').value = '';
+    }
 
-        <div class="secao-adm">
-            <h3>📝 Injetar Nova Previsão</h3>
-            <select id="enq-categoria" onchange="ajustarFormulario()">
-                <option value="Mercado Financeiro">📈 Mercado Financeiro</option>
-                <option value="Esporte">⚽ Esporte</option>
-            </select>
-            <div id="campos-dinamicos" style="margin: 10px 0;"></div>
-            <button class="btn-adm" onclick="injetarEnquete()" style="background:var(--primary-blue)">Injetar</button>
-        </div>
-    </div>
-
-    <script>
-        const SUPABASE_URL = "https://xxxzluqjgqwkpzjjxpbj.supabase.co";
-        const SUPABASE_KEY = "SUA_CHAVE_ANON_AQUI"; 
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        async function carregarAdmin() {
-            // 1. Carregar Depósitos
-            const { data: recargas } = await supabase.from('depositos').select('*');
-            const tRec = document.getElementById('tabela-recargas');
-            tRec.innerHTML = recargas ? recargas.map(r => `
-                <tr>
-                    <td>${r.membro_id || 'N/A'}</td>
-                    <td>${r.valor}</td>
-                    <td><button onclick="aprovarRecarga('${r.id}', '${r.membro_id}', ${r.valor})">Aprovar</button></td>
-                </tr>
-            `).join('') : '<tr><td>Nenhum</td></tr>';
-
-            // 2. Carregar Saques
-            const { data: saques } = await supabase.from('saques').select('*').eq('status', 'PENDENTE');
-            const tSaq = document.getElementById('tabela-saques');
-            tSaq.innerHTML = saques ? saques.map(s => `
-                <tr>
-                    <td>${s.membro_id}</td>
-                    <td>${s.valor}</td>
-                    <td><button onclick="finalizarSaque('${s.id}', '${s.membro_id}', ${s.valor})">Pagar</button></td>
-                </tr>
-            `).join('') : '<tr><td>Nenhum</td></tr>';
+    function carregarPedidosSaque() {
+        const saques = JSON.parse(localStorage.getItem('saques')) || [];
+        const div = document.getElementById('listaSaques');
+        if(saques.length === 0) {
+            div.innerHTML = "Nenhum pedido de saque pendente.";
+            return;
         }
+        
+        div.innerHTML = '';
+        saques.forEach((s, idx) => {
+            div.innerHTML += `
+                <div class="notif-item">
+                    <span>👤 <strong>${s.usuario}</strong> está solicitando o saque de <strong>${s.valor} moedas</strong>.</span>
+                    <button onclick="pagarSaque(${idx})" style="background:#00b37e; padding:5px 10px;">Aprovar & Pagar</button>
+                </div>
+            `;
+        });
+    }
 
-        async function aprovarRecarga(id, membroId, valor) {
-            const { data: m } = await supabase.from('membros').select('saldo').eq('id', membroId).single();
-            await supabase.from('membros').update({ saldo: parseFloat(m.saldo) + parseFloat(valor) }).eq('id', membroId);
-            await supabase.from('depositos').update({ status: 'APROVADO' }).eq('id', id);
-            alert("Aprovado!");
-            carregarAdmin();
-        }
+    function pagarSaque(idx) {
+        let saques = JSON.parse(localStorage.getItem('saques'));
+        saques.splice(idx, 1); // Remove da fila após pagar
+        localStorage.setItem('saques', JSON.stringify(saques));
+        alert("Saque aprovado e processado!");
+        carregarPedidosSaque();
+    }
 
-        function ajustarFormulario() {
-            const cat = document.getElementById('enq-categoria').value;
-            const container = document.getElementById('campos-dinamicos');
-            container.innerHTML = cat === "Mercado Financeiro" 
-                ? `<input id="enq-ativo" placeholder="Ex: WIN1!">` 
-                : `<input id="enq-pergunta" placeholder="Ex: Flamengo vs Vasco">`;
-        }
-
-        carregarAdmin();
-    </script>
+    // Inicializa a lista de saques ao carregar
+    carregarPedidosSaque();
+</script>
 </body>
 </html>
