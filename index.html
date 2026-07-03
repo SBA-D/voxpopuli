@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Acessar Painel</title>
+    <title>VoxPopuli - Login</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -149,7 +149,7 @@
 </div>
 
 <script>
-    // Configura a conta do administrador se o banco estiver vazio
+    // Inicializa as contas se o banco no navegador estiver vazio
     if (!localStorage.getItem('users')) {
         localStorage.setItem('users', JSON.stringify({ 
             'adm': { senha: 'adm', saldo: 0, adm: true } 
@@ -168,7 +168,7 @@
         document.getElementById('loginBox').style.display = 'block';
     }
 
-    // Salva o novo usuário no LocalStorage
+    // Salva o novo usuário no LocalStorage do navegador
     function fazerCadastro() {
         const user = document.getElementById('cadUser').value.trim();
         const pass = document.getElementById('cadPass').value.trim();
@@ -183,7 +183,7 @@
             return alert('Esse nome de usuário já está sendo usado.');
         }
 
-        // Salva com saldo inicial de 0 moedas
+        // Cria o membro com saldo 0
         users[user] = { senha: pass, saldo: 0, adm: false };
         localStorage.setItem('users', JSON.stringify(users));
         
@@ -191,7 +191,7 @@
         mostrarLogin();
     }
 
-    // Verifica credenciais e redireciona
+    // Faz a verificação e manda para a página certa
     function fazerLogin() {
         const user = document.getElementById('loginUser').value.trim();
         const pass = document.getElementById('loginPass').value.trim();
@@ -200,11 +200,11 @@
         if (users[user] && users[user].senha === pass) {
             localStorage.setItem('usuarioLogado', user);
             
-            // Se for adm vai para adm.html, senão vai para painel.html
+            // Redirecionamento correto conforme o tipo de conta
             if (users[user].adm === true) {
                 window.location.href = 'adm.html';
             } else {
-                window.location.href = 'painel.html';
+                window.location.href = 'dashboard.html';
             }
         } else {
             alert('Usuário ou senha incorretos!');
