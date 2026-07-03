@@ -114,7 +114,7 @@
         <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Preço unitário fixado em: <b>1 Moeda = R$ 1,00</b>. Mínimo para recarga: R$ 9,00.</div>
         <div class="grid-inputs" style="grid-template-columns: 1fr auto;">
             <input type="number" id="valDeposito" placeholder="Quantidade de Moedas (Mínimo 9)">
-            <button class="btn btn-green" onclick="generarPixDeposito()">Gerar PIX</button>
+            <button class="btn btn-green" onclick="gerarPixDeposito()">Gerar PIX</button>
         </div>
         
         <div id="pixArea" style="display: none;" class="pix-modal-box">
@@ -154,7 +154,7 @@
     function atualizarDados() {
         let users = JSON.parse(localStorage.getItem('users')) || {};
         if(users[usuarioLogado]) {
-            document.getElementById('saldoUsuario').innerText = Number(users[usuarioLogado].saldo).toFixed(2);
+            document.getElementById('saldoUsuario').innerText = Number(users[usuarioLogado].saldo || 0).toFixed(2);
         }
         carregarEnquetes();
         renderizarExtratoGeral();
@@ -173,7 +173,6 @@
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         const container = document.getElementById('containerEnquetes');
         
-        // Auto-exclusão visual instantânea caso o tempo acabe
         let filtradas = enquetes.filter(enq => {
             let tempoExpirado = new Date(`${enq.dataFim}T${enq.horaFim}`).getTime() - new Date().getTime() <= 0;
             return enq.tipo === categoriaAtual && !enq.finalizada && !tempoExpirado;
@@ -226,7 +225,7 @@
             let dist = new Date(`${dataStr}T${horaStr}`).getTime() - new Date().getTime();
             if(dist <= 0) { 
                 el.innerText = "ENCERRADO"; 
-                carregarEnquetes(); // Força exclusão imediata do card na UI do membro
+                carregarEnquetes(); 
                 return; 
             }
             let h = Math.floor(dist / 3600000);
@@ -237,13 +236,13 @@
         setInterval(rodar, 1000); rodar();
     }
 
-    function ejecutarApostaMoeda(enqueteId, palpiteEscolhido) {
-        let users = JSON.parse(localStorage.getItem('users'));
+    function executarApostaMoeda(enqueteId, palpiteEscolhido) {
+        let users = JSON.parse(localStorage.getItem('users')) || {};
         let qte = prompt("Quantas moedas (R$) deseja alocar nesta previsão?:", "10");
         let valorAposta = parseFloat(qte);
 
         if(isNaN(valorAposta) || valorAposta <= 0) return alert("Valor inválido.");
-        if(users[usuarioLogado].saldo < valorAposta) return alert("Moedas insuficientes.");
+        if(!users[usuarioLogado] || users[usuarioLogado].saldo < valorAposta) return alert("Moedas insuficientes.");
 
         users[usuarioLogado].saldo -= valorAposta;
         localStorage.setItem('users', JSON.stringify(users));
@@ -274,7 +273,6 @@
 
         let itensExtrato = [];
 
-        // 1. Depósitos feitos pelo usuário
         const depositos = JSON.parse(localStorage.getItem('depositos')) || [];
         depositos.filter(d => d.usuario === usuarioLogado).forEach(d => {
             itensExtrato.push({
@@ -285,7 +283,6 @@
             });
         });
 
-        // 2. Saques solicitados pelo usuário
         const saques = JSON.parse(localStorage.getItem('saques')) || [];
         saques.filter(s => s.usuario === usuarioLogado).forEach(s => {
             itensExtrato.push({
@@ -296,7 +293,6 @@
             });
         });
 
-        // 3. Apostas/Previsões
         const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
         apostas.filter(a => a.usuario === usuarioLogado).forEach(a => {
             let txtResultado = "";
@@ -361,11 +357,11 @@
         const valor = parseFloat(document.getElementById('valSaque').value);
         const tipoPix = document.getElementById('tipoPixSaque').value;
         const chavePix = document.getElementById('chavePixSaque').value.trim();
-        let users = JSON.parse(localStorage.getItem('users'));
+        let users = JSON.parse(localStorage.getItem('users')) || {};
         
         if(isNaN(valor) || valor < 150) return alert("O resgate mínimo é de R$ 150,00.");
         if(!chavePix) return alert("Informe a sua chave de destino.");
-        if(users[usuarioLogado].saldo < valor) return alert("Moedas insuficientes.");
+        if(!users[usuarioLogado] || users[usuarioLogado].saldo < valor) return alert("Moedas insuficientes.");
 
         users[usuarioLogado].saldo -= valor;
         localStorage.setItem('users', JSON.stringify(users));
@@ -383,9 +379,8 @@
         window.location.href = 'index.html';
     }
 
-    // Inicialização Geral
     atualizarDados();
-    setInterval(carregarEnquetes, 15000); // Polling a cada 15s para remover expiradas e validar UI
+    setInterval(carregarEnquetes, 15000);
 </script>
 </body>
 </html>
