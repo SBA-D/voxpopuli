@@ -20,8 +20,8 @@
         .btn { padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; transition: background 0.2s; }
         .btn-blue { background: var(--accent-blue); color: white; width: 100%; margin-top: 10px; }
         .btn-blue:hover { background: #2655d4; }
-        .btn-success { background: var(--accent-green); color: #0d1222; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; }
-        .btn-danger { background: var(--accent-red); color: white; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; }
+        .btn-success { background: var(--accent-green); color: #0d1222; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-danger { background: var(--accent-red); color: white; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
         .btn-warn { background: #ff9f43; color: #0d1222; padding: 8px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
@@ -36,6 +36,20 @@
     <div class="admin-header">
         <div class="header-left"><h1>VoxPopuli - Painel Administrativo</h1></div>
         <button class="btn" style="background:#202431; color:white; padding: 10px 20px;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
+    </div>
+
+    <div class="card" style="border-color: #ff9f43;">
+        <h2 style="color: #ff9f43;">📥 Solicitações de Depósito PIX (Pendentes)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Membro / Usuário</th>
+                    <th>Valor Solicitado</th>
+                    <th>Ações de Liberação</th>
+                </tr>
+            </thead>
+            <tbody id="listaDepositosPendentes"></tbody>
+        </table>
     </div>
 
     <div class="card">
@@ -81,6 +95,7 @@
 
     async function inicializarPainel() {
         await calcularCaixaGeral();
+        await renderizarDepositos();
         await renderizarRodadasAbertas();
     }
 
@@ -88,6 +103,45 @@
         let { data: users } = await _supabase.from('usuarios').select('saldo');
         let total = 0; if(users) users.forEach(u => total += parseFloat(u.saldo || 0));
         document.getElementById('caixaPlataforma').innerText = total.toFixed(2);
+    }
+
+    async function renderizarDepositos() {
+        const { data: deps } = await _supabase.from('depositos').select('*').eq('status', 'pendente');
+        const tbody = document.getElementById('listaDepositosPendentes');
+        tbody.innerHTML = '';
+
+        if(!deps || deps.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nenhum alerta de PIX pendente no momento.</td></tr>`;
+            return;
+        }
+
+        deps.forEach(d => {
+            tbody.innerHTML += `<tr>
+                <td><b>${d.usuario}</b></td>
+                <td style="color:var(--accent-green); font-weight:bold;">R$ ${Number(d.valor).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-success" onclick="processarDeposito(${d.id}, '${d.usuario}', ${d.valor}, 'aprovado')">✔️ Aprovar e Injetar Saldo</button>
+                    <button class="btn btn-danger" onclick="processarDeposito(${d.id}, '${d.usuario}', ${d.valor}, 'recusado')">❌ Recusar</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function processarDeposito(depId, username, valor, novoStatus) {
+        if(novoStatus === 'aprovado') {
+            // Pegar saldo atual do usuário
+            let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', username).single();
+            const saldoAtual = parseFloat(user.saldo || 0);
+            
+            // Creditar saldo na conta do membro
+            await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', username);
+        }
+
+        // Mudar status da transação de depósito
+        await _supabase.from('depositos').update({ status: novoStatus }).eq('id', depId);
+        
+        alert(`Depósito ${novoStatus} com sucesso!`);
+        inicializarPainel();
     }
 
     async function criarEnquete() {
@@ -115,7 +169,7 @@
         const tbody = document.getElementById('listaRodadasAbertas'); tbody.innerHTML = '';
 
         if(!enquetes || enquetes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding: 20px;">Nenhum mercado ativo em custódia. crie uma nova enquete abaixo!</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding: 20px;">Nenhum mercado ativo em custódia.</td></tr>`;
             return;
         }
 
@@ -128,7 +182,7 @@
                 <td><span class="pote-badge">R$ ${totalPote.toFixed(2)}</span></td>
                 <td><button class="btn-warn" onclick="togglePausa(${enq.id}, ${enq.pausada})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
                 <td>
-                    <button class="btn btn-success" onclick="liquidarEnquete(${enq.id}, '${enq.op1}')">Vila ${enq.op1}</button>
+                    <button class="btn btn-success" onclick="liquidarEnquete(${enq.id}, '${enq.op1}')">Vitória ${enq.op1}</button>
                     <button class="btn btn-danger" onclick="liquidarEnquete(${enq.id}, '${enq.op2}')">Vitória ${enq.op2}</button>
                 </td>
             </tr>`;
