@@ -36,7 +36,7 @@
         .btn-green { background: var(--accent-green); color: #0d1222; }
         .btn-exit { background: #202431; color: var(--text-muted); }
         
-        .main-content { padding: 24px; max-width: 800px; margin: 0 auto; }
+        .main-content { padding: 24px; max-width: 850px; margin: 0 auto; }
         .card { background: var(--bg-card); padding: 24px; margin-top: 20px; border-radius: 16px; border: 1px solid var(--border-color); }
         .card h3 { margin-top: 0; font-size: 14px; margin-bottom: 18px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         
@@ -48,9 +48,10 @@
         .tab-btn.active { background: #0640df; border-color: var(--accent-blue); color: white; }
         
         .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-top: 20px; display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: center; }
-        .enquete-ativo { font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+        .enquete-ativo { font-size: 24px; font-weight: 800; margin-bottom: 12px; }
         .opcoes-container { display: flex; flex-direction: column; gap: 10px; }
         .opcao-btn { background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px; border-radius: 8px; text-align: left; font-size: 15px; cursor: pointer; display: flex; justify-content: space-between; }
+        .opcao-btn:hover { border-color: var(--accent-blue); }
         
         .tempo-container { border: 1px solid var(--accent-red); background: #221114; border-radius: 10px; padding: 12px; text-align: center; }
         .timer { font-size: 18px; font-weight: 700; font-family: monospace; }
@@ -61,6 +62,11 @@
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
+        
+        .suspensas-aviso {
+            background: #2c1a0a; border: 1px solid #ff9f43; color: #ff9f43;
+            padding: 15px; border-radius: 8px; font-size: 14px; font-weight: 700; text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -78,37 +84,34 @@
 
 <div class="main-content">
 
-    <!-- SELEÇÃO DE CATEGORIAS -->
     <div class="category-selector">
         <button class="tab-btn active" id="tabFinanceiro" onclick="mudarCategoria('financeiro')">📊 Mercado Financeiro</button>
         <button class="tab-btn" id="tabEsportes" onclick="mudarCategoria('esportes')">⚽ Esportes</button>
     </div>
 
-    <!-- LISTA DE PREVISÕES ATIVAS -->
     <div id="containerEnquetes"></div>
 
-    <!-- HISTÓRICO VISÍVEL DE GANHOS E PERDAS -->
     <div class="card">
-        <h3>📊 Meu Histórico de Previsões e Resultados</h3>
+        <h3>📊 Extrato Geral de Transações e Previsões (Depósitos, Saques e Apostas)</h3>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Acompanhe aqui o fluxo financeiro completo de depósitos, retiradas e o resultado de cada palpite.</p>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Ativo / Rodada</th>
-                        <th>Seu Palpite</th>
-                        <th>Moedas Jogadas</th>
-                        <th>Status do Resultado</th>
+                        <th>Data/Hora</th>
+                        <th>Tipo de Operação</th>
+                        <th>Descrição / Detalhes</th>
+                        <th>Valor / Resultado</th>
                     </tr>
                 </thead>
-                <tbody id="historicoApostas"></tbody>
+                <tbody id="extratoGeralUsuario"></tbody>
             </table>
         </div>
     </div>
 
-    <!-- SEÇÃO DE DEPÓSITO -->
     <div class="card" id="depositoSection">
         <h3>💳 Adicionar Moedas de Operação via PIX</h3>
-        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Preço unitário está fixado em <b>1 Moeda = R$ 1,00</b>. Recarga mínima de R$ 9,00.</div>
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Preço unitário fixado em: <b>1 Moeda = R$ 1,00</b>. Mínimo para recarga: R$ 9,00.</div>
         <div class="grid-inputs" style="grid-template-columns: 1fr auto;">
             <input type="number" id="valDeposito" placeholder="Quantidade de Moedas (Mínimo 9)">
             <button class="btn btn-green" onclick="gerarPixDeposito()">Gerar PIX</button>
@@ -122,7 +125,6 @@
         </div>
     </div>
 
-    <!-- SEÇÃO DE SAQUE -->
     <div class="card">
         <h3>💰 Resgatar Saldo / Saque</h3>
         <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Retirada mínima estipulada em <b>R$ 150,00</b>.</div>
@@ -142,7 +144,6 @@
 </div>
 
 <script>
-    // Chave PIX parametrizada com absoluto sucesso
     let suaChavePixDestino = "Ef0ce40a-5e1e-42ef-a2b6-a2d3664491bd"; 
     const usuarioLogado = localStorage.getItem('usuarioLogado');
     if(!usuarioLogado) window.location.href = 'index.html';
@@ -156,7 +157,7 @@
             document.getElementById('saldoUsuario').innerText = Number(users[usuarioLogado].saldo).toFixed(2);
         }
         carregarEnquetes();
-        renderizarHistoricoMembro();
+        renderizarExtratoGeral();
     }
 
     function mudarCategoria(categoria) {
@@ -171,26 +172,42 @@
     function carregarEnquetes() {
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         const container = document.getElementById('containerEnquetes');
-        let filtradas = enquetes.filter(enq => enq.tipo === categoriaAtual && !enq.finalizada);
+        
+        // REGRA IMPORTANTE: Filtra apenas enquetes da categoria, que não foram finalizadas E cujo tempo NÃO expirou
+        let filtradas = enquetes.filter(enq => {
+            let tempoExpirado = new Date(`${enq.dataFim}T${enq.horaFim}`).getTime() - new Date().getTime() <= 0;
+            return enq.tipo === categoriaAtual && !enq.finalizada && !tempoExpirado;
+        });
         
         if(filtradas.length === 0) {
-            container.innerHTML = `<div class="card" style="text-align: center; color: var(--text-muted);">Nenhuma rodada de previsão ativa no momento.</div>`;
+            container.innerHTML = `<div class="card" style="text-align: center; color: var(--text-muted);">Nenhuma rodada ativa ou com tempo disponível nesta categoria.</div>`;
             return;
         }
 
         container.innerHTML = '';
         filtradas.forEach((enq) => {
             let subtitulo = enq.tipo === 'financeiro' ? `O ativo fechará acima ou abaixo do preço alvo? (${enq.precoAlvo || '0.00'})` : "Quem vencerá o confronto?";
+            
+            // Verifica se o Administrador travou/pausou a enquete manualmente
+            let botoesOuAvisoHTML = "";
+            if(enq.pausada) {
+                botoesOuAvisoHTML = `<div class="suspensas-aviso">⏸️ Apostas Suspensas pelo Administrador. Aguardando o encerramento do timer.</div>`;
+            } else {
+                botoesOuAvisoHTML = `
+                    <div class="opcoes-container">
+                        <button class="opcao-btn" onclick="executarApostaMoeda(${enq.id}, '${enq.op1}')"><span>▲ Palpitar em: ${enq.op1}</span></button>
+                        <button class="opcao-btn" onclick="executarApostaMoeda(${enq.id}, '${enq.op2}')"><span>▼ Palpitar em: ${enq.op2}</span></button>
+                    </div>
+                `;
+            }
+
             container.innerHTML += `
                 <div class="enquete-box">
                     <div>
                         <span style="color: var(--accent-blue); font-size:12px; font-weight:700;">🔥 MERCADO DISPONÍVEL</span>
                         <div class="enquete-ativo">${enq.ativo}</div>
-                        <p style="font-size:14px; color:var(--text-muted);">${subtitulo}</p>
-                        <div class="opcoes-container">
-                            <button class="opcao-btn" onclick="executarApostaMoeda(${enq.id}, '${enq.op1}')"><span>▲ Aposta em: ${enq.op1}</span></button>
-                            <button class="opcao-btn" onclick="executarApostaMoeda(${enq.id}, '${enq.op2}')"><span>▼ Aposta em: ${enq.op2}</span></button>
-                        </div>
+                        <p style="font-size:14px; color:var(--text-muted); margin-bottom:15px;">${subtitulo}</p>
+                        ${botoesOuAvisoHTML}
                     </div>
                     <div style="border-left: 1px solid var(--border-color); padding-left:20px;">
                         <div class="tempo-container">
@@ -208,9 +225,14 @@
         function rodar() {
             let el = document.getElementById(elId); if(!el) return;
             let dist = new Date(`${dataStr}T${horaStr}`).getTime() - new Date().getTime();
-            if(dist < 0) { el.innerText = "ENCERRADO"; return; }
+            if(dist <= 0) { 
+                el.innerText = "ENCERRADO"; 
+                // Atualiza a lista para remover a enquete expirada da tela imediatamente
+                carregarEnquetes();
+                return; 
+            }
             let h = Math.floor(dist / 3600000);
-            let m = Math.floor((dist % 3600000) / 6000);
+            let m = Math.floor((dist % 3600000) / 60000);
             let s = Math.floor((dist % 60000) / 1000);
             el.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
         }
@@ -219,13 +241,12 @@
 
     function executarApostaMoeda(enqueteId, palpiteEscolhido) {
         let users = JSON.parse(localStorage.getItem('users'));
-        let qte = prompt("Quantas moedas deseja alocar nesta previsão? (1 Moeda = R$1.00):", "10");
+        let qte = prompt("Quantas moedas (R$) deseja alocar nesta previsão?:", "10");
         let valorAposta = parseFloat(qte);
 
         if(isNaN(valorAposta) || valorAposta <= 0) return alert("Valor inválido.");
-        if(users[usuarioLogado].saldo < valorAposta) return alert("Você não possui moedas suficientes para essa aposta.");
+        if(users[usuarioLogado].saldo < valorAposta) return alert("Moedas insuficientes.");
 
-        // Subtrai o saldo de moedas do membro
         users[usuarioLogado].saldo -= valorAposta;
         localStorage.setItem('users', JSON.stringify(users));
 
@@ -240,34 +261,77 @@
             palpite: palpiteEscolhido,
             valor: valorAposta,
             status: 'Pendente',
-            lucro: 0
+            lucro: 0,
+            data: new Date().toLocaleString('pt-BR')
         });
 
         localStorage.setItem('apostas', JSON.stringify(apostas));
-        alert("Aposta registrada com sucesso nas tabelas de rateio!");
+        alert("Aposta registrada com sucesso na rodada!");
         atualizarDados();
     }
 
-    function renderizarHistoricoMembro() {
-        const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
-        const tbody = document.getElementById('historicoApostas');
+    function renderizarExtratoGeral() {
+        const tbody = document.getElementById('extratoGeralUsuario');
         tbody.innerHTML = '';
 
-        let minhasApostas = apostas.filter(a => a.usuario === usuarioLogado);
-        minhasApostas.reverse().forEach(a => {
-            let corStatus = '#ff9f43';
-            let txtStatus = 'Aguardando Painel';
-            
-            if(a.status === 'Venceu') { corStatus = 'var(--accent-green)'; txtStatus = `Venceu (Ganhou Moedas: +${Number(a.lucro).toFixed(2)})`; }
-            if(a.status === 'Perdeu') { corStatus = 'var(--accent-red)'; txtStatus = 'Perdeu (0.00 Moedas)'; }
-            if(a.status === 'Devolvido') { corStatus = 'gray'; txtStatus = 'Rodada Anulada (Estornado)'; }
+        let itensExtrato = [];
 
+        // 1. Coleta os depósitos feitos pelo usuário
+        const depositos = JSON.parse(localStorage.getItem('depositos')) || [];
+        depositos.filter(d => d.usuario === usuarioLogado).forEach(d => {
+            itensExtrato.push({
+                data: d.data,
+                tipo: '📥 Depósito PIX',
+                desc: `Compra de moedas de operação. Status: <b>${d.status}</b>`,
+                valHTML: `<span style="color:var(--accent-green)">+ R$ ${Number(d.valor).toFixed(2)}</span>`
+            });
+        });
+
+        // 2. Coleta os saques solicitados pelo usuário
+        const saques = JSON.parse(localStorage.getItem('saques')) || [];
+        saques.filter(s => s.usuario === usuarioLogado).forEach(s => {
+            itensExtrato.push({
+                data: s.data,
+                tipo: '📤 Retirada Saque',
+                desc: `Pedido enviado via PIX (${s.tipoPix}). Status: <b>${s.status}</b>`,
+                valHTML: `<span style="color:var(--accent-red)">- R$ ${Number(s.valor).toFixed(2)}</span>`
+            });
+        });
+
+        // 3. Coleta as apostas/previsões
+        const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
+        apostas.filter(a => a.usuario === usuarioLogado).forEach(a => {
+            let txtResultado = "";
+            let valColor = "white";
+
+            if(a.status === 'Pendente') { txtResultado = "Aguardando Resultado"; valColor = "#ff9f43"; }
+            else if(a.status === 'Venceu') { txtResultado = `Acertou! (Retorno Proporcional: +R$ ${Number(a.lucro).toFixed(2)})`; valColor = "var(--accent-green)"; }
+            else if(a.status === 'Perdeu') { txtResultado = "Errou o Palpite (Perdeu a Entrada)"; valColor = "var(--accent-red)"; }
+            else if(a.status === 'Devolvido') { txtResultado = "Anulada (Moedas Estornadas)"; valColor = "gray"; }
+
+            itensExtrato.push({
+                data: a.data || 'Recente',
+                tipo: '🎮 Palpite em Enquete',
+                desc: `Mercado: <b>${a.ativo}</b> | Palpite feito: <code>${a.palpite}</code> <br> <small style="color:${valColor}">Status: ${txtResultado}</small>`,
+                valHTML: `<span style="color:var(--accent-red)">- 🪙 ${Number(a.valor).toFixed(2)}</span>`
+            });
+        });
+
+        // Ordena tudo por data decrescente (mais recentes no topo)
+        itensExtrato.sort((a, b) => new Date(b.data) - new Date(a.data));
+
+        if(itensExtrato.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted)">Nenhuma movimentação identificada nesta conta.</td></tr>`;
+            return;
+        }
+
+        itensExtrato.forEach(item => {
             tbody.innerHTML += `
                 <tr>
-                    <td><b>${a.ativo}</b></td>
-                    <td><code>${a.palpite}</code></td>
-                    <td>🪙 ${Number(a.valor).toFixed(2)}</td>
-                    <td style="color:${corStatus}; font-weight:700;">${txtStatus}</td>
+                    <td><small>${item.data}</small></td>
+                    <td><b>${item.tipo}</b></td>
+                    <td>${item.desc}</td>
+                    <td><b>${item.valHTML}</b></td>
                 </tr>
             `;
         });
@@ -294,6 +358,7 @@
         localStorage.setItem('depositos', JSON.stringify(depositos));
         alert("Notificação enviada ao ADM para análise financeira.");
         document.getElementById('pixArea').style.display = 'none';
+        renderizarExtratoGeral();
     }
 
     function solicitarSaque() {
@@ -322,7 +387,9 @@
         window.location.href = 'index.html';
     }
 
+    // Loop de Atualização Dinâmica das Informações e Timers
     atualizarDados();
+    setInterval(carregarEnquetes, 15000); // Filtra e limpa enquetes da tela a cada 15 segundos
 </script>
 </body>
 </html>
