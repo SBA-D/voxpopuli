@@ -63,7 +63,8 @@
 
 <script>
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
+    // IMPORTANTE: Use a chave completa que copiou do botão de dois quadradinhos do painel
+    const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olcLXasdaS21"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     function mostrarCadastro() {
@@ -81,13 +82,13 @@
         const pass = document.getElementById('cadPass').value.trim();
         
         if (!user || !pass) return alert('Preencha todos os campos!');
-        if (user === 'voxadmin' || user === 'adm') return alert('Nome de usuário reservado.');
+        if (user === 'voxadmin' || user === 'adm') return alert('Nome de usuário reservado pelo sistema.');
 
         let { data: existe } = await _supabase.from('usuarios').select('username').eq('username', user).maybeSingle();
-        if (existe) return alert('Esse usuário já existe.');
+        if (existe) return alert('Esse usuário já existe no sistema.');
 
         const { error } = await _supabase.from('usuarios').insert([{ username: user, password: pass, saldo: 0 }]);
-        if(error) return alert('Erro: ' + error.message);
+        if(error) return alert('Erro ao cadastrar: ' + error.message);
         
         alert('Conta de membro criada com sucesso!');
         mostrarLogin();
