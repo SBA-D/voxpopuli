@@ -6,18 +6,19 @@
     <title>VoxPopuli - Premium Member Dashboard</title>
     <style>
         :root { --bg-main: #060913; --bg-card: #0d1222; --bg-input: #111728; --border-color: #1a2238; --accent-blue: #4371f7; --accent-green: #00b37e; --accent-red: #f75a68; --text-muted: #7d859a; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 0; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px 24px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 15px 24px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.4); }
         .moedas-badge { background: #091a18; border: 1px solid var(--accent-green); padding: 10px 18px; border-radius: 30px; font-size: 14px; color: var(--accent-green); font-weight: 700; }
-        .main-content { padding: 24px; max-width: 850px; margin: 0 auto; }
-        .card { background: var(--bg-card); padding: 24px; margin-top: 20px; border-radius: 16px; border: 1px solid var(--border-color); }
-        .category-selector { display: flex; gap: 12px; margin-top: 24px; }
-        .tab-btn { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
-        .tab-btn.active { background: #0640df; color: white; }
-        .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-top: 20px; display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: center; }
-        .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px; border-radius: 8px; text-align: left; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; }
-        .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 10px; background: #1c253d; display: inline-block; padding: 4px 10px; border-radius: 4px; }
-        .timer { font-size: 18px; font-weight: 700; color: var(--accent-red); }
+        .main-content { padding: 24px; max-width: 900px; margin: 0 auto; }
+        .card { background: var(--bg-card); padding: 30px; margin-top: 20px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .category-selector { display: flex; gap: 15px; margin-top: 10px; margin-bottom: 10px; }
+        .tab-btn { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 15px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn.active { background: #0640df; color: white; border-color: #0640df; box-shadow: 0 0 12px rgba(6,64,223,0.4); }
+        .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; margin-top: 20px; display: grid; grid-template-columns: 1fr 240px; gap: 20px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px 18px; border-radius: 8px; text-align: left; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; transition: border-color 0.2s; }
+        .opcao-btn:hover { border-color: var(--accent-blue); }
+        .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; }
+        .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -27,7 +28,7 @@
     <div style="font-size:24px; font-weight:800; color:var(--accent-blue);">VoxPopuli 📈</div>
     <div style="display: flex; align-items: center; gap: 15px;">
         <div class="moedas-badge">🪙 <span id="saldoUsuario">0.00</span> Moedas</div>
-        <button style="padding:10px; background:#202431; border:none; color:white; border-radius:8px; cursor:pointer;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
+        <button style="padding:10px 18px; background:#202431; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
 </div>
 
@@ -69,7 +70,7 @@
         const container = document.getElementById('containerEnquetes');
         
         if(!enquetes || enquetes.length === 0) {
-            container.innerHTML = `<div class="card" style="text-align:center; color:var(--text-muted);">Nenhum mercado ativo no momento nesta categoria.</div>`;
+            container.innerHTML = `<div class="card" style="color:var(--text-muted);">Nenhum mercado ativo no momento nesta categoria.</div>`;
             return;
         }
 
@@ -79,19 +80,19 @@
             if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) volumePote += parseFloat(a.valor); });
 
             let corpoVotos = enq.pausada 
-                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:10px; border-radius:8px; text-align:center;">⏸️ Mercado Suspenso Temporariamente</div>`
-                : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')">▲ ${enq.op1}</button>
-                   <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')">▼ ${enq.op2}</button>`;
+                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:12px; border-radius:8px; text-align:center; font-weight:bold; font-size:14px; border:1px solid #523414;">⏸️ Mercado Suspenso Temporariamente</div>`
+                : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')"><span>▲ ${enq.op1}</span> <span>Selecionar</span></button>
+                   <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')"><span>▼ ${enq.op2}</span> <span>Selecionar</span></button>`;
 
             container.innerHTML += `<div class="enquete-box">
                 <div>
                     <div class="pote-acumulado-marcador">💰 Pote: R$ ${volumePote.toFixed(2)}</div>
-                    <div style="font-size:22px; font-weight:800;">${enq.ativo}</div>
-                    <p style="color:var(--text-muted); font-size:13px;">Alvo: ${enq.preco_alvo || 'N/A'}</p>
+                    <div style="font-size:22px; font-weight:800; margin-bottom:5px;">${enq.ativo}</div>
+                    <p style="color:var(--text-muted); font-size:14px; margin-top:0; margin-bottom:15px;">Alvo / Parâmetro: <b>${enq.preco_alvo || 'Resultado Direto'}</b></p>
                     ${corpoVotos}
                 </div>
-                <div style="text-align:center; border-left:1px solid var(--border-color); padding-left:15px;">
-                    <div class="timer">Expira em:<br>${enq.data_fim}</div>
+                <div style="text-align:center; border-left:1px solid var(--border-color); padding-left:20px;">
+                    <div class="timer">⏱️ Expira em:<br><span style="font-size:14px; display:inline-block; margin-top:5px; color:#fff;">${enq.data_fim} às ${enq.hora_fim || '00:00'}</span></div>
                 </div>
             </div>`;
         });
