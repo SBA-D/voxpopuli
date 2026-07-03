@@ -3,95 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel do Administrador</title>
+    <title>VoxPopuli - Super Admin Engine</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121214; color: #fff; margin: 20px; }
-        .card { background: #202024; padding: 20px; margin-top: 20px; border-radius: 8px; }
-        input, select { padding: 10px; margin: 10px 0; background: #121214; color: #fff; border: 1px solid #29292e; border-radius: 4px; width: 100%; box-sizing: border-box;}
-        button { padding: 10px 20px; background: #00b37e; border: none; color: white; cursor: pointer; border-radius: 4px; font-weight: bold;}
-        .notif-item { background: #29292e; padding: 10px; margin: 5px 0; border-radius: 4px; display: flex; justify-content: space-between;}
+        :root {
+            --bg-main: #060913;
+            --bg-card: #0d1222;
+            --bg-input: #111728;
+            --border-color: #1a2238;
+            --accent-blue: #4371f7;
+            --accent-green: #00b37e;
+            --accent-red: #f75a68;
+            --text-muted: #7d859a;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; 
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: var(--accent-blue); font-size: 28px; margin-bottom: 5px; font-weight: 800; }
+        .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 25px; }
+        
+        .card { 
+            background: var(--bg-card); border: 1px solid var(--border-color); 
+            padding: 24px; border-radius: 14px; margin-bottom: 20px; 
+        }
+        h2 { font-size: 18px; margin-top: 0; margin-bottom: 15px; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        @media(max-width: 600px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
+        
+        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        input, select { 
+            width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid #1c253d; 
+            color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px;
+        }
+        
+        .btn { 
+            padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; 
+            cursor: pointer; transition: all 0.2s; font-size: 14px;
+        }
+        .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
+        .btn-blue:hover { background: #2651d4; }
+        .btn-success { background: var(--accent-green); color: #0d1222; padding: 6px 12px; font-size: 12px; }
+        .btn-danger { background: var(--accent-red); color: white; padding: 6px 12px; font-size: 12px; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: 700; }
+        tr:hover { background: #13192e; }
+
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+        .badge-pending { background: #3b2a16; color: #ff9f43; }
+        .badge-success { background: #113622; color: var(--accent-green); }
     </style>
 </head>
 <body>
 
-<h2>⚙️ Painel de Administração</h2>
-<button onclick="window.location.href='index.html'" style="background:#555;">Ir para o Login</button>
+<div class="container">
+    <h1>VoxPopuli 控制台 Engine v2</h1>
+    <div class="subtitle">Área Geral do Administrador - Gestão de Enquetes, Aprovações e Finanças</div>
 
-<div class="card">
-    <h3>Criar Nova Enquete / Ativo</h3>
-    <label>Tipo de Mercado:</label>
-    <select id="tipoEnquete" onchange="mudarFormulario()">
-        <option value="financeiro">Mercado Financeiro (Forex, Cripto, Ações, Índices)</option>
-        <option value="esportes">Esportes (Futebol, Basquete, etc.)</option>
-    </select>
+    <!-- INJETAR NOVA ENQUETE -->
+    <div class="card">
+        <h2>🚀 Injetar Nova Enquete / Rodada de Apostas</h2>
+        
+        <div class="grid-2">
+            <div>
+                <label>Tipo de Mercado</label>
+                <select id="enqTipo" onchange="ajustarCamposFormulario()">
+                    <option value="financeiro">📊 Mercado Financeiro</option>
+                    <option value="esportes">⚽ Esportes</option>
+                </select>
+            </div>
+            <div>
+                <label>Identificação do Ativo / Confronto</label>
+                <input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT ou Flamengo x Vasco">
+            </div>
+        </div>
 
-    <label>Nome do Ativo ou Jogo (Ex: EUR/USD, BTC/USDT, PETR4, Mini Índice WIN, Real Madrid x Barcelona):</label>
-    <input type="text" id="nomeAtivo" placeholder="Digite o ativo ou confronto">
+        <div class="grid-3" id="camposFinanceiro">
+            <div>
+                <label>Preço de Referência Alvo (Opcional)</label>
+                <input type="text" id="enqPrecoAlvo" placeholder="Ex: 4.5215">
+            </div>
+            <div>
+                <label>Opção 1 (Botão de Cima)</label>
+                <input type="text" id="enqOp1Fin" value="Acima">
+            </div>
+            <div>
+                <label>Opção 2 (Botão de Baixo)</label>
+                <input type="text" id="enqOp2Fin" value="Abaixo">
+            </div>
+        </div>
 
-    <button onclick="salvarEnquete()">Adicionar no Painel</button>
-</div>
+        <div class="grid-2" id="camposEsportes" style="display: none;">
+            <div>
+                <label>Nome do Time 1 (Opção 1)</label>
+                <input type="text" id="enqOp1Esp" placeholder="Ex: Flamengo">
+            </div>
+            <div>
+                <label>Nome do Time 2 (Opção 2)</label>
+                <input type="text" id="enqOp2Esp" placeholder="Ex: Vasco">
+            </div>
+        </div>
 
-<div class="card">
-    <h3>🔔 Notificações de Pedidos de Saque</h3>
-    <div id="listaSaques">Nenhum pedido de saque pendente.</div>
+        <div class="grid-2">
+            <div>
+                <label>Data Limite de Encerramento</label>
+                <input type="date" id="enqDataFim">
+            </div>
+            <div>
+                <label>Hora Limite de Encerramento</label>
+                <input type="time" id="enqHoraFim">
+            </div>
+        </div>
+
+        <button class="btn btn-blue" onclick="criarEnquete()">Disparar Enquete nos Painéis</button>
+    </div>
+
+    <!-- GERENCIAR DEPÓSITOS -->
+    <div class="card">
+        <h2>📥 Aprovar Depósitos PIX Pendentes</h2>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Valor Solicitado</th>
+                        <th>Data/Hora</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaDepositos"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- GERENCIAR SAQUES -->
+    <div class="card">
+        <h2>📤 Analisar e Pagar Saques (Mín. R$150)</h2>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Valor</th>
+                        <th>Tipo PIX</th>
+                        <th>Chave PIX Alvo</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="listaSaques"></tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
-    function mudarFormulario() {
-        // Pode ser usado para customizar campos dinamicamente no futuro
+    function ajustarCamposFormulario() {
+        const tipo = document.getElementById('enqTipo').value;
+        if(tipo === 'financeiro') {
+            document.getElementById('camposFinanceiro').style.display = 'grid';
+            document.getElementById('camposEsportes').style.display = 'none';
+        } else {
+            document.getElementById('camposFinanceiro').style.display = 'none';
+            document.getElementById('camposEsportes').style.display = 'grid';
+        }
     }
 
-    function salvarEnquete() {
-        const tipo = document.getElementById('tipoEnquete').value;
-        const ativo = document.getElementById('nomeAtivo').value.trim();
+    function criarEnquete() {
+        const tipo = document.getElementById('enqTipo').value;
+        const ativo = document.getElementById('enqAtivo').value.trim();
+        const dataFim = document.getElementById('enqDataFim').value;
+        const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo) return alert("Insira o nome do ativo ou do jogo.");
+        if(!ativo || !dataFim || !horaFim) return alert("Preencha todos os campos da rodada!");
+
+        let op1 = "", op2 = "", precoAlvo = "";
+
+        if(tipo === 'financeiro') {
+            precoAlvo = document.getElementById('enqPrecoAlvo').value.trim();
+            op1 = document.getElementById('enqOp1Fin').value;
+            op2 = document.getElementById('enqOp2Fin').value;
+        } else {
+            op1 = document.getElementById('enqOp1Esp').value.trim();
+            op2 = document.getElementById('enqOp2Esp').value.trim();
+            if(!op1 || !op2) return alert("Digite o nome dos dois competidores esportivos!");
+        }
 
         let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        
-        let novaEnquete = {
-            tipo: tipo,
-            ativo: ativo,
-            op1: tipo === 'financeiro' ? 'Subir (Acima)' : 'Time A/Casa',
-            op2: tipo === 'financeiro' ? 'Descer (Abaixo)' : 'Time B/Visitante',
-            pergunta: tipo === 'financeiro' ? 'Fechará acima ou abaixo do fechamento anterior?' : 'Quem vencerá a partida?'
-        };
-
-        enquetes.push(novaEnquete);
+        enquetes.push({ tipo, ativo, precoAlvo, op1, op2, dataFim, horaFim });
         localStorage.setItem('enquetes', JSON.stringify(enquetes));
-        alert("Enquete adicionada com sucesso!");
-        document.getElementById('nomeAtivo').value = '';
+
+        alert("Sucesso! Enquete publicada globalmente.");
+        document.getElementById('enqAtivo').value = '';
     }
 
-    function carregarPedidosSaque() {
+    function renderizarFinancas() {
+        const depositos = JSON.parse(localStorage.getItem('depositos')) || [];
         const saques = JSON.parse(localStorage.getItem('saques')) || [];
-        const div = document.getElementById('listaSaques');
-        if(saques.length === 0) {
-            div.innerHTML = "Nenhum pedido de saque pendente.";
-            return;
-        }
         
-        div.innerHTML = '';
-        saques.forEach((s, idx) => {
-            div.innerHTML += `
-                <div class="notif-item">
-                    <span>👤 <strong>${s.usuario}</strong> está solicitando o saque de <strong>${s.valor} moedas</strong>.</span>
-                    <button onclick="pagarSaque(${idx})" style="background:#00b37e; padding:5px 10px;">Aprovar & Pagar</button>
-                </div>
-            `;
+        // Renderizar depósitos
+        const tbodyDep = document.getElementById('listaDepositos');
+        tbodyDep.innerHTML = '';
+        depositos.forEach((dep, index) => {
+            if(dep.status === 'Pendente') {
+                tbodyDep.innerHTML += `
+                    <tr>
+                        <td><b>${dep.usuario}</b></td>
+                        <td style="color:var(--accent-green)">R$ ${Number(dep.valor).toFixed(2)}</td>
+                        <td>${dep.data}</td>
+                        <td><span class="badge badge-pending">Pendente</span></td>
+                        <td>
+                            <button class="btn btn-success" onclick="aprovarDeposito(${index})">Aprovar Saldo</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        });
+
+        // Renderizar saques
+        const tbodySaq = document.getElementById('listaSaques');
+        tbodySaq.innerHTML = '';
+        saques.forEach((saq, index) => {
+            if(saq.status === 'Pendente') {
+                tbodySaq.innerHTML += `
+                    <tr>
+                        <td><b>${saq.usuario}</b></td>
+                        <td style="color:var(--accent-red)">R$ ${Number(saq.valor).toFixed(2)}</td>
+                        <td><small>${saq.tipoPix}</small></td>
+                        <td><code>${saq.chavePix}</code></td>
+                        <td><span class="badge badge-pending">Pendente</span></td>
+                        <td>
+                            <button class="btn btn-success" onclick="aprovarSaque(${index})">Marcar como Pago</button>
+                        </td>
+                    </tr>
+                `;
+            }
         });
     }
 
-    function pagarSaque(idx) {
-        let saques = JSON.parse(localStorage.getItem('saques'));
-        saques.splice(idx, 1); // Remove da fila após pagar
-        localStorage.setItem('saques', JSON.stringify(saques));
-        alert("Saque aprovado e processado!");
-        carregarPedidosSaque();
+    function aprovarDeposito(index) {
+        let depositos = JSON.parse(localStorage.getItem('depositos'));
+        let users = JSON.parse(localStorage.getItem('users'));
+        const dep = depositos[index];
+
+        if(users[dep.usuario]) {
+            users[dep.usuario].saldo += dep.valor;
+            dep.status = 'Aprovado';
+            localStorage.setItem('users', JSON.stringify(users));
+            localStorage.setItem('depositos', JSON.stringify(depositos));
+            alert("Depósito aprovado e saldo injetado na conta do cliente!");
+            renderizarFinancas();
+        }
     }
 
-    // Inicializa a lista de saques ao carregar
-    carregarPedidosSaque();
+    function aprovarSaque(index) {
+        let saques = JSON.parse(localStorage.getItem('saques'));
+        saques[index].status = 'Pago';
+        localStorage.setItem('saques', JSON.stringify(saques));
+        alert("Saque marcado como liquidado com sucesso.");
+        renderizarFinancas();
+    }
+
+    // Inicialização da Dashboard do ADM
+    renderizarFinancas();
 </script>
 </body>
 </html>
