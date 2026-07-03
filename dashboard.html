@@ -84,7 +84,7 @@
         }
         .card h3 {
             margin-top: 0;
-            font-size: 16px;
+            font-size: 14px;
             margin-bottom: 15px;
             color: #7d859a;
             text-transform: uppercase;
@@ -96,7 +96,7 @@
             gap: 10px;
             margin-top: 15px;
         }
-        input { 
+        input, select { 
             flex: 1;
             padding: 12px; 
             background: #111728; 
@@ -104,8 +104,33 @@
             border: 1px solid #1c253d; 
             border-radius: 8px; 
             font-size: 14px;
+            box-sizing: border-box;
         }
-        input:focus { outline: none; border-color: #4371f7; }
+        input:focus, select:focus { outline: none; border-color: #4371f7; }
+
+        /* Estilo das Abas de Seleção de Categoria */
+        .category-selector {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .tab-btn {
+            flex: 1;
+            background: #111728;
+            border: 1px solid #1c253d;
+            color: #7d859a;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+        .tab-btn.active {
+            background: #0640df;
+            border-color: #4371f7;
+            color: white;
+        }
         
         .enquete-box {
             background: #0d1222;
@@ -125,9 +150,16 @@
             display: block;
         }
         .enquete-pergunta {
-            font-size: 18px;
+            font-size: 16px;
+            font-weight: normal;
+            color: #7d859a;
+            margin-bottom: 10px;
+        }
+        .enquete-ativo {
+            font-size: 22px;
             font-weight: bold;
             margin-bottom: 20px;
+            color: #fff;
         }
         .opcao-btn {
             background: #111728;
@@ -175,6 +207,7 @@
 </head>
 <body>
 
+<!-- TOPO DO SITE -->
 <div class="header">
     <div class="logo-text">VoxPopuli <span>📈</span></div>
     <div class="header-right">
@@ -188,6 +221,7 @@
 
 <div class="main-content">
 
+    <!-- SEÇÃO DE SAQUE -->
     <div class="card">
         <h3>💰 Solicitar Saque</h3>
         <div class="input-inline">
@@ -196,17 +230,42 @@
         </div>
     </div>
 
-    <h2 style="margin-top: 30px; font-size: 22px; font-weight: 600;">Previsões Ativas</h2>
+    <!-- SELEÇÃO DE CATEGORIAS PRINCIPAIS -->
+    <div class="category-selector">
+        <button class="tab-btn active" id="tabFinanceiro" onclick="mudarCategoria('financeiro')">📊 Mercado Financeiro</button>
+        <button class="tab-btn" id="tabEsportes" onclick="mudarCategoria('esportes')">⚽ Esportes</button>
+    </div>
+
+    <!-- SUB-CARD: FILTRO DE ATIVOS (SÓ APARECE EM MERCADO FINANCEIRO) -->
+    <div class="card" id="filtroAtivosCard">
+        <h3>🔍 Selecionar Ativo para Analisar</h3>
+        <select id="selectAtivo" onchange="filtrarPorAtivo()">
+            <option value="todos">-- Mostrar Todos os Ativos Ativos --</option>
+            <!-- Você pode deletar ou adicionar mais opções aqui facilmente -->
+            <option value="EUR/USD">Forex: EUR/USD</option>
+            <option value="BTC/USDT">Cripto: BTC/USDT</option>
+            <option value="ETH/USDT">Cripto: ETH/USDT</option>
+            <option value="PETR4">Ações: PETR4 (Petrobras)</option>
+            <option value="VALE3">Ações: VALE3 (Vale)</option>
+            <option value="WIN">Índice: WIN (Mini Índice)</option>
+            <option value="WDO">Dólar: WDO (Mini Dólar)</option>
+        </select>
+    </div>
+
+    <!-- LISTA DE PREVISÕES ATIVAS -->
+    <h2 style="margin-top: 30px; font-size: 22px; font-weight: 600;" id="tituloPrevisoes">Previsões: Mercado Financeiro</h2>
     
     <div id="containerEnquetes">
-        </div>
+        <!-- As enquetes injetadas dinamicamente aparecem aqui -->
+    </div>
 
 </div>
 
 <script>
-    // Segurança: se não estiver logado, volta pro index
     const usuarioLogado = localStorage.getItem('usuarioLogado');
     if(!usuarioLogado) window.location.href = 'index.html';
+
+    let categoriaAtual = 'financeiro';
 
     function atualizarDados() {
         let users = JSON.parse(localStorage.getItem('users')) || {};
@@ -216,64 +275,66 @@
         carregarEnquetes();
     }
 
-    function comprarMoedas() {
-        let valor = prompt("Quantas moedas deseja comprar via PIX? (1 Real = 1 Moeda)");
-        valor = parseInt(valor);
-        if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
-
-        alert(`Chave Copia e Cola PIX Gerada para ${valor} moedas. Simulando aprovação de pagamento!`);
-        let users = JSON.parse(localStorage.getItem('users'));
-        users[usuarioLogado].saldo += valor;
-        localStorage.setItem('users', JSON.stringify(users));
-        atualizarDados();
+    // Gerencia a troca de abas principais
+    function mudarCategoria(categoria) {
+        categoriaAtual = categoria;
+        
+        document.getElementById('tabFinanceiro').classList.remove('active');
+        document.getElementById('tabEsportes').classList.remove('active');
+        
+        if(categoria === 'financeiro') {
+            document.getElementById('tabFinanceiro').classList.add('active');
+            document.getElementById('filtroAtivosCard').style.display = 'block';
+            document.getElementById('tituloPrevisoes').innerText = "Previsões: Mercado Financeiro";
+        } else {
+            document.getElementById('tabEsportes').classList.add('active');
+            document.getElementById('filtroAtivosCard').style.display = 'none';
+            document.getElementById('tituloPrevisoes').innerText = "Previsões: Esportes";
+        }
+        carregarEnquetes();
     }
 
-    function solicitarSaque() {
-        const valor = parseInt(document.getElementById('valSaque').value);
-        let users = JSON.parse(localStorage.getItem('users'));
-        
-        if(isNaN(valor) || valor < 10) return alert("O valor mínimo para saque é de 10 moedas.");
-        if(users[usuarioLogado].saldo < valor) return alert("Saldo insuficiente para este saque.");
-
-        users[usuarioLogado].saldo -= valor;
-        localStorage.setItem('users', JSON.stringify(users));
-
-        let saques = JSON.parse(localStorage.getItem('saques')) || [];
-        saques.push({ usuario: usuarioLogado, valor: valor, status: 'Pendente' });
-        localStorage.setItem('saques', JSON.stringify(saques));
-
-        alert("Seu pedido de saque foi enviado com sucesso para aprovação do ADM!");
-        document.getElementById('valSaque').value = '';
-        atualizarDados();
+    function filtrarPorAtivo() {
+        carregarEnquetes();
     }
 
     function carregarEnquetes() {
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         const container = document.getElementById('containerEnquetes');
+        const ativoFiltrado = document.getElementById('selectAtivo').value;
         
-        if(enquetes.length === 0) {
+        // Filtra as enquetes com base na aba e no select de ativo
+        let enquetesFiltradas = enquetes.filter(enq => enq.tipo === categoriaAtual);
+        
+        if(categoriaAtual === 'financeiro' && ativoFiltrado !== 'todos') {
+            enquetesFiltradas = enquetesFiltradas.filter(enq => enq.ativo === ativoFiltrado);
+        }
+
+        if(enquetesFiltradas.length === 0) {
             container.innerHTML = `
                 <div class="enquete-box">
-                    <span class="enquete-badge">🔥 Enquete em andamento</span>
-                    <div class="enquete-pergunta">Aguardando palpites...</div>
-                    <div style="color: #7d859a; font-size: 15px; margin: 15px 0;">Quem é o melhor? Ronaldo ou Kaká?</div>
-                    <button class="opcao-btn"><span>Ronaldo</span> <span>--</span></button>
-                    <button class="opcao-btn"><span>Kaká</span> <span>--</span></button>
-                    <div class="tempo-container">
-                        <div class="tempo-titulo">⏱️ TEMPO ESGOTADO</div>
-                        <div class="timer">00:00:00</div>
-                    </div>
+                    <span class="enquete-badge">Aguardando Palpites...</span>
+                    <div class="enquete-pergunta">Nenhuma enquete ativa nesta categoria no momento.</div>
                 </div>
             `;
             return;
         }
 
         container.innerHTML = '';
-        enquetes.forEach((enq, index) => {
+        enquetesFiltradas.forEach((enq, index) => {
+            let perguntaTexto = "";
+            
+            if(enq.tipo === 'financeiro') {
+                perguntaTexto = "O ativo fechará o dia acima ou abaixo do preço de fechamento do dia anterior?";
+            } else {
+                perguntaTexto = "Quem vence o confronto?";
+            }
+
             container.innerHTML += `
                 <div class="enquete-box">
-                    <span class="enquete-badge">🔥 Enquete de ${enq.tipo === 'financeiro' ? 'Mercado' : 'Esportes'}</span>
-                    <div class="enquete-pergunta">${enq.ativo}</div>
+                    <span class="enquete-badge">🔥 ENQUETE EM ANDAMENTO</span>
+                    <div class="enquete-pergunta">${perguntaTexto}</div>
+                    <div class="enquete-ativo">${enq.ativo}</div>
                     
                     <button class="opcao-btn" onclick="apostar(${index}, '${enq.op1}')">
                         <span>${enq.op1}</span> <span>--</span>
@@ -294,18 +355,43 @@
 
     function apostar(index, opcao) {
         let users = JSON.parse(localStorage.getItem('users'));
-        if(users[usuarioLogado].saldo < 1) return alert("Você precisa de pelo menos 1 moeda para votar!");
+        if(users[usuarioLogado].saldo < 1) return alert("Você precisa de pelo menos 1 moeda de saldo para responder!");
 
         users[usuarioLogado].saldo -= 1;
         localStorage.setItem('users', JSON.stringify(users));
 
-        let enquetes = JSON.parse(localStorage.getItem('enquetes'));
-        let apostas = JSON.parse(localStorage.getItem('apostas')) || [];
-        
-        apostas.push({ usuario: usuarioLogado, ativo: enquetes[index].ativo, palpite: opcao });
-        localStorage.setItem('apostas', JSON.stringify(apostas));
+        alert(`Aposta de 1 moeda confirmada em: ${opcao}!`);
+        atualizarDados();
+    }
 
-        alert(`Palpite confirmado em: ${opcao}!`);
+    function comprarMoedas() {
+        let valor = prompt("Quantas moedas deseja comprar via PIX? (1 Real = 1 Moeda)");
+        valor = parseInt(valor);
+        if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
+
+        alert(`Chave PIX gerada. Pagamento de ${valor} moedas simulado com sucesso!`);
+        let users = JSON.parse(localStorage.getItem('users'));
+        users[usuarioLogado].saldo += valor;
+        localStorage.setItem('users', JSON.stringify(users));
+        atualizarDados();
+    }
+
+    function solicitarSaque() {
+        const valor = parseInt(document.getElementById('valSaque').value);
+        let users = JSON.parse(localStorage.getItem('users'));
+        
+        if(isNaN(valor) || valor < 10) return alert("O valor mínimo para saque é de 10 moedas.");
+        if(users[usuarioLogado].saldo < valor) return alert("Saldo insuficiente.");
+
+        users[usuarioLogado].saldo -= valor;
+        localStorage.setItem('users', JSON.stringify(users));
+
+        let saques = JSON.parse(localStorage.getItem('saques')) || [];
+        saques.push({ usuario: usuarioLogado, valor: valor, status: 'Pendente' });
+        localStorage.setItem('saques', JSON.stringify(saques));
+
+        alert("Pedido de saque enviado para o ADM!");
+        document.getElementById('valSaque').value = '';
         atualizarDados();
     }
 
@@ -314,6 +400,7 @@
         window.location.href = 'index.html';
     }
 
+    // Inicializa a tela com os dados
     atualizarDados();
 </script>
 </body>
