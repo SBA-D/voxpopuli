@@ -5,16 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxPopuli - Super Admin Engine (Cloud)</title>
     <style>
-        :root {
-            --bg-main: #060913;
-            --bg-card: #0d1222;
-            --bg-input: #111728;
-            --border-color: #1a2238;
-            --accent-blue: #4371f7;
-            --accent-green: #00b37e;
-            --accent-red: #f75a68;
-            --text-muted: #7d859a;
-        }
+        :root { --bg-main: #060913; --bg-card: #0d1222; --bg-input: #111728; --border-color: #1a2238; --accent-blue: #4371f7; --accent-green: #00b37e; --accent-red: #f75a68; --text-muted: #7d859a; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; }
         .container { max-width: 950px; margin: 0 auto; }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
@@ -40,93 +31,48 @@
 <body>
 <div class="container">
     <div class="admin-header">
-        <div class="header-left">
-            <h1>VoxPopuli - Painel Administrativo</h1>
-        </div>
+        <div class="header-left"><h1>VoxPopuli - Painel Administrativo</h1></div>
         <button class="btn" style="background:#202431; color:var(--text-muted);" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
 
     <div class="card">
-        <h2>💰 Caixa Geral da Plataforma (Dinheiro de Clientes Custodiado)</h2>
+        <h2>💰 Caixa Geral da Plataforma</h2>
         <div class="caixa-box">🏦 Total em Custódia: R$ <span id="caixaPlataforma">0.00</span></div>
     </div>
 
     <div class="card">
-        <h2>🎯 Controle de Enquetes & Monitoramento de Potes Acumulados</h2>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Ativo / Mercado</th>
-                        <th>Volume Acumulado</th>
-                        <th>Ações de Trava</th>
-                        <th>Encerrar e Liquidar</th>
-                    </tr>
-                </thead>
-                <tbody id="listaRodadasAbertas"></tbody>
-            </table>
-        </div>
+        <h2>🎯 Controle de Enquetes</h2>
+        <table>
+            <thead><tr><th>Ativo / Mercado</th><th>Volume Acumulado</th><th>Ações</th><th>Liquidação</th></tr></thead>
+            <tbody id="listaRodadasAbertas"></tbody>
+        </table>
     </div>
 
     <div class="card">
         <h2>🚀 Injetar Nova Rodada</h2>
         <div class="grid-2">
-            <div>
-                <label>Tipo</label>
-                <select id="enqTipo">
-                    <option value="financeiro">📊 Mercado Financeiro</option>
-                    <option value="esportes">⚽ Esportes</option>
-                </select>
-            </div>
-            <div>
-                <label>Ativo / Confronto</label>
-                <input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT">
-            </div>
+            <div><label>Tipo</label><select id="enqTipo"><option value="financeiro">📊 Mercado Financeiro</option><option value="esportes">⚽ Esportes</option></select></div>
+            <div><label>Ativo / Confronto</label><input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT"></div>
         </div>
         <div class="grid-3">
-            <div>
-                <label>Alvo / Referência</label>
-                <input type="text" id="enqPrecoAlvo" placeholder="Preço Alvo">
-            </div>
-            <div>
-                <label>Opção 1</label>
-                <input type="text" id="enqOp1" value="Acima">
-            </div>
-            <div>
-                <label>Opção 2</label>
-                <input type="text" id="enqOp2" value="Abaixo">
-            </div>
+            <div><label>Alvo / Referência</label><input type="text" id="enqPrecoAlvo" placeholder="Preço Alvo"></div>
+            <div><label>Opção 1</label><input type="text" id="enqOp1" value="Acima"></div>
+            <div><label>Opção 2</label><input type="text" id="enqOp2" value="Abaixo"></div>
         </div>
         <div class="grid-2">
-            <div>
-                <input type="date" id="enqDataFim">
-            </div>
-            <div>
-                <input type="time" id="enqHoraFim">
-            </div>
+            <div><input type="date" id="enqDataFim"></div>
+            <div><input type="time" id="enqHoraFim"></div>
         </div>
         <button class="btn btn-blue" onclick="criarEnquete()">Publicar Enquete</button>
-    </div>
-
-    <div class="card">
-        <h2>📥 Aprovar Depósitos PIX</h2>
-        <table>
-            <thead><tr><th>Usuário</th><th>Valor</th><th>Ação</th></tr></thead>
-            <tbody id="listaDepositos"></tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h2>📤 Pagar Saques</h2>
-        <table>
-            <thead><tr><th>Usuário</th><th>Valor</th><th>Chave PIX</th><th>Ação</th></tr></thead>
-            <tbody id="listaSaques"></tbody>
-        </table>
     </div>
 </div>
 
 <script>
-    // 🔑 Conexão em Nuvem Configurada
+    // Trava de segurança no ADM
+    if(localStorage.getItem('usuarioLogado') !== 'voxadmin') {
+        window.location.href = './index.html';
+    }
+
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -134,15 +80,11 @@
     async function inicializarPainel() {
         await calcularCaixaGeral();
         await renderizarRodadasAbertas();
-        await renderizarFinancas();
     }
 
     async function calcularCaixaGeral() {
         let { data: users } = await _supabase.from('usuarios').select('saldo');
-        let total = 0;
-        if(users) {
-            users.forEach(u => total += parseFloat(u.saldo || 0));
-        }
+        let total = 0; if(users) users.forEach(u => total += parseFloat(u.saldo || 0));
         document.getElementById('caixaPlataforma').innerText = total.toFixed(2);
     }
 
@@ -155,29 +97,28 @@
         const hora_fim = document.getElementById('enqHoraFim').value;
         const preco_alvo = document.getElementById('enqPrecoAlvo').value;
 
-        if(!ativo || !data_fim || !hora_fim) return alert("Preencha os dados básicos.");
+        if(!ativo || !data_fim || !hora_fim) return alert("Preencha todos os campos.");
 
-        await _supabase.from('enquetes').insert([{ tipo, ativo, preco_alvo, op1, op2, data_fim, hora_fim }]);
-        alert("Publicada na Nuvem!");
+        const { error } = await _supabase.from('enquetes').insert([{ tipo, ativo, preco_alvo, op1, op2, data_fim, hora_fim, finalizada: false, pausada: false }]);
+        if(error) return alert("Erro ao criar: " + error.message);
+        
+        alert("Enquete enviada com sucesso para a Nuvem!");
         inicializarPainel();
     }
 
     async function renderizarRodadasAbertas() {
         let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
         let { data: apostas } = await _supabase.from('apostas').select('*');
-        const tbody = document.getElementById('listaRodadasAbertas');
-        tbody.innerHTML = '';
+        const tbody = document.getElementById('listaRodadasAbertas'); tbody.innerHTML = '';
 
         if(enquetes) {
             enquetes.forEach(enq => {
-                let totalPoteRodada = 0;
-                if(apostas) {
-                    apostas.forEach(a => { if(a.enquete_id === enq.id) totalPoteRodada += parseFloat(a.valor); });
-                }
+                let totalPote = 0;
+                if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) totalPote += parseFloat(a.valor); });
 
                 tbody.innerHTML += `<tr>
                     <td><b>${enq.ativo}</b><br><small>${enq.op1} vs ${enq.op2}</small></td>
-                    <td><span class="pote-badge">🪙 Pote: R$ ${totalPoteRodada.toFixed(2)}</span></td>
+                    <td><span class="pote-badge">R$ ${totalPote.toFixed(2)}</span></td>
                     <td><button class="btn-warn" onclick="togglePausa(${enq.id}, ${enq.pausada})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
                     <td>
                         <button class="btn btn-success" onclick="liquidarEnquete(${enq.id}, '${enq.op1}')">${enq.op1}</button>
@@ -188,71 +129,14 @@
         }
     }
 
-    async function togglePausa(id, statusAtual) {
-        await _supabase.from('enquetes').update({ pausada: !statusAtual }).eq('id', id);
+    async function togglePausa(id, status) {
+        await _supabase.from('enquetes').update({ pausada: !status }).eq('id', id);
         renderizarRodadasAbertas();
     }
 
     async function liquidarEnquete(id, vencedor) {
-        let { data: apostas } = await _supabase.from('apostas').select('*').eq('enquete_id', id).eq('status', 'Pendente');
-        
-        if(!apostas || apostas.length === 0) {
-            await _supabase.from('enquetes').update({ finalizada: true }).eq('id', id);
-            alert("Enquete encerrada sem apostas.");
-            return inicializarPainel();
-        }
-
-        let totalPote = 0; let totalVencedores = 0;
-        apostas.forEach(a => {
-            totalPote += parseFloat(a.valor);
-            if(a.palpite === vencedor) totalVencedores += parseFloat(a.valor);
-        });
-
-        for(let a of apostas) {
-            if(a.palpite === vencedor) {
-                let ganho = (parseFloat(a.valor) / totalVencedores) * totalPote;
-                let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', a.usuario).single();
-                let novoSaldo = parseFloat(u.saldo || 0) + ganho;
-                
-                await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', a.usuario);
-                await _supabase.from('apostas').update({ status: 'Venceu', lucro: ganho }).eq('id', a.id);
-            } else {
-                await _supabase.from('apostas').update({ status: 'Perdeu', lucro: 0 }).eq('id', a.id);
-            }
-        }
-
         await _supabase.from('enquetes').update({ finalizada: true }).eq('id', id);
-        alert("Rodada liquidada e saldos atualizados na nuvem!");
-        inicializarPainel();
-    }
-
-    async function renderizarFinancas() {
-        let { data: transacoes } = await _supabase.from('transacoes').select('*').eq('status', 'Pendente');
-        const tbodyD = document.getElementById('listaDepositos'); tbodyD.innerHTML = '';
-        const tbodyS = document.getElementById('listaSaques'); tbodyS.innerHTML = '';
-
-        if(transacoes) {
-            transacoes.forEach(t => {
-                if(t.tipo === 'deposito') {
-                    tbodyD.innerHTML += `<tr><td>${t.usuario}</td><td style="color:var(--accent-green)">R$ ${parseFloat(t.valor).toFixed(2)}</td><td><button class="btn btn-success" onclick="aprovarDep(${t.id}, '${t.usuario}', ${t.valor})">Liberar</button></td></tr>`;
-                } else {
-                    tbodyS.innerHTML += `<tr><td>${t.usuario}</td><td style="color:var(--accent-red)">R$ ${parseFloat(t.valor).toFixed(2)}</td><td><code>${t.chave_pix}</code></td><td><button class="btn btn-success" onclick="pagarSaq(${t.id})">Pagar</button></td></tr>`;
-                }
-            });
-        }
-    }
-
-    async function aprovarDep(id, usuario, valor) {
-        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario).single();
-        let nuevoSaldo = parseFloat(u.saldo || 0) + parseFloat(valor);
-        
-        await _supabase.from('usuarios').update({ saldo: nuevoSaldo }).eq('username', usuario);
-        await _supabase.from('transacoes').update({ status: 'Aprovado' }).eq('id', id);
-        inicializarPainel();
-    }
-
-    async function pagarSaq(id) {
-        await _supabase.from('transacoes').update({ status: 'Pago' }).eq('id', id);
+        alert("Rodada encerrada!");
         inicializarPainel();
     }
 
