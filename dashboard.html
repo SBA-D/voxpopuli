@@ -17,243 +17,50 @@
         }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-main); 
-            color: #fff; 
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            background-color: var(--bg-main); color: #fff; margin: 0; padding: 0; box-sizing: border-box;
         }
         .header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background: var(--bg-card); 
-            padding: 15px 24px; 
-            border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); 
+            padding: 15px 24px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100;
         }
-        .logo-text {
-            font-size: 24px;
-            font-weight: 800;
-            color: var(--accent-blue);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            letter-spacing: -0.5px;
-        }
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
+        .logo-text { font-size: 24px; font-weight: 800; color: var(--accent-blue); display: flex; align-items: center; gap: 8px; }
+        .header-right { display: flex; align-items: center; gap: 15px; }
+        
         .moedas-badge {
-            background: #091a18;
-            border: 1px solid var(--accent-green);
-            padding: 10px 18px;
-            border-radius: 30px;
-            font-size: 14px;
-            color: var(--accent-green);
-            font-weight: 700;
-            box-shadow: 0 0 15px rgba(0, 179, 126, 0.1);
+            background: #091a18; border: 1px solid var(--accent-green); padding: 10px 18px;
+            border-radius: 30px; font-size: 14px; color: var(--accent-green); font-weight: 700;
         }
-        .btn {
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 14px;
-            border: none;
-            transition: all 0.2s ease-in-out;
-        }
+        .btn { padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; border: none; transition: all 0.2s; }
         .btn-blue { background: #0640df; color: white; width: 100%; }
-        .btn-blue:hover { background: #022cb3; transform: translateY(-1px); }
+        .btn-blue:hover { background: #022cb3; }
         .btn-green { background: var(--accent-green); color: #0d1222; }
-        .btn-green:hover { background: #029669; transform: translateY(-1px); }
         .btn-exit { background: #202431; color: var(--text-muted); }
-        .btn-exit:hover { background: #2c3246; color: #fff; }
         
-        .main-content {
-            padding: 24px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
+        .main-content { padding: 24px; max-width: 800px; margin: 0 auto; }
+        .card { background: var(--bg-card); padding: 24px; margin-top: 20px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .card h3 { margin-top: 0; font-size: 14px; margin-bottom: 18px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         
-        .card { 
-            background: var(--bg-card); 
-            padding: 24px; 
-            margin-top: 20px; 
-            border-radius: 16px; 
-            border: 1px solid var(--border-color);
-        }
-        .card h3 {
-            margin-top: 0;
-            font-size: 14px;
-            margin-bottom: 18px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        .grid-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        input, select { width: 100%; padding: 14px; background: var(--bg-input); color: white; border: 1px solid #1c253d; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
         
-        .grid-inputs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-        input, select { 
-            width: 100%;
-            padding: 14px; 
-            background: var(--bg-input); 
-            color: white; 
-            border: 1px solid #1c253d; 
-            border-radius: 8px; 
-            font-size: 14px;
-            box-sizing: border-box;
-        }
-        input:focus, select:focus { outline: none; border-color: var(--accent-blue); }
+        .category-selector { display: flex; gap: 12px; margin-top: 24px; }
+        .tab-btn { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
+        .tab-btn.active { background: #0640df; border-color: var(--accent-blue); color: white; }
+        
+        .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; margin-top: 20px; display: grid; grid-template-columns: 1fr 220px; gap: 20px; align-items: center; }
+        .enquete-ativo { font-size: 24px; font-weight: 800; margin-bottom: 20px; }
+        .opcoes-container { display: flex; flex-direction: column; gap: 10px; }
+        .opcao-btn { background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px; border-radius: 8px; text-align: left; font-size: 15px; cursor: pointer; display: flex; justify-content: space-between; }
+        
+        .tempo-container { border: 1px solid var(--accent-red); background: #221114; border-radius: 10px; padding: 12px; text-align: center; }
+        .timer { font-size: 18px; font-weight: 700; font-family: monospace; }
+        
+        .pix-modal-box { background: #111a30; border: 2px solid var(--accent-blue); border-radius: 12px; padding: 18px; margin-top: 15px; text-align: center; }
+        .pix-code { background: var(--bg-main); padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; word-break: break-all; margin: 10px 0; border: 1px dashed var(--border-color); }
 
-        .category-selector {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        .tab-btn {
-            flex: 1;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            color: var(--text-muted);
-            padding: 16px;
-            border-radius: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 15px;
-            transition: all 0.2s;
-        }
-        .tab-btn.active {
-            background: #0640df;
-            border-color: var(--accent-blue);
-            color: white;
-            box-shadow: 0 4px 15px rgba(6, 64, 223, 0.3);
-        }
-        
-        /* Layout Moderno da Enquete */
-        .enquete-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 24px;
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: 1fr 220px;
-            gap: 20px;
-            align-items: center;
-        }
-        @media(max-width: 680px) {
-            .enquete-box { grid-template-columns: 1fr; }
-        }
-        .enquete-left { text-align: left; }
-        .enquete-right {
-            border-left: 1px solid var(--border-color);
-            padding-left: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-        @media(max-width: 680px) {
-            .enquete-right { border-left: none; padding-left: 0; border-top: 1px solid var(--border-color); padding-top: 20px; }
-        }
-        .enquete-badge {
-            color: var(--accent-blue);
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        .enquete-pergunta {
-            font-size: 15px;
-            color: var(--text-muted);
-            margin-bottom: 6px;
-        }
-        .enquete-ativo {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 20px;
-            color: #fff;
-        }
-        .opcoes-container {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .opcao-btn {
-            background: var(--bg-input);
-            border: 1px solid #1c253d;
-            color: white;
-            padding: 14px;
-            border-radius: 8px;
-            text-align: left;
-            font-size: 15px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .opcao-btn:hover {
-            border-color: var(--accent-blue);
-            background: #151d33;
-        }
-        
-        .tempo-container {
-            border: 1px solid var(--accent-red);
-            background: #221114;
-            border-radius: 10px;
-            padding: 12px;
-            text-align: center;
-        }
-        .tempo-titulo {
-            color: var(--accent-red);
-            font-size: 11px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-        .timer {
-            font-size: 18px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            font-family: monospace;
-        }
-        .data-limite {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 8px;
-            text-align: center;
-        }
-
-        .pix-modal-box {
-            background: #111a30;
-            border: 2px solid var(--accent-blue);
-            border-radius: 12px;
-            padding: 18px;
-            margin-top: 15px;
-            text-align: center;
-        }
-        .pix-code {
-            background: var(--bg-main);
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 12px;
-            color: var(--text-muted);
-            word-break: break-all;
-            margin: 10px 0;
-            border: 1px dashed var(--border-color);
-        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
     </style>
 </head>
 <body>
@@ -262,50 +69,65 @@
     <div class="logo-text">VoxPopuli <span>📈</span></div>
     <div class="header-right">
         <div class="moedas-badge">
-            💵 R$ <span id="saldoUsuario">0.00</span>
+            🪙 <span id="saldoUsuario">0.00</span> Moedas
         </div>
-        <button class="btn btn-blue" style="width: auto;" onclick="document.getElementById('depositoSection').scrollIntoView({behavior: 'smooth'})">+ Depositar</button>
+        <button class="btn btn-blue" style="width: auto;" onclick="document.getElementById('depositoSection').scrollIntoView({behavior: 'smooth'})">+ Comprar Moedas</button>
         <button class="btn btn-exit" onclick="logout()">Sair</button>
     </div>
 </div>
 
 <div class="main-content">
 
-    <!-- SELEÇÃO DE CATEGORIAS PRINCIPAIS -->
+    <!-- SELEÇÃO DE CATEGORIAS -->
     <div class="category-selector">
         <button class="tab-btn active" id="tabFinanceiro" onclick="mudarCategoria('financeiro')">📊 Mercado Financeiro</button>
         <button class="tab-btn" id="tabEsportes" onclick="mudarCategoria('esportes')">⚽ Esportes</button>
     </div>
 
     <!-- LISTA DE PREVISÕES ATIVAS -->
-    <div id="containerEnquetes">
-        <!-- Enquetes injetadas via localStorage aparecem aqui -->
+    <div id="containerEnquetes"></div>
+
+    <!-- HISTÓRICO VISÍVEL DE GANHOS E PERDAS -->
+    <div class="card">
+        <h3>📊 Meu Histórico de Previsões e Resultados</h3>
+        <div style="overflow-x:auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ativo / Rodada</th>
+                        <th>Seu Palpite</th>
+                        <th>Moedas Jogadas</th>
+                        <th>Status do Resultado</th>
+                    </tr>
+                </thead>
+                <tbody id="historicoApostas"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- SEÇÃO DE DEPÓSITO -->
     <div class="card" id="depositoSection">
-        <h3>💳 Adicionar Saldo via PIX</h3>
-        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Depósito mínimo de <b>R$ 9,00</b>. Digite o valor abaixo para gerar o Copia e Cola:</div>
+        <h3>💳 Adicionar Moedas de Operação via PIX</h3>
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Preço unitário está fixado em <b>1 Moeda = R$ 1,00</b>. Recarga mínima de R$ 9,00.</div>
         <div class="grid-inputs" style="grid-template-columns: 1fr auto;">
-            <input type="number" id="valDeposito" placeholder="Valor do depósito (Ex: 50)">
+            <input type="number" id="valDeposito" placeholder="Quantidade de Moedas (Mínimo 9)">
             <button class="btn btn-green" onclick="gerarPixDeposito()">Gerar PIX</button>
         </div>
         
         <div id="pixArea" style="display: none;" class="pix-modal-box">
             <div style="font-weight: 700; color: #fff; margin-bottom: 5px;">PIX Copia e Cola Gerado!</div>
-            <div style="font-size: 13px; color: var(--text-muted);">Clique no botão abaixo para copiar a chave e pague no app do seu banco.</div>
             <div class="pix-code" id="pixCopiaColaTexto">CHAVE_PIX_AQUI</div>
             <button class="btn btn-blue" style="margin-bottom:10px;" onclick="copiarChavePix()">📋 Copiar Código PIX</button>
-            <button class="btn btn-green" style="width:100%; background: #00b37e;" onclick="confirmarPagamentoAoAdm()">✅ Já efetuei o pagamento! Notificar ADM</button>
+            <button class="btn btn-green" style="width:100%;" onclick="confirmarPagamentoAoAdm()">✅ Já efetuei o pagamento! Notificar ADM</button>
         </div>
     </div>
 
     <!-- SEÇÃO DE SAQUE -->
     <div class="card">
-        <h3>💰 Solicitar Saque</h3>
-        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Saque mínimo estipulado em <b>R$ 150,00</b>.</div>
+        <h3>💰 Resgatar Saldo / Saque</h3>
+        <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">Retirada mínima estipulada em <b>R$ 150,00</b>.</div>
         <div class="grid-inputs">
-            <input type="number" id="valSaque" placeholder="Valor do Saque (Mín. R$150)">
+            <input type="number" id="valSaque" placeholder="Valor do Resgate (Mín. R$150)">
             <select id="tipoPixSaque">
                 <option value="CPF">Chave CPF</option>
                 <option value="Celular">Chave Celular</option>
@@ -313,14 +135,14 @@
                 <option value="Chave Aleatória">Chave Aleatória</option>
             </select>
         </div>
-        <input type="text" id="chavePixSaque" placeholder="Digite sua Chave PIX destino aqui" style="margin-bottom: 12px;">
+        <input type="text" id="chavePixSaque" placeholder="Insira sua Chave PIX destino aqui" style="margin-bottom: 12px;">
         <button class="btn btn-blue" style="background: var(--accent-red);" onclick="solicitarSaque()">Enviar Pedido de Saque</button>
     </div>
 
 </div>
 
 <script>
-    // Configurações Gerais - Sua chave PIX atualizada com sucesso pelo Programador
+    // Chave PIX parametrizada com absoluto sucesso
     let suaChavePixDestino = "Ef0ce40a-5e1e-42ef-a2b6-a2d3664491bd"; 
     const usuarioLogado = localStorage.getItem('usuarioLogado');
     if(!usuarioLogado) window.location.href = 'index.html';
@@ -334,148 +156,144 @@
             document.getElementById('saldoUsuario').innerText = Number(users[usuarioLogado].saldo).toFixed(2);
         }
         carregarEnquetes();
+        renderizarHistoricoMembro();
     }
 
     function mudarCategoria(categoria) {
         categoriaAtual = categoria;
         document.getElementById('tabFinanceiro').classList.remove('active');
         document.getElementById('tabEsportes').classList.remove('active');
-        
-        if(categoria === 'financeiro') {
-            document.getElementById('tabFinanceiro').classList.add('active');
-        } else {
-            document.getElementById('tabEsportes').classList.add('active');
-        }
+        if(categoria === 'financeiro') document.getElementById('tabFinanceiro').classList.add('active');
+        else document.getElementById('tabEsportes').classList.add('active');
         carregarEnquetes();
     }
 
     function carregarEnquetes() {
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         const container = document.getElementById('containerEnquetes');
+        let filtradas = enquetes.filter(enq => enq.tipo === categoriaAtual && !enq.finalizada);
         
-        let enquetesFiltradas = enquetes.filter(enq => enq.tipo === categoriaAtual);
-        
-        if(enquetesFiltradas.length === 0) {
-            container.innerHTML = `
-                <div class="card" style="text-align: center; color: var(--text-muted);">
-                    Nenhuma rodada ou enquete ativa para esta categoria no momento.
-                </div>
-            `;
+        if(filtradas.length === 0) {
+            container.innerHTML = `<div class="card" style="text-align: center; color: var(--text-muted);">Nenhuma rodada de previsão ativa no momento.</div>`;
             return;
         }
 
         container.innerHTML = '';
-        enquetesFiltradas.forEach((enq, index) => {
-            let perguntaTexto = enq.tipo === 'financeiro' 
-                ? `O ativo fechará o dia acima ou abaixo do preço de fechamento anterior? (${enq.precoAlvo || '0.00'})` 
-                : "Quem vence o confronto direto?";
-
+        filtradas.forEach((enq) => {
+            let subtitulo = enq.tipo === 'financeiro' ? `O ativo fechará acima ou abaixo do preço alvo? (${enq.precoAlvo || '0.00'})` : "Quem vencerá o confronto?";
             container.innerHTML += `
                 <div class="enquete-box">
-                    <div class="enquete-left">
-                        <span class="enquete-badge">🔥 Rodada Disponível</span>
+                    <div>
+                        <span style="color: var(--accent-blue); font-size:12px; font-weight:700;">🔥 MERCADO DISPONÍVEL</span>
                         <div class="enquete-ativo">${enq.ativo}</div>
-                        <div class="enquete-pergunta">${perguntaTexto}</div>
+                        <p style="font-size:14px; color:var(--text-muted);">${subtitulo}</p>
                         <div class="opcoes-container">
-                            <button class="opcao-btn" onclick="apostar(${index}, '${enq.op1}')"><span>▲ ${enq.op1}</span></button>
-                            <button class="opcao-btn" onclick="apostar(${index}, '${enq.op2}')"><span>▼ ${enq.op2}</span></button>
+                            <button class="opcao-btn" onclick="executarApostaMoeda(${enq.id}, '${enq.op1}')"><span>▲ Aposta em: ${enq.op1}</span></button>
+                            <button class="opcao-btn" onclick="executarApostaMoeda(${enq.id}, '${enq.op2}')"><span>▼ Aposta em: ${enq.op2}</span></button>
                         </div>
                     </div>
-                    <div class="enquete-right">
+                    <div style="border-left: 1px solid var(--border-color); padding-left:20px;">
                         <div class="tempo-container">
-                            <div class="tempo-titulo">⏱️ TEMPO RESTANTE</div>
-                            <div class="timer" id="timer-${index}">Aguardando...</div>
+                            <div style="color:var(--accent-red); font-size:11px; font-weight:700;">TEMPO RESTANTE</div>
+                            <div class="timer" id="timer-${enq.id}">--:--:--</div>
                         </div>
-                        <div class="data-limite">Termina em:<br><b>${enq.dataFim || '--'} às ${enq.horaFim || '--'}</b></div>
                     </div>
                 </div>
             `;
-            iniciarContagemRegressiva(enq.dataFim, enq.horaFim, `timer-${index}`);
+            iniciarContagemRegressiva(enq.dataFim, enq.horaFim, `timer-${enq.id}`);
         });
     }
 
-    function iniciarContagemRegressiva(dataStr, horaStr, elementId) {
-        if(!dataStr || !horaStr) return;
-        
-        function atualizarTimer() {
-            const agora = new Date().getTime();
-            const fim = new Date(`${dataStr}T${horaStr}`).getTime();
-            const distancia = fim - agora;
-            const el = document.getElementById(elementId);
-            
-            if(!el) return;
-
-            if (distancia < 0) {
-                el.innerText = "EXPIRADO";
-                el.parentElement.style.borderColor = "gray";
-                el.parentElement.style.background = "#222";
-                return;
-            }
-
-            const horas = Math.floor((distancia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((distancia % (1000 * 60 * 60)) / (1000 * 60));
-            const segundos = Math.floor((distancia % (1000 * 60)) / 1000);
-
-            el.innerText = `${String(horas).padStart(2,'0')}:${String(minutos).padStart(2,'0')}:${String(segundos).padStart(2,'0')}`;
+    function iniciarContagemRegressiva(dataStr, horaStr, elId) {
+        function rodar() {
+            let el = document.getElementById(elId); if(!el) return;
+            let dist = new Date(`${dataStr}T${horaStr}`).getTime() - new Date().getTime();
+            if(dist < 0) { el.innerText = "ENCERRADO"; return; }
+            let h = Math.floor(dist / 3600000);
+            let m = Math.floor((dist % 3600000) / 6000);
+            let s = Math.floor((dist % 60000) / 1000);
+            el.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
         }
-        setInterval(atualizarTimer, 1000);
-        atualizarTimer();
+        setInterval(rodar, 1000); rodar();
     }
 
-    function apostar(index, opcao) {
+    function executarApostaMoeda(enqueteId, palpiteEscolhido) {
         let users = JSON.parse(localStorage.getItem('users'));
-        let valorAposta = prompt("Quanto deseja apostar nessa previsão? (R$):", "10");
-        valorAposta = parseFloat(valorAposta);
+        let qte = prompt("Quantas moedas deseja alocar nesta previsão? (1 Moeda = R$1.00):", "10");
+        let valorAposta = parseFloat(qte);
 
         if(isNaN(valorAposta) || valorAposta <= 0) return alert("Valor inválido.");
-        if(users[usuarioLogado].saldo < valorAposta) return alert("Saldo insuficiente.");
+        if(users[usuarioLogado].saldo < valorAposta) return alert("Você não possui moedas suficientes para essa aposta.");
 
+        // Subtrai o saldo de moedas do membro
         users[usuarioLogado].saldo -= valorAposta;
         localStorage.setItem('users', JSON.stringify(users));
 
-        let enquetes = JSON.parse(localStorage.getItem('enquetes'));
+        let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
+        let enq = enquetes.find(e => e.id === enqueteId);
         let apostas = JSON.parse(localStorage.getItem('apostas')) || [];
         
-        apostas.push({ usuario: usuarioLogado, ativo: enquetes[index].ativo, palpite: opcao, valor: valorAposta, status: 'Pendente' });
-        localStorage.setItem('apostas', JSON.stringify(apostas));
+        apostas.push({
+            usuario: usuarioLogado,
+            enqueteId: enqueteId,
+            ativo: enq.ativo,
+            palpite: palpiteEscolhido,
+            valor: valorAposta,
+            status: 'Pendente',
+            lucro: 0
+        });
 
-        alert(`Sucesso! Sua aposta de R$ ${valorAposta.toFixed(2)} na opção [${opcao}] foi registrada.`);
+        localStorage.setItem('apostas', JSON.stringify(apostas));
+        alert("Aposta registrada com sucesso nas tabelas de rateio!");
         atualizarDados();
+    }
+
+    function renderizarHistoricoMembro() {
+        const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
+        const tbody = document.getElementById('historicoApostas');
+        tbody.innerHTML = '';
+
+        let minhasApostas = apostas.filter(a => a.usuario === usuarioLogado);
+        minhasApostas.reverse().forEach(a => {
+            let corStatus = '#ff9f43';
+            let txtStatus = 'Aguardando Painel';
+            
+            if(a.status === 'Venceu') { corStatus = 'var(--accent-green)'; txtStatus = `Venceu (Ganhou Moedas: +${Number(a.lucro).toFixed(2)})`; }
+            if(a.status === 'Perdeu') { corStatus = 'var(--accent-red)'; txtStatus = 'Perdeu (0.00 Moedas)'; }
+            if(a.status === 'Devolvido') { corStatus = 'gray'; txtStatus = 'Rodada Anulada (Estornado)'; }
+
+            tbody.innerHTML += `
+                <tr>
+                    <td><b>${a.ativo}</b></td>
+                    <td><code>${a.palpite}</code></td>
+                    <td>🪙 ${Number(a.valor).toFixed(2)}</td>
+                    <td style="color:${corStatus}; font-weight:700;">${txtStatus}</td>
+                </tr>
+            `;
+        });
     }
 
     function gerarPixDeposito() {
         const valor = parseFloat(document.getElementById('valDeposito').value);
-        if(isNaN(valor) || valor < 9) {
-            return alert("O valor mínimo para recarga/depósito é de R$ 9,00.");
-        }
+        if(isNaN(valor) || valor < 9) return alert("A compra mínima permitida é de 9 moedas.");
         valorGeradoAtual = valor;
 
-        // Gera string PIX contendo os metadados necessários e a sua chave real
         let stringPix = `00020101021126580014br.gov.bcb.pix0114${suaChavePixDestino}5204000053039865405${valor.toFixed(2)}5802BR5910VoxPopuli6009Araruama62070503***6304`;
-        
         document.getElementById('pixCopiaColaTexto').innerText = stringPix;
         document.getElementById('pixArea').style.display = 'block';
     }
 
     function copiarChavePix() {
-        const texto = document.getElementById('pixCopiaColaTexto').innerText;
-        navigator.clipboard.writeText(texto);
-        alert("Código PIX Copia e Cola copiado para a área de transferência!");
+        navigator.clipboard.writeText(document.getElementById('pixCopiaColaTexto').innerText);
+        alert("PIX Copia e Cola copiado!");
     }
 
     function confirmarPagamentoAoAdm() {
         let depositos = JSON.parse(localStorage.getItem('depositos')) || [];
-        depositos.push({
-            usuario: usuarioLogado,
-            valor: valorGeradoAtual,
-            status: 'Pendente',
-            data: new Date().toLocaleString('pt-BR')
-        });
+        depositos.push({ usuario: usuarioLogado, valor: valorGeradoAtual, status: 'Pendente', data: new Date().toLocaleString('pt-BR') });
         localStorage.setItem('depositos', JSON.stringify(depositos));
-        
-        alert("Notificação enviada ao Administrador! O seu saldo será liberado assim que o pagamento constar na conta.");
+        alert("Notificação enviada ao ADM para análise financeira.");
         document.getElementById('pixArea').style.display = 'none';
-        document.getElementById('valDeposito').value = '';
     }
 
     function solicitarSaque() {
@@ -484,9 +302,9 @@
         const chavePix = document.getElementById('chavePixSaque').value.trim();
         let users = JSON.parse(localStorage.getItem('users'));
         
-        if(isNaN(valor) || valor < 150) return alert("O valor mínimo exigido para realizar saques é de R$ 150,00.");
-        if(!chavePix) return alert("Você precisa informar a chave PIX de destino.");
-        if(users[usuarioLogado].saldo < valor) return alert("Saldo insuficiente em conta para processar esse saque.");
+        if(isNaN(valor) || valor < 150) return alert("O resgate mínimo é de R$ 150,00.");
+        if(!chavePix) return alert("Informe a sua chave de destino.");
+        if(users[usuarioLogado].saldo < valor) return alert("Moedas insuficientes.");
 
         users[usuarioLogado].saldo -= valor;
         localStorage.setItem('users', JSON.stringify(users));
@@ -495,9 +313,7 @@
         saques.push({ usuario: usuarioLogado, valor: valor, tipoPix: tipoPix, chavePix: chavePix, status: 'Pendente', data: new Date().toLocaleString('pt-BR') });
         localStorage.setItem('saques', JSON.stringify(saques));
 
-        alert("Seu pedido de saque foi encaminhado para a mesa financeira do ADM.");
-        document.getElementById('valSaque').value = '';
-        document.getElementById('chavePixSaque').value = '';
+        alert("Seu pedido de saque foi enviado para conferência.");
         atualizarDados();
     }
 
