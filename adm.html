@@ -85,8 +85,8 @@
     
     <div class="admin-header">
         <div class="header-left">
-            <h1>VoxPopuli 控制台 Engine v5</h1>
-            <div class="subtitle">Mesa de Operações Avançada - Controle de Votações em Tempo Real e Arbitragem</div>
+            <h1>VoxPopuli 控制台 Engine v5.1</h1>
+            <div class="subtitle">Mesa de Operações Avançada - Sistema de Arbitragem Sem Estornos e Retenção Incondicional de Erros</div>
         </div>
         <button class="btn-exit" onclick="logoutAdmin()">Sair do Painel</button>
     </div>
@@ -142,8 +142,8 @@
     </div>
 
     <div class="card">
-        <h2>🎯 Controle Interativo de Enquetes (Pausar e Encerrar de Forma Proporcional)</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Pause os palpites a qualquer momento mantendo o timer ativo, ou finalize definindo o vencedor.</p>
+        <h2>🎯 Controle Interativo de Enquetes (Pausar e Encerrar com Retenção Total de Erros)</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Pause os palpites mantendo o timer correndo, ou liquide definindo o vencedor (quem errar perde em definitivo).</p>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
@@ -363,7 +363,7 @@
             dataFim, 
             horaFim, 
             finalizada: false,
-            pausada: false // Nova propriedade para travar as apostas individualmente
+            pausada: false
         });
         localStorage.setItem('enquetes', JSON.stringify(enquetes));
 
@@ -424,30 +424,24 @@
         let totalPote = 0;
         let totalVencedores = 0;
 
+        // Calcula o pote acumulado total
         apostasDaRodada.forEach(a => {
             totalPote += a.valor;
             if(a.palpite === opcaoVencedora) totalVencedores += a.valor;
         });
 
-        if(totalVencedores === 0 && apostasDaRodada.length > 0) {
-            apostasDaRodada.forEach(a => {
-                users[a.usuario].saldo += a.valor;
-                a.status = 'Devolvido';
-            });
-            alert("Ninguém acertou. Moedas devolvidas aos participantes.");
-        } else {
-            apostasDaRodada.forEach(a => {
-                if(a.palpite === opcaoVencedora) {
-                    let premioProporcional = (a.valor / totalVencedores) * totalPote;
-                    users[a.usuario].saldo += premioProporcional;
-                    a.status = 'Venceu';
-                    a.lucro = premioProporcional;
-                } else {
-                    a.status = 'Perdeu';
-                    a.lucro = 0;
-                }
-            });
-        }
+        // Aplicação cirúrgica do resultado sem devolução aos perdedores
+        apostasDaRodada.forEach(a => {
+            if(a.palpite === opcaoVencedora) {
+                let premioProporcional = (a.valor / totalVencedores) * totalPote;
+                users[a.usuario].saldo += premioProporcional;
+                a.status = 'Venceu';
+                a.lucro = premioProporcional;
+            } else {
+                a.status = 'Perdeu';
+                a.lucro = 0; // Dinheiro retido permanentemente
+            }
+        });
 
         rodada.finalizada = true;
         rodada.vencedor = opcaoVencedora;
@@ -456,7 +450,7 @@
         localStorage.setItem('apostas', JSON.stringify(apostas));
         localStorage.setItem('users', JSON.stringify(users));
 
-        alert(`Rodada Encerrada! Resultado definitivo cadastrado.`);
+        alert(`Rodada Encerrada com sucesso! Vencedor definitivo: ${opcaoVencedora}.`);
         renderizarRodadasAbertas();
     }
 
