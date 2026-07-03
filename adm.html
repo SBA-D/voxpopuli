@@ -15,143 +15,52 @@
             --accent-red: #f75a68;
             --text-muted: #7d859a;
         }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; 
-        }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; }
         .container { max-width: 950px; margin: 0 auto; }
-        
-        .admin-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-        }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
         .header-left h1 { color: var(--accent-blue); font-size: 28px; margin: 0; font-weight: 800; }
-        .header-left .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 5px; }
-        
-        .card { 
-            background: var(--bg-card); border: 1px solid var(--border-color); 
-            padding: 24px; border-radius: 14px; margin-bottom: 20px; 
-        }
-        h2 { font-size: 18px; margin-top: 0; margin-bottom: 15px; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-        
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 24px; border-radius: 14px; margin-bottom: 20px; }
+        h2 { font-size: 18px; margin-top: 0; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-        @media(max-width: 600px) { .grid-3, .grid-2 { grid-template-columns: 1fr; } }
-        
-        label { display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
-        input, select { 
-            width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid #1c253d; 
-            color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px;
-        }
-        
-        .btn { 
-            padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; 
-            cursor: pointer; transition: all 0.2s; font-size: 14px;
-        }
+        input, select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid #1c253d; color: #fff; border-radius: 8px; box-sizing: border-box; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; }
         .btn-blue { background: var(--accent-blue); color: white; width: 100%; }
-        .btn-blue:hover { background: #2651d4; }
-        .btn-success { background: var(--accent-green); color: #0d1222; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; }
-        .btn-danger { background: var(--accent-red); color: white; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; }
-        .btn-warn { background: #ff9f43; color: #0d1222; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; border: none; cursor: pointer; }
-        
-        .btn-exit {
-            background: #202431; color: var(--text-muted); padding: 10px 18px;
-            border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; border: none; transition: all 0.2s;
-        }
-        .btn-exit:hover { background: #2c3246; color: #fff; }
-        
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
-        th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; font-weight: 700; }
-        tr:hover { background: #13192e; }
-
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
-        .badge-pending { background: #3b2a16; color: #ff9f43; }
-        .badge-success { background: #113622; color: var(--accent-green); }
-        .badge-blocked { background: #3a1619; color: var(--accent-red); }
-
-        .busca-box {
-            background: var(--bg-input); border: 1px solid var(--border-color); padding: 15px; border-radius: 8px; margin-top: 15px;
-        }
+        .btn-success { background: var(--accent-green); color: #0d1222; font-size: 12px; padding: 8px 12px; border-radius: 6px; }
+        .btn-danger { background: var(--accent-red); color: white; font-size: 12px; padding: 8px 12px; border-radius: 6px; }
+        .btn-warn { background: #ff9f43; color: #0d1222; padding: 8px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
+        .caixa-box { background: #091a18; border: 1px solid var(--accent-green); padding: 15px; border-radius: 10px; font-size: 20px; font-weight: bold; color: var(--accent-green); display: inline-block; margin-bottom: 15px; }
+        .pote-badge { background: #1c253d; padding: 4px 8px; border-radius: 4px; font-size: 12px; color: #ff9f43; font-weight: bold; }
     </style>
 </head>
 <body>
-
 <div class="container">
-    
     <div class="admin-header">
         <div class="header-left">
-            <h1>VoxPopuli 控制台 Engine v5.2</h1>
-            <div class="subtitle">Mesa de Operações Avançada - Sistema de Arbitragem Sem Estornos e Retenção Incondicional de Erros</div>
+            <h1>VoxPopuli - Painel Administrativo</h1>
         </div>
-        <button class="btn-exit" onclick="logoutAdmin()">Sair do Painel</button>
+        <button class="btn" style="background:#202431; color:var(--text-muted);" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
 
     <div class="card">
-        <h2>🛡️ Painel de Controle e Moderação de Membros</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Gerencie saldos manuais, dados cadastrais e aplique bloqueios de conduta imediatamente.</p>
-        
-        <div class="grid-2" style="grid-template-columns: 1fr auto;">
-            <div>
-                <label>Selecione ou Busque o Usuário</label>
-                <select id="selectUsuariosModerar" onchange="carregarDadosUsuarioModerar()">
-                    <option value="">-- Selecione um Membro Cadastrado --</option>
-                </select>
-            </div>
-            <div style="display: flex; align-items: flex-end;">
-                <button class="btn btn-blue" onclick="atualizarListaMembrosSelect()" style="padding: 12px;">🔄 Atualizar Lista</button>
-            </div>
-        </div>
-
-        <div id="dadosModeracaoUsuario" class="busca-box" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-                <span style="font-weight: 800; font-size: 16px; color: var(--accent-blue);">Membro: <span id="modNomeUser" style="color:#fff;">--</span></span>
-                <span id="modStatusBadge"></span>
-            </div>
-
-            <div class="grid-2" style="margin-bottom: 15px;">
-                <div>
-                    <label>E-mail Cadastrado</label>
-                    <input type="text" id="modEmailUser" readonly style="opacity: 0.7; background: var(--bg-main);">
-                </div>
-                <div>
-                    <label>Senha do Usuário</label>
-                    <input type="text" id="modSenhaUser" readonly style="opacity: 0.7; background: var(--bg-main);">
-                </div>
-            </div>
-
-            <div class="grid-2" style="align-items: flex-end; background: var(--bg-main); padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border-color);">
-                <div>
-                    <label>Saldo de Moedas Manual (R$)</label>
-                    <input type="number" step="0.01" id="modSaldoUser" style="font-weight: bold; color: var(--accent-green); font-size: 16px;">
-                </div>
-                <div>
-                    <button class="btn btn-blue" onclick="salvarSaldoManual()" style="background: var(--accent-green); color: #0d1222;">💾 Alterar Saldo Manualmente</button>
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px;">
-                <button class="btn btn-danger" id="btnBloquearUser" style="flex: 1;" onclick="alterarStatusBloqueio(true)">🚫 Bloquear Membro por Má Conduta</button>
-                <button class="btn btn-blue" id="btnDesbloquearUser" style="flex: 1; background: #202431;" onclick="alterarStatusBloqueio(false)">✅ Remover Bloqueio / Liberar Acesso</button>
-            </div>
-        </div>
+        <h2>💰 Caixa Geral da Plataforma (Dinheiro de Clientes Custodiado)</h2>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Monitoramento automático e consolidado de todas as moedas ativas nas carteiras dos membros.</p>
+        <div class="caixa-box">🏦 Total em Custódia: R$ <span id="caixaPlataforma">0.00</span></div>
     </div>
 
     <div class="card">
-        <h2>🎯 Controle Interativo de Enquetes (Pausar e Encerrar com Retenção Total de Erros)</h2>
-        <p style="font-size: 13px; color: var(--text-muted); margin-top: -10px;">Pause os palpites mantendo o timer correndo, ou liquide definindo o vencedor (quem errar perde em definitivo).</p>
+        <h2>🎯 Controle de Enquetes & Monitoramento de Potes Acumulados</h2>
         <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Ativo / Evento</th>
-                        <th>Status Votação</th>
-                        <th>Trava Manual</th>
-                        <th>Declarar Resultado Final</th>
+                        <th>Ativo / Mercado</th>
+                        <th>Volume Acumulado</th>
+                        <th>Ações de Trava</th>
+                        <th>Encerrar e Liquidar</th>
                     </tr>
                 </thead>
                 <tbody id="listaRodadasAbertas"></tbody>
@@ -160,372 +69,200 @@
     </div>
 
     <div class="card">
-        <h2>🚀 Injetar Nova Enquete / Rodada de Apostas</h2>
+        <h2>🚀 Injetar Nova Rodada</h2>
         <div class="grid-2">
             <div>
-                <label>Tipo de Mercado</label>
-                <select id="enqTipo" onchange="ajustarCamposFormulario()">
+                <label>Tipo</label>
+                <select id="enqTipo">
                     <option value="financeiro">📊 Mercado Financeiro</option>
                     <option value="esportes">⚽ Esportes</option>
                 </select>
             </div>
             <div>
-                <label>Identificação do Ativo / Confronto</label>
-                <input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT ou Flamengo x Vasco">
+                <label>Ativo / Confronto</label>
+                <input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT">
             </div>
         </div>
-
-        <div class="grid-3" id="camposFinanceiro">
+        <div class="grid-3">
             <div>
-                <label>Preço de Referência Alvo (Opcional)</label>
-                <input type="text" id="enqPrecoAlvo" placeholder="Ex: 4.5215">
+                <label>Alvo / Referência</label>
+                <input type="text" id="enqPrecoAlvo" placeholder="Preço Alvo">
             </div>
             <div>
-                <label>Opção 1 (Botão de Cima)</label>
-                <input type="text" id="enqOp1Fin" value="Acima">
+                <label>Opção 1</label>
+                <input type="text" id="enqOp1" value="Acima">
             </div>
             <div>
-                <label>Opção 2 (Botão de Baixo)</label>
-                <input type="text" id="enqOp2Fin" value="Abaixo">
-            </div>
-        </div>
-
-        <div class="grid-2" id="camposEsportes" style="display: none;">
-            <div>
-                <label>Nome do Time 1 (Opção 1)</label>
-                <input type="text" id="enqOp1Esp" placeholder="Ex: Flamengo">
-            </div>
-            <div>
-                <label>Nome do Time 2 (Opção 2)</label>
-                <input type="text" id="enqOp2Esp" placeholder="Ex: Vasco">
+                <label>Opção 2</label>
+                <input type="text" id="enqOp2" value="Abaixo">
             </div>
         </div>
-
         <div class="grid-2">
             <div>
-                <label>Data Limite de Encerramento</label>
                 <input type="date" id="enqDataFim">
             </div>
             <div>
-                <label>Hora Limite de Encerramento</label>
                 <input type="time" id="enqHoraFim">
             </div>
         </div>
-
-        <button class="btn btn-blue" onclick="criarEnquete()">Disparar Enquete nos Painéis</button>
+        <button class="btn btn-blue" onclick="criarEnquete()">Publicar Enquete</button>
     </div>
 
     <div class="card">
-        <h2>📥 Aprovar Depósitos PIX Pendentes</h2>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Usuário</th>
-                        <th>Valor Solicitado</th>
-                        <th>Data/Hora</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="listaDepositos"></tbody>
-            </table>
-        </div>
+        <h2>📥 Aprovar Depósitos PIX</h2>
+        <table>
+            <thead><tr><th>Usuário</th><th>Valor</th><th>Ação</th></tr></thead>
+            <tbody id="listaDepositos"></tbody>
+        </table>
     </div>
 
     <div class="card">
-        <h2>📤 Analisar e Pagar Saques (Mín. R$150)</h2>
-        <div style="overflow-x:auto;">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Usuário</th>
-                        <th>Valor</th>
-                        <th>Tipo PIX</th>
-                        <th>Chave PIX Alvo</th>
-                        <th>Status</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="listaSaques"></tbody>
-            </table>
-        </div>
+        <h2>📤 Pagar Saques</h2>
+        <table>
+            <thead><tr><th>Usuário</th><th>Valor</th><th>Chave PIX</th><th>Ação</th></tr></thead>
+            <tbody id="listaSaques"></tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    const usuarioLogado = localStorage.getItem('usuarioLogado');
-    if(!usuarioLogado) window.location.href = 'index.html';
+    function inicializarPainel() {
+        calcularCaixaGeral();
+        renderizarRodadasAbertas();
+        renderizarFinancas();
+    }
 
-    function atualizarListaMembrosSelect() {
+    function calcularCaixaGeral() {
         const users = JSON.parse(localStorage.getItem('users')) || {};
-        const select = document.getElementById('selectUsuariosModerar');
-        select.innerHTML = '<option value="">-- Selecione um Membro Cadastrado --</option>';
-        Object.keys(users).forEach(username => {
-            if(username !== 'adm' && username !== 'admin') {
-                select.innerHTML += `<option value="${username}">${username}</option>`;
+        let total = 0;
+        Object.keys(users).forEach(u => {
+            if(u !== 'adm' && u !== 'admin') {
+                total += parseFloat(users[u].saldo || 0);
             }
         });
-    }
-
-    function carregarDadosUsuarioModerar() {
-        const username = document.getElementById('selectUsuariosModerar').value;
-        const box = document.getElementById('dadosModeracaoUsuario');
-        if(!username) { box.style.display = 'none'; return; }
-
-        const users = JSON.parse(localStorage.getItem('users')) || {};
-        const user = users[username];
-
-        if(user) {
-            box.style.display = 'block';
-            document.getElementById('modNomeUser').innerText = username;
-            document.getElementById('modEmailUser').value = user.email || 'Não informado';
-            document.getElementById('modSenhaUser').value = user.password || '******';
-            document.getElementById('modSaldoUser').value = Number(user.saldo || 0).toFixed(2);
-            
-            const badge = document.getElementById('modStatusBadge');
-            if(user.bloqueado) {
-                badge.className = "badge badge-blocked"; badge.innerText = "BLOQUEADO";
-                document.getElementById('btnBloquearUser').style.display = 'none';
-                document.getElementById('btnDesbloquearUser').style.display = 'block';
-            } else {
-                badge.className = "badge badge-success"; badge.innerText = "ATIVO / NORMAL";
-                document.getElementById('btnBloquearUser').style.display = 'block';
-                document.getElementById('btnDesbloquearUser').style.display = 'none';
-            }
-        }
-    }
-
-    function salvarSaldoManual() {
-        const username = document.getElementById('selectUsuariosModerar').value;
-        const novoSaldo = parseFloat(document.getElementById('modSaldoUser').value);
-        if(!username || isNaN(novoSaldo)) return alert("Dados inválidos.");
-
-        let users = JSON.parse(localStorage.getItem('users')) || {};
-        if(users[username]) {
-            users[username].saldo = novoSaldo;
-            localStorage.setItem('users', JSON.stringify(users));
-            alert(`Sucesso! Saldo de ${username} atualizado.`);
-            carregarDadosUsuarioModerar();
-        }
-    }
-
-    function alterarStatusBloqueio(bloquear) {
-        const username = document.getElementById('selectUsuariosModerar').value;
-        if(!username) return;
-        let users = JSON.parse(localStorage.getItem('users')) || {};
-        if(users[username]) {
-            users[username].bloqueado = bloquear;
-            localStorage.setItem('users', JSON.stringify(users));
-            alert(bloquear ? "Membro bloqueado!" : "Membro reativado!");
-            carregarDadosUsuarioModerar();
-        }
-    }
-
-    function ajustarCamposFormulario() {
-        const tipo = document.getElementById('enqTipo').value;
-        if(tipo === 'financeiro') {
-            document.getElementById('camposFinanceiro').style.display = 'grid';
-            document.getElementById('camposEsportes').style.display = 'none';
-        } else {
-            document.getElementById('camposFinanceiro').style.display = 'none';
-            document.getElementById('camposEsportes').style.display = 'grid';
-        }
+        document.getElementById('caixaPlataforma').innerText = total.toFixed(2);
     }
 
     function criarEnquete() {
         const tipo = document.getElementById('enqTipo').value;
         const ativo = document.getElementById('enqAtivo').value.trim();
+        const op1 = document.getElementById('enqOp1').value;
+        const op2 = document.getElementById('enqOp2').value;
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
+        const precoAlvo = document.getElementById('enqPrecoAlvo').value;
 
-        if(!ativo || !dataFim || !horaFim) return alert("Preencha todos os campos!");
-
-        let op1 = "", op2 = "", precoAlvo = "";
-        if(tipo === 'financeiro') {
-            precoAlvo = document.getElementById('enqPrecoAlvo').value.trim();
-            op1 = document.getElementById('enqOp1Fin').value;
-            op2 = document.getElementById('enqOp2Fin').value;
-        } else {
-            op1 = document.getElementById('enqOp1Esp').value.trim();
-            op2 = document.getElementById('enqOp2Esp').value.trim();
-            if(!op1 || !op2) return alert("Insira os competidores esportivos!");
-        }
+        if(!ativo || !dataFim || !horaFim) return alert("Preencha os dados básicos.");
 
         let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        enquetes.push({ 
-            id: Date.now(), 
-            tipo, 
-            ativo, 
-            precoAlvo, 
-            op1, 
-            op2, 
-            dataFim, 
-            horaFim, 
-            finalizada: false,
-            pausada: false
-        });
+        enquetes.push({ id: Date.now(), tipo, ativo, precoAlvo, op1, op2, dataFim, horaFim, finalizada: false, pausada: false });
         localStorage.setItem('enquetes', JSON.stringify(enquetes));
-
-        alert("Enquete publicada com sucesso!");
-        document.getElementById('enqAtivo').value = '';
-        renderizarRodadasAbertas();
+        alert("Publicada!");
+        inicializarPainel();
     }
 
     function renderizarRodadasAbertas() {
         const enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
+        const apostas = JSON.parse(localStorage.getItem('apostas')) || [];
         const tbody = document.getElementById('listaRodadasAbertas');
         tbody.innerHTML = '';
 
-        enquetes.forEach((enq) => {
-            if (!enq.finalizada) {
-                let txtPausa = enq.pausada ? "Apostas Pausadas" : "Liberada para Votos";
-                let corPausa = enq.pausada ? "color: var(--accent-red);" : "color: var(--accent-green);";
-                let btnPausaTxt = enq.pausada ? "▶️ Liberar Palpites" : "⏸️ Pausar Palpites";
+        enquetes.forEach(enq => {
+            if(!enq.finalizada) {
+                // Calcular total acumulado neste pote específico pelas apostas dos membros
+                let totalPoteRodada = 0;
+                apostas.forEach(a => { if(a.enqueteId === enq.id) totalPoteRodada += a.valor; });
 
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${enq.ativo}</b> <br><small style="color:var(--text-muted)">${enq.op1} vs ${enq.op2}</small></td>
-                        <td style="${corPausa} font-weight:700; font-size:13px;">${txtPausa}</td>
-                        <td>
-                            <button class="btn-warn" onclick="alternarPausaEnquete(${enq.id})">${btnPausaTxt}</button>
-                        </td>
-                        <td>
-                            <button class="btn btn-success" onclick="finalizarRodada(${enq.id}, '${enq.op1}')">Venceu: ${enq.op1}</button>
-                            <button class="btn btn-danger" onclick="finalizarRodada(${enq.id}, '${enq.op2}')">Venceu: ${enq.op2}</button>
-                        </td>
-                    </tr>
-                `;
+                tbody.innerHTML += `<tr>
+                    <td><b>${enq.ativo}</b><br><small>${enq.op1} vs ${enq.op2}</small></td>
+                    <td><span class="pote-badge">🪙 Pote: R$ ${totalPoteRodada.toFixed(2)}</span></td>
+                    <td><button class="btn-warn" onclick="togglePausa(${enq.id})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
+                    <td>
+                        <button class="btn btn-success" onclick="liquidarEnquete(${enq.id}, '${enq.op1}')">${enq.op1}</button>
+                        <button class="btn btn-danger" onclick="liquidarEnquete(${enq.id}, '${enq.op2}')">${enq.op2}</button>
+                    </td>
+                </tr>`;
             }
         });
     }
 
-    function alternarPausaEnquete(enqueteId) {
+    function togglePausa(id) {
         let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
-        let index = enquetes.findIndex(e => e.id === enqueteId);
-        if(index !== -1) {
-            enquetes[index].pausada = !enquetes[index].pausada;
-            localStorage.setItem('enquetes', JSON.stringify(enquetes));
-            alert(enquetes[index].pausada ? "Apostas suspensas nesta enquete!" : "Apostas liberadas novamente!");
-            renderizarRodadasAbertas();
-        }
+        let index = enquetes.findIndex(e => e.id === id);
+        if(index !== -1) { enquetes[index].pausada = !enquetes[index].pausada; localStorage.setItem('enquetes', JSON.stringify(enquetes)); renderizarRodadasAbertas(); }
     }
 
-    function finalizarRodada(enqueteId, opcaoVencedora) {
+    function liquidarEnquete(id, vencedor) {
         let enquetes = JSON.parse(localStorage.getItem('enquetes')) || [];
         let apostas = JSON.parse(localStorage.getItem('apostas')) || [];
         let users = JSON.parse(localStorage.getItem('users')) || {};
 
-        let indexEnq = enquetes.findIndex(e => e.id === enqueteId);
-        if(indexEnq === -1) return;
-        const rodada = enquetes[indexEnq];
-
-        let totalPote = 0;
-        let totalVencedores = 0;
-
-        // Processa as apostas ligadas diretamente a esta enquete e calcula o pote total acumulado
+        let totalPote = 0; let totalVencedores = 0;
         apostas.forEach(a => {
-            if(a.enqueteId === enqueteId && a.status === 'Pendente') {
+            if(a.enqueteId === id && a.status === 'Pendente') {
                 totalPote += a.valor;
-                if(a.palpite === opcaoVencedora) {
-                    totalVencedores += a.valor;
-                }
+                if(a.palpite === vencedor) totalVencedores += a.valor;
             }
         });
 
-        // Aplica as regras de ganho e perda estrita sem estornos
         apostas.forEach(a => {
-            if(a.enqueteId === enqueteId && a.status === 'Pendente') {
-                if(a.palpite === opcaoVencedora) {
-                    let premioProporcional = (a.valor / totalVencedores) * totalPote;
-                    if(users[a.usuario]) {
-                        users[a.usuario].saldo += premioProporcional;
-                    }
-                    a.status = 'Venceu';
-                    a.lucro = premioProporcional;
+            if(a.enqueteId === id && a.status === 'Pendente') {
+                if(a.palpite === vencedor) {
+                    let ganho = (a.valor / totalVencedores) * totalPote;
+                    if(users[a.usuario]) users[a.usuario].saldo += ganho;
+                    a.status = 'Venceu'; a.lucro = ganho;
                 } else {
-                    a.status = 'Perdeu';
-                    a.lucro = 0; // O usuário que errou perde o valor permanentemente
+                    a.status = 'Perdeu'; a.lucro = 0;
                 }
             }
         });
 
-        rodada.finalizada = true;
-        rodada.vencedor = opcaoVencedora;
+        let idx = enquetes.findIndex(e => e.id === id);
+        if(idx !== -1) enquetes[idx].finalizada = true;
 
         localStorage.setItem('enquetes', JSON.stringify(enquetes));
         localStorage.setItem('apostas', JSON.stringify(apostas));
         localStorage.setItem('users', JSON.stringify(users));
-
-        alert(`Rodada Encerrada com sucesso! Vencedor definitivo: ${opcaoVencedora}.`);
-        renderizarRodadasAbertas();
+        
+        alert("Rodada liquidada!");
+        inicializarPainel();
     }
 
     function renderizarFinancas() {
         const depositos = JSON.parse(localStorage.getItem('depositos')) || [];
         const saques = JSON.parse(localStorage.getItem('saques')) || [];
         
-        const tbodyDep = document.getElementById('listaDepositos');
-        tbodyDep.innerHTML = '';
-        depositos.forEach((dep, index) => {
-            if(dep.status === 'Pendente') {
-                tbodyDep.innerHTML += `<tr>
-                    <td><b>${dep.usuario}</b></td>
-                    <td style="color:var(--accent-green)">R$ ${Number(dep.valor).toFixed(2)}</td>
-                    <td>${dep.data}</td>
-                    <td><span class="badge badge-pending">Pendente</span></td>
-                    <td><button class="btn btn-success" onclick="aprovarDeposito(${index})">Aprovar Saldo</button></td>
-                </tr>`;
+        const tbodyD = document.getElementById('listaDepositos'); tbodyD.innerHTML = '';
+        depositos.forEach((d, i) => {
+            if(d.status === 'Pendente') {
+                tbodyD.innerHTML += `<tr><td>${d.usuario}</td><td style="color:var(--accent-green)">R$ ${d.valor.toFixed(2)}</td><td><button class="btn btn-success" onclick="aprovarDep(${i})">Liberar</button></td></tr>`;
             }
         });
 
-        const tbodySaq = document.getElementById('listaSaques');
-        tbodySaq.innerHTML = '';
-        saques.forEach((saq, index) => {
-            if(saq.status === 'Pendente') {
-                tbodySaq.innerHTML += `<tr>
-                    <td><b>${saq.usuario}</b></td>
-                    <td style="color:var(--accent-red)">R$ ${Number(saq.valor).toFixed(2)}</td>
-                    <td><small>${saq.tipoPix}</small></td>
-                    <td><code>${saq.chavePix}</code></td>
-                    <td><span class="badge badge-pending">Pendente</span></td>
-                    <td><button class="btn btn-success" onclick="aprovarSaque(${index})">Marcar como Pago</button></td>
-                </tr>`;
+        const tbodyS = document.getElementById('listaSaques'); tbodyS.innerHTML = '';
+        saques.forEach((s, i) => {
+            if(s.status === 'Pendente') {
+                tbodyS.innerHTML += `<tr><td>${s.usuario}</td><td style="color:var(--accent-red)">R$ ${s.valor.toFixed(2)}</td><td><code>${s.chavePix}</code></td><td><button class="btn btn-success" onclick="pagarSaq(${i})">Pagar</button></td></tr>`;
             }
         });
     }
 
-    function aprovarDeposito(index) {
+    function aprovarDep(i) {
         let depositos = JSON.parse(localStorage.getItem('depositos')) || [];
         let users = JSON.parse(localStorage.getItem('users')) || {};
-        const dep = depositos[index];
-        if(users[dep.usuario]) {
-            users[dep.usuario].saldo += dep.valor;
-            dep.status = 'Aprovado';
-            localStorage.setItem('users', JSON.stringify(users));
-            localStorage.setItem('depositos', JSON.stringify(depositos));
-            alert("Moedas injetadas na conta do usuário!");
-            renderizarFinancas();
-        }
+        let d = depositos[i];
+        if(users[d.usuario]) { users[d.usuario].saldo += d.valor; d.status = 'Aprovado'; }
+        localStorage.setItem('users', JSON.stringify(users)); localStorage.setItem('depositos', JSON.stringify(depositos));
+        inicializarPainel();
     }
 
-    function aprovarSaque(index) {
+    function pagarSaq(i) {
         let saques = JSON.parse(localStorage.getItem('saques')) || [];
-        saques[index].status = 'Pago';
-        localStorage.setItem('saques', JSON.stringify(saques));
-        alert("Saque liquidado com sucesso.");
-        renderizarFinancas();
+        saques[i].status = 'Pago'; localStorage.setItem('saques', JSON.stringify(saques));
+        inicializarPainel();
     }
 
-    function logoutAdmin() {
-        localStorage.removeItem('usuarioLogado');
-        window.location.href = 'index.html';
-    }
-
-    // Inicialização segura
-    atualizarListaMembrosSelect();
-    renderizarRodadasAbertas();
-    renderizarFinancas();
+    inicializarPainel();
 </script>
 </body>
 </html>
