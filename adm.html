@@ -85,7 +85,7 @@
     
     <div class="admin-header">
         <div class="header-left">
-            <h1>VoxPopuli 控制台 Engine v5.1</h1>
+            <h1>VoxPopuli 控制台 Engine v5.2</h1>
             <div class="subtitle">Mesa de Operações Avançada - Sistema de Arbitragem Sem Estornos e Retenção Incondicional de Erros</div>
         </div>
         <button class="btn-exit" onclick="logoutAdmin()">Sair do Painel</button>
@@ -281,7 +281,7 @@
             document.getElementById('modNomeUser').innerText = username;
             document.getElementById('modEmailUser').value = user.email || 'Não informado';
             document.getElementById('modSenhaUser').value = user.password || '******';
-            document.getElementById('modSaldoUser').value = Number(user.saldo).toFixed(2);
+            document.getElementById('modSaldoUser').value = Number(user.saldo || 0).toFixed(2);
             
             const badge = document.getElementById('modStatusBadge');
             if(user.bloqueado) {
@@ -301,7 +301,7 @@
         const novoSaldo = parseFloat(document.getElementById('modSaldoUser').value);
         if(!username || isNaN(novoSaldo)) return alert("Dados inválidos.");
 
-        let users = JSON.parse(localStorage.getItem('users'));
+        let users = JSON.parse(localStorage.getItem('users')) || {};
         if(users[username]) {
             users[username].saldo = novoSaldo;
             localStorage.setItem('users', JSON.stringify(users));
@@ -313,7 +313,7 @@
     function alterarStatusBloqueio(bloquear) {
         const username = document.getElementById('selectUsuariosModerar').value;
         if(!username) return;
-        let users = JSON.parse(localStorage.getItem('users'));
+        let users = JSON.parse(localStorage.getItem('users')) || {};
         if(users[username]) {
             users[username].bloqueado = bloquear;
             localStorage.setItem('users', JSON.stringify(users));
@@ -420,26 +420,33 @@
         if(indexEnq === -1) return;
         const rodada = enquetes[indexEnq];
 
-        let apostasDaRodada = apostas.filter(a => a.enqueteId === enqueteId && a.status === 'Pendente');
         let totalPote = 0;
         let totalVencedores = 0;
 
-        // Calcula o pote acumulado total
-        apostasDaRodada.forEach(a => {
-            totalPote += a.valor;
-            if(a.palpite === opcaoVencedora) totalVencedores += a.valor;
+        // Processa as apostas ligadas diretamente a esta enquete e calcula o pote total acumulado
+        apostas.forEach(a => {
+            if(a.enqueteId === enqueteId && a.status === 'Pendente') {
+                totalPote += a.valor;
+                if(a.palpite === opcaoVencedora) {
+                    totalVencedores += a.valor;
+                }
+            }
         });
 
-        // Aplicação cirúrgica do resultado sem devolução aos perdedores
-        apostasDaRodada.forEach(a => {
-            if(a.palpite === opcaoVencedora) {
-                let premioProporcional = (a.valor / totalVencedores) * totalPote;
-                users[a.usuario].saldo += premioProporcional;
-                a.status = 'Venceu';
-                a.lucro = premioProporcional;
-            } else {
-                a.status = 'Perdeu';
-                a.lucro = 0; // Dinheiro retido permanentemente
+        // Aplica as regras de ganho e perda estrita sem estornos
+        apostas.forEach(a => {
+            if(a.enqueteId === enqueteId && a.status === 'Pendente') {
+                if(a.palpite === opcaoVencedora) {
+                    let premioProporcional = (a.valor / totalVencedores) * totalPote;
+                    if(users[a.usuario]) {
+                        users[a.usuario].saldo += premioProporcional;
+                    }
+                    a.status = 'Venceu';
+                    a.lucro = premioProporcional;
+                } else {
+                    a.status = 'Perdeu';
+                    a.lucro = 0; // O usuário que errou perde o valor permanentemente
+                }
             }
         });
 
@@ -489,8 +496,8 @@
     }
 
     function aprovarDeposito(index) {
-        let depositos = JSON.parse(localStorage.getItem('depositos'));
-        let users = JSON.parse(localStorage.getItem('users'));
+        let depositos = JSON.parse(localStorage.getItem('depositos')) || [];
+        let users = JSON.parse(localStorage.getItem('users')) || {};
         const dep = depositos[index];
         if(users[dep.usuario]) {
             users[dep.usuario].saldo += dep.valor;
@@ -503,7 +510,7 @@
     }
 
     function aprovarSaque(index) {
-        let saques = JSON.parse(localStorage.getItem('saques'));
+        let saques = JSON.parse(localStorage.getItem('saques')) || [];
         saques[index].status = 'Pago';
         localStorage.setItem('saques', JSON.stringify(saques));
         alert("Saque liquidado com sucesso.");
@@ -515,7 +522,7 @@
         window.location.href = 'index.html';
     }
 
-    // Inicialização
+    // Inicialização segura
     atualizarListaMembrosSelect();
     renderizarRodadasAbertas();
     renderizarFinancas();
