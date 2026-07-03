@@ -5,103 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxPopuli - Login</title>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            background-color: #060913; 
-            color: #fff; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            height: 100vh; 
-            margin: 0; 
-        }
-        .container { 
-            background: #0d1222; 
-            padding: 35px 25px; 
-            border-radius: 16px; 
-            border: 1px solid #1a2238;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); 
-            width: 340px; 
-            text-align: center; 
-            box-sizing: border-box;
-        }
-        .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        .logo { 
-            font-size: 32px; 
-            font-weight: bold; 
-            color: #4371f7; 
-            letter-spacing: 0.5px; 
-        }
-        .logo-emoji {
-            font-size: 28px;
-        }
-        h2 {
-            font-size: 20px;
-            margin-top: 0;
-            margin-bottom: 25px;
-            font-weight: 600;
-        }
-        .input-group {
-            text-align: left;
-            margin-bottom: 18px;
-        }
-        .input-group label {
-            display: block;
-            font-size: 14px;
-            color: #7d859a;
-            margin-bottom: 8px;
-        }
-        input { 
-            width: 100%; 
-            padding: 14px; 
-            border: 1px solid #1c253d; 
-            background: #111728; 
-            color: #fff; 
-            border-radius: 8px; 
-            box-sizing: border-box;
-            font-size: 15px;
-        }
-        input:focus {
-            outline: none;
-            border-color: #4371f7;
-        }
-        button { 
-            width: 100%; 
-            padding: 14px; 
-            background: #0640df; 
-            border: none; 
-            color: white; 
-            font-weight: bold; 
-            cursor: pointer; 
-            border-radius: 8px; 
-            margin-top: 10px; 
-            font-size: 16px;
-            transition: background 0.2s;
-        }
-        button:hover { 
-            background: #022cb3; 
-        }
-        .toggle-link { 
-            color: #7d859a; 
-            font-size: 13px; 
-            margin-top: 25px; 
-            display: block; 
-            cursor: pointer; 
-            text-decoration: none; 
-        }
-        .toggle-link span {
-            color: #4371f7;
-            font-weight: bold;
-        }
-        .toggle-link span:hover { 
-            text-decoration: underline; 
-        }
+        body { font-family: Arial, sans-serif; background-color: #060913; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: #0d1222; padding: 35px 25px; border-radius: 16px; border: 1px solid #1a2238; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 340px; text-align: center; box-sizing: border-box; }
+        .logo-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
+        .logo { font-size: 32px; font-weight: bold; color: #4371f7; letter-spacing: 0.5px; }
+        .logo-emoji { font-size: 28px; }
+        h2 { font-size: 20px; margin-top: 0; margin-bottom: 25px; font-weight: 600; }
+        .input-group { text-align: left; margin-bottom: 18px; }
+        .input-group label { display: block; font-size: 14px; color: #7d859a; margin-bottom: 8px; }
+        input { width: 100%; padding: 14px; border: 1px solid #1c253d; background: #111728; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        input:focus { outline: none; border-color: #4371f7; }
+        button { width: 100%; padding: 14px; background: #0640df; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; font-size: 16px; transition: background 0.2s; }
+        button:hover { background: #022cb3; }
+        .toggle-link { color: #7d859a; font-size: 13px; margin-top: 25px; display: block; cursor: pointer; text-decoration: none; }
+        .toggle-link span { color: #4371f7; font-weight: bold; }
+        .toggle-link span:hover { text-decoration: underline; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -113,17 +31,14 @@
         <div class="logo-emoji">📈</div>
     </div>
     <h2>Acessar Painel</h2>
-    
     <div class="input-group">
         <label>Usuário / ID</label>
         <input type="text" id="loginUser" placeholder="Digite seu usuário">
     </div>
-    
     <div class="input-group">
         <label>Senha</label>
         <input type="password" id="loginPass" placeholder="Digite sua senha">
     </div>
-    
     <button onclick="fazerLogin()">Entrar no Painel</button>
     <div class="toggle-link" onclick="mostrarCadastro()">Não tem uma conta? <span>Cadastre-se aqui</span></div>
 </div>
@@ -134,94 +49,70 @@
         <div class="logo-emoji">📈</div>
     </div>
     <h2>Cadastre-se</h2>
-    
     <div class="input-group">
         <label>Escolha um Usuário / ID</label>
         <input type="text" id="cadUser" placeholder="Ex: trader01">
     </div>
-    
     <div class="input-group">
         <label>Crie uma Senha</label>
         <input type="password" id="cadPass" placeholder="Digite sua senha">
     </div>
-    
     <button onclick="fazerCadastro()">Criar Conta e Salvar</button>
     <div class="toggle-link" onclick="mostrarLogin()">Já tem uma conta? <span>Faça Login</span></div>
 </div>
 
 <script>
-    // 🔑 Conexão em Nuvem Configurada
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D35oaRAEby0oZmoUwfhl9A_guti3olc";
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // Alternar para a aba de cadastro
     function mostrarCadastro() {
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('cadastroBox').style.display = 'block';
     }
 
-    // Alternar para a aba de login
     function mostrarLogin() {
         document.getElementById('cadastroBox').style.display = 'none';
         document.getElementById('loginBox').style.display = 'block';
     }
 
-    // Salva o novo usuário direto na Nuvem do Supabase
     async function fazerCadastro() {
         const user = document.getElementById('cadUser').value.trim().toLowerCase();
         const pass = document.getElementById('cadPass').value.trim();
         
-        if (!user || !pass) {
-            return alert('Preencha todos os campos para se cadastrar!');
-        }
+        if (!user || !pass) return alert('Preencha todos os campos!');
+        if (user === 'voxadmin' || user === 'adm') return alert('Nome de usuário reservado.');
 
-        if (user === 'adm') {
-            return alert('Este nome de usuário é reservado para o sistema.');
-        }
-
-        // Verifica se o usuário já existe na nuvem
         let { data: existe } = await _supabase.from('usuarios').select('username').eq('username', user).maybeSingle();
-        
-        if (existe) {
-            return alert('Esse nome de usuário já está sendo usado.');
-        }
+        if (existe) return alert('Esse usuário já existe.');
 
-        // Insere na tabela 'usuarios' com saldo inicial 0
         const { error } = await _supabase.from('usuarios').insert([{ username: user, password: pass, saldo: 0 }]);
+        if(error) return alert('Erro: ' + error.message);
         
-        if(error) {
-            return alert('Erro ao salvar no banco: ' + error.message);
-        }
-        
-        alert('Cadastro realizado com sucesso na nuvem! Use seus dados para logar.');
+        alert('Conta de membro criada com sucesso!');
         mostrarLogin();
     }
 
-    // Faz a verificação na nuvem e manda para a página certa
     async function fazerLogin() {
         const user = document.getElementById('loginUser').value.trim().toLowerCase();
         const pass = document.getElementById('loginPass').value.trim();
 
-        if (!user || !pass) {
-            return alert('Preencha todos os campos!');
-        }
+        if (!user || !pass) return alert('Preencha os campos!');
 
-        // Regra de segurança/atalho para a sua conta Admin padrão
-        if (user === 'adm' && pass === 'adm') {
-            localStorage.setItem('usuarioLogado', 'adm');
+        // 🔒 CONTA ÚNICA DO ADMINISTRADOR EXCLUSIVA
+        if (user === 'voxadmin' && pass === 'populi2026#') {
+            localStorage.setItem('usuarioLogado', 'voxadmin');
             window.location.href = 'adm.html';
             return;
         }
 
-        // Busca o usuário na nuvem do Supabase
-        let { data: usuario, error } = await _supabase.from('usuarios').select('*').eq('username', user).maybeSingle();
+        let { data: usuario } = await _supabase.from('usuarios').select('*').eq('username', user).maybeSingle();
 
         if (usuario && usuario.password === pass) {
             localStorage.setItem('usuarioLogado', user);
             window.location.href = 'dashboard.html';
         } else {
-            alert('Usuário ou senha incorretos na nuvem!');
+            alert('Usuário ou senha incorretos!');
         }
     }
 </script>
