@@ -89,7 +89,9 @@
                     <th>Movimentação</th>
                 </tr>
             </thead>
-            <tbody id="historicoTransacoes"></tbody>
+            <tbody id="historicoTransacoes">
+                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Carregando histórico...</td></tr>
+            </tbody>
         </table>
     </div>
 </div>
@@ -99,6 +101,7 @@
     if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
+    // Cole aqui a sua chave ANON PUBLIC correta obtida no painel do Supabase
     const SUPABASE_KEY = "sb_publishable_D35oaRAeby0oZmoUwfhl9A_guti3olc"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let categoryAtual = 'financeiro';
@@ -135,102 +138,87 @@
         if(!chave || isNaN(valor) || valor <= 0) return alert("Dados inválidos.");
 
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente na conta para solicitar este saque.");
+        if(!user || parseFloat(user.saldo) < val) return alert("Saldo insuficiente.");
 
         const { error } = await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
         if(error) return alert("Erro ao solicitar: " + error.message);
 
-        // Aloca como saque pendente na tabela de transações
         await _supabase.from('transacoes').insert([{
             usuario: usuarioLogado,
             tipo: 'saque_pend',
-            descricao: `Solicitação de Saque enviada (Aguardando aprovação). Chave: ${chave}`,
+            descricao: `Solicitação de Saque enviada. Chave: ${chave}`,
             valor: -valor
         }]);
 
-        alert("Solicitação enviada com sucesso! Aguarde a liberação do Administrador.");
+        alert("Solicitação enviada! Aguarde liberação do administrador.");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
         atualizarDados();
     }
 
     async function carregarHistorico() {
-        // Força o nome do usuário a remover espaços extras para evitar erros de busca
-        const usuarioLimpo = usuarioLogado ? usuarioLogado.trim() : "";
-        
-        const { data: trans, error } = await _supabase
-            .from('transacoes')
-            .select('*')
-            .eq('usuario', usuarioLimpo)
-            .order('id', { ascending: false }); // Ordena pelo ID mais recente para carregar rápido
-
         const tbody = document.getElementById('historicoTransacoes');
         if (!tbody) return;
-        
-        tbody.innerHTML = '';
 
-        if (error) {
-            console.error("Erro Supabase Histórico:", error);
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro ao ler dados de extrato.</td></tr>`;
-            return;
-        }
-
-        if (!trans || trans.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação de saldo encontrada.</td></tr>`;
-            return;
-        }
-
-        let linhasHtml = '';
-        trans.forEach(t => {
-            // Trata a data de criação com fallback seguro caso venha nula
-            let dataFormatada = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
-            let valorNumerico = parseFloat(t.valor || 0);
+        try {
+            const usuarioLimpo = usuarioLogado ? usuarioLogado.trim() : "";
             
-            let corVal = valorNumerico >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            let sinal = valorNumerico > 0 ? '+' : '';
-            let bgBadge = '#1a121e';
-            let txtBadge = 'var(--accent-red)';
-            let tipoTxt = 'INFO';
+            // Busca expandida sem distinção rígida para garantir compatibilidade
+            const { data: trans, error } = await _supabase
+                .from('transacoes')
+                .select('*')
+                .eq('usuario', usuarioLimpo)
+                .order('id', { ascending: false });
 
-            // Normalização de string para evitar erros caso venha com caixa alta do banco
-            const tipoNormalizado = String(t.tipo).toLowerCase().trim();
-
-            if (tipoNormalizado === 'deposito') {
-                bgBadge = '#091a18';
-                txtBadge = 'var(--accent-green)';
-                tipoTxt = '📥 DEPÓSITO';
-            } else if (tipoNormalizado === 'saque_pend') {
-                bgBadge = '#2c1a0a';
-                txtBadge = '#ff9f43';
-                tipoTxt = '⏳ SAQUE PENDENTE';
-                sinal = ''; 
-            } else if (tipoNormalizado === 'saque') {
-                bgBadge = '#241217';
-                txtBadge = 'var(--accent-red)';
-                tipoTxt = '📤 SAQUE PAGO';
-            } else if (tipoNormalizado === 'lucro_enquete') {
-                bgBadge = '#091a18';
-                txtBadge = 'var(--accent-green)';
-                tipoTxt = '🟢 LUCRO';
-            } else if (tipoNormalizado === 'perda_enquete') {
-                bgBadge = '#241217';
-                txtBadge = 'var(--accent-red)';
-                tipoTxt = '🔴 ERRO/PERDA';
-            } else if (tipoNormalizado === 'alocacao') {
-                bgBadge = '#1c253d';
-                txtBadge = '#7d859a';
-                tipoTxt = '🎰 APOSTADO';
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro banco: ${error.message} (Verifique se a tabela 'transacoes' existe)</td></tr>`;
+                return;
             }
 
-            linhasHtml += `<tr>
-                <td>${dataFormatada}</td>
-                <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block;">${tipoTxt}</span></td>
-                <td>${t.descricao || ''}</td>
-                <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Math.abs(valorNumerico).toFixed(2)}</td>
-            </tr>`;
-        });
+            if (!trans || trans.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação de saldo encontrada para o usuário "${usuarioLimpo}".</td></tr>`;
+                return;
+            }
 
-        tbody.innerHTML = linhasHtml;
+            let linhasHtml = '';
+            trans.forEach(t => {
+                let dataFormatada = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
+                let valorNumerico = parseFloat(t.valor || 0);
+                
+                let corVal = valorNumerico >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+                let sinal = valorNumerico > 0 ? '+' : '';
+                let bgBadge = '#1a121e';
+                let txtBadge = 'var(--accent-red)';
+                let tipoTxt = 'INFO';
+
+                const tipoNormalizado = String(t.tipo || '').toLowerCase().trim();
+
+                if (tipoNormalizado === 'deposito') {
+                    bgBadge = '#091a18'; txtBadge = 'var(--accent-green)'; tipoTxt = '📥 DEPÓSITO';
+                } else if (tipoNormalizado === 'saque_pend') {
+                    bgBadge = '#2c1a0a'; txtBadge = '#ff9f43'; tipoTxt = '⏳ SAQUE PEND.'; sinal = '';
+                } else if (tipoNormalizado === 'saque') {
+                    bgBadge = '#241217'; txtBadge = 'var(--accent-red)'; tipoTxt = '📤 SAQUE PAGO';
+                } else if (tipoNormalizado === 'lucro_enquete') {
+                    bgBadge = '#091a18'; txtBadge = 'var(--accent-green)'; tipoTxt = '🟢 LUCRO';
+                } else if (tipoNormalizado === 'perda_enquete') {
+                    bgBadge = '#241217'; txtBadge = 'var(--accent-red)'; tipoTxt = '🔴 ERRO/PERDA';
+                } else if (tipoNormalizado === 'alocacao') {
+                    bgBadge = '#1c253d'; txtBadge = '#7d859a'; tipoTxt = '🎰 APOSTADO';
+                }
+
+                linhasHtml += `<tr>
+                    <td>${dataFormatada}</td>
+                    <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}">${tipoTxt}</span></td>
+                    <td>${t.descricao || ''}</td>
+                    <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Math.abs(valorNumerico).toFixed(2)}</td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = linhasHtml;
+        } catch (err) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro crítico de renderização: ${err.message}</td></tr>`;
+        }
     }
 
     function mudarCategoria(cat) {
