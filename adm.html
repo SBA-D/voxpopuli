@@ -36,7 +36,6 @@
         <button class="btn" style="background:#202431; color:white; padding: 10px 20px;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
 
-    <!-- CONTROLAR DEPÓSITOS -->
     <div class="card" style="border-color: #ff9f43;">
         <h2 style="color: #ff9f43;">📥 Solicitações de Depósito PIX (Pendentes)</h2>
         <table>
@@ -45,7 +44,6 @@
         </table>
     </div>
 
-    <!-- 🔥 NOVO: CONTROLAR SOLICITAÇÕES DE SAQUES -->
     <div class="card" style="border-color: var(--accent-red);">
         <h2 style="color: var(--accent-red);">📤 Solicitações de Saque PIX (Pendentes)</h2>
         <table>
@@ -134,7 +132,6 @@
         inicializarPainel();
     }
 
-    // 🔥 NOVO: RENDERIZAR E PROCESSAR OS PEDIDOS DE SAQUE
     async function renderizarSaques() {
         const { data: sqs } = await _supabase.from('saques').select('*').eq('status', 'pendente');
         const tbody = document.getElementById('listaSaquesPendentes'); tbody.innerHTML = '';
@@ -163,10 +160,8 @@
                 return;
             }
 
-            // Descontar definitivamente do saldo do usuário apenas agora!
             await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', username);
             
-            // Gerar registro histórico negativo
             await _supabase.from('transacoes').insert([{ 
                 usuario: username, 
                 tipo: 'saque', 
@@ -264,7 +259,10 @@
         inicializarPainel();
     }
 
-    inicializarPainel();
+    // Executa a inicialização de forma segura ao carregar a página
+    window.onload = function() {
+        inicializarPainel();
+    };
 </script>
 </body>
 </html>
