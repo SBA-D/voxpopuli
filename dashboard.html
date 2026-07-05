@@ -125,9 +125,9 @@
         alert("Notificação enviada com sucesso!");
         document.getElementById('qrContainer').style.display = 'none';
         document.getElementById('valorPix').value = '';
+        atualizarDados();
     }
 
-    // CORREÇÃO AQUI: Não remove saldo na hora, cria uma linha de pendência na tabela de saques.
     async function solicitarSaque() {
         const chave = document.getElementById('chavePixSaque').value.trim();
         const valor = parseFloat(document.getElementById('valorSaque').value);
@@ -136,10 +136,16 @@
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
         if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente na conta para solicitar este saque.");
 
-        // Apenas envia a solicitação para a nova tabela 'saques' com status 'pendente'
         const { error } = await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
-        
         if(error) return alert("Erro ao solicitar: " + error.message);
+
+        // Criar linha temporária de aviso também na tabela transações para controle visual do usuário
+        await _supabase.from('transacoes').insert([{
+            usuario: usuarioLogado,
+            tipo: 'saque_pend',
+            descricao: `Solicitação de Saque enviada (Aguardando Admin). Chave: ${chave}`,
+            valor: -valor
+        }]);
 
         alert("Solicitação enviada com sucesso! O saldo só será deduzido após a aprovação do Administrador.");
         document.getElementById('chavePixSaque').value = '';
@@ -148,9 +154,15 @@
     }
 
     async function carregarHistorico() {
-        const { data: trans } = await _supabase.from('transacoes').select('*').eq('usuario', usuarioLogado).order('created_at', { ascending: false });
+        const { data: trans, error } = await _supabase.from('transacoes').select('*').eq('usuario', usuarioLogado).order('created_at', { ascending: false });
         const tbody = document.getElementById('historicoTransacoes');
         tbody.innerHTML = '';
+
+        if(error) {
+            console.error("Erro ao carregar histórico:", error);
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro ao carregar histórico do banco de dados.</td></tr>`;
+            return;
+        }
 
         if(!trans || trans.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação encontrada.</td></tr>`;
@@ -159,16 +171,30 @@
 
         trans.forEach(t => {
             let dataFormatada = new Date(t.created_at).toLocaleDateString('pt-BR');
+            
+            // Define cores e badges inteligentes com base no tipo da transação
             let corVal = t.valor > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
             let sinal = t.valor > 0 ? '+' : '';
-            let bgBadge = t.tipo === 'deposito' || t.tipo === 'premio' ? '#091a18' : '#1a121e';
-            let txtBadge = t.tipo === 'deposito' || t.tipo === 'premio' ? 'var(--accent-green)' : 'var(--accent-red)';
+            
+            let bgBadge = '#1a121e';
+            let txtBadge = 'var(--accent-red)';
+            let tipoTxt = t.tipo ? t.tipo.toUpperCase() : 'INFO';
+
+            if(t.tipo === 'deposito' || t.tipo === 'premio' || t.valor > 0) {
+                bgBadge = '#091a18';
+                txtBadge = 'var(--accent-green)';
+            } else if(t.tipo === 'saque_pend') {
+                bgBadge = '#2c1a0a';
+                txtBadge = '#ff9f43';
+                tipoTxt = "PENDENTE";
+                sinal = ""; // Não mostra de forma definitiva ainda
+            }
 
             tbody.innerHTML += `<tr>
                 <td>${dataFormatada}</td>
-                <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}">${t.tipo.toUpperCase()}</span></td>
+                <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}">${tipoTxt}</span></td>
                 <td>${t.descricao}</td>
-                <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Number(t.valor).toFixed(2)}</td>
+                <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Math.abs(Number(t.valor)).toFixed(2)}</td>
             </tr>`;
         });
     }
@@ -182,13 +208,20 @@
     }
 
     async function carregarEnquetes() {
-        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('tipo', categoryAtual).eq('finalizada', false);
+        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
         let { data: apostas } = await _supabase.from('apostas').select('*');
         const container = document.getElementById('containerEnquetes');
-        if(!enquetes || enquetes.length === 0) { container.innerHTML = `<div class="card-info">Nenhum mercado ativo.</div>`; return; }
+        
+        // Filtra apenas as enquetes do tipo selecionado
+        let enquetesFiltradas = enquetes ? enquetes.filter(e => e.tipo === categoryAtual) : [];
+
+        if(enquetesFiltradas.length === 0) { 
+            container.innerHTML = `<div class="card-info">Nenhum mercado ativo nesta categoria.</div>`; 
+            return; 
+        }
 
         container.innerHTML = '';
-        enquetes.forEach(enq => {
+        enquetesFiltradas.forEach(enq => {
             let volumePote = 0;
             if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) volumePote += parseFloat(a.valor); });
 
@@ -225,7 +258,10 @@
         atualizarDados();
     }
 
-    atualizarDados();
+    // Inicialização amigável
+    window.onload = function() {
+        atualizarDados();
+    };
 </script>
 </body>
 </html>
