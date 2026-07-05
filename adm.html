@@ -36,11 +36,21 @@
         <button class="btn" style="background:#202431; color:white; padding: 10px 20px;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
 
+    <!-- CONTROLAR DEPÓSITOS -->
     <div class="card" style="border-color: #ff9f43;">
         <h2 style="color: #ff9f43;">📥 Solicitações de Depósito PIX (Pendentes)</h2>
         <table>
             <thead><tr><th>Membro</th><th>Valor Solicitado</th><th>Ações de Liberação</th></tr></thead>
             <tbody id="listaDepositosPendentes"></tbody>
+        </table>
+    </div>
+
+    <!-- 🔥 NOVO: CONTROLAR SOLICITAÇÕES DE SAQUES -->
+    <div class="card" style="border-color: var(--accent-red);">
+        <h2 style="color: var(--accent-red);">📤 Solicitações de Saque PIX (Pendentes)</h2>
+        <table>
+            <thead><tr><th>Membro</th><th>Chave PIX Informada</th><th>Valor do Saque</th><th>Ações</th></tr></thead>
+            <tbody id="listaSaquesPendentes"></tbody>
         </table>
     </div>
 
@@ -86,6 +96,7 @@
     async function inicializarPainel() {
         await calcularCaixaGeral();
         await renderizarDepositos();
+        await renderizarSaques();
         await renderizarRodadasAbertas();
     }
 
@@ -120,6 +131,52 @@
         }
         await _supabase.from('depositos').update({ status: novoStatus }).eq('id', depId);
         alert("Depósito processado!");
+        inicializarPainel();
+    }
+
+    // 🔥 NOVO: RENDERIZAR E PROCESSAR OS PEDIDOS DE SAQUE
+    async function renderizarSaques() {
+        const { data: sqs } = await _supabase.from('saques').select('*').eq('status', 'pendente');
+        const tbody = document.getElementById('listaSaquesPendentes'); tbody.innerHTML = '';
+        if(!sqs || sqs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma solicitação de saque pendente.</td></tr>`; return; }
+
+        sqs.forEach(s => {
+            tbody.innerHTML += `<tr>
+                <td><b>${s.usuario}</b></td>
+                <td><code style="background:#111728; padding:5px; border-radius:4px; border:1px solid #1a2238;">${s.chave_pix}</code></td>
+                <td style="color:var(--accent-red); font-weight:bold;">R$ ${Number(s.valor).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-success" onclick="processarSaque(${s.id}, '${s.usuario}', ${s.valor}, '${s.chave_pix}', 'aprovado')">✔️ Aprovar e Descontar</button>
+                    <button class="btn btn-danger" onclick="processarSaque(${s.id}, '${s.usuario}', ${s.valor}, '${s.chave_pix}', 'recusado')">❌ Recusar</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function processarSaque(saqueId, username, valor, chavePix, novoStatus) {
+        if(novoStatus === 'aprovado') {
+            let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', username).single();
+            let saldoAtual = parseFloat(user.saldo || 0);
+
+            if(saldoAtual < parseFloat(valor)) {
+                alert("Erro crítico: O usuário não possui mais esse saldo em conta para efetuar o desconto do saque.");
+                return;
+            }
+
+            // Descontar definitivamente do saldo do usuário apenas agora!
+            await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', username);
+            
+            // Gerar registro histórico negativo
+            await _supabase.from('transacoes').insert([{ 
+                usuario: username, 
+                tipo: 'saque', 
+                descricao: `Saque PIX Aprovado e Pago (Chave: ${chavePix})`, 
+                valor: -parseFloat(valor) 
+            }]);
+        }
+        
+        await _supabase.from('saques').update({ status: novoStatus }).eq('id', saqueId);
+        alert(`Solicitação de saque marcada como: ${novoStatus}`);
         inicializarPainel();
     }
 
@@ -165,11 +222,9 @@
         renderizarRodadasAbertas();
     }
 
-    // ⚡ LÓGICA DE RATEIO PROPORCIONAL
     async function liquidarEnqueteComRateio(enqueteId, opcaoVencedora, nomeAtivo) {
         if(!confirm(`Confirmar vitória de "${opcaoVencedora}" com cálculo de rateio?`)) return;
 
-        // 1. Coleta todas as apostas feitas nesta rodada
         let { data: todasAsApostas } = await _supabase.from('apostas').select('*').eq('enquete_id', enqueteId);
         
         if(todasAsApostas && todasAsApostas.length > 0) {
@@ -185,17 +240,14 @@
                 }
             });
 
-            // 2. Distribui o pote proporcionalmente aos acertadores
             if(vencedores.length > 0 && poteVencedores > 0) {
                 for(let vencedor of vencedores) {
                     let proporcao = parseFloat(vencedor.valor) / poteVencedores;
                     let premioGanhocapitulo = poteTotal * proporcao;
 
-                    // Puxar saldo atual do vencedor do banco
                     let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario).single();
                     let saldoNovo = parseFloat(u.saldo || 0) + premioGanhocapitulo;
 
-                    // Atualiza saldo e gera histórico de premiação
                     await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario);
                     await _supabase.from('transacoes').insert([{
                         usuario: vencedor.usuario,
@@ -207,7 +259,6 @@
             }
         }
 
-        // Finaliza a enquete
         await _supabase.from('enquetes').update({ finalizada: true }).eq('id', enqueteId);
         alert("Mercado liquidado e saldo distribuído via rateio!");
         inicializarPainel();
