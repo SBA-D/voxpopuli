@@ -29,8 +29,6 @@
         .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; }
         .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; text-align: center; }
         .qr-area { margin-top: 10px; background: #fff; color: #000; padding: 15px; border-radius: 8px; display: none; text-align: center; }
-        
-        /* Estilos tabela de extrato */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
@@ -129,18 +127,21 @@
         document.getElementById('valorPix').value = '';
     }
 
+    // CORREÇÃO AQUI: Não remove saldo na hora, cria uma linha de pendência na tabela de saques.
     async function solicitarSaque() {
         const chave = document.getElementById('chavePixSaque').value.trim();
         const valor = parseFloat(document.getElementById('valorSaque').value);
         if(!chave || isNaN(valor) || valor <= 0) return alert("Dados inválidos.");
 
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente.");
+        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente na conta para solicitar este saque.");
 
-        await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - valor }).eq('username', usuarioLogado);
-        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'saque', descricao: `Retirada PIX solicitada para chave: ${chave}`, valor: -valor }]);
+        // Apenas envia a solicitação para a nova tabela 'saques' com status 'pendente'
+        const { error } = await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
         
-        alert("Saque debitado e enviado para análise!");
+        if(error) return alert("Erro ao solicitar: " + error.message);
+
+        alert("Solicitação enviada com sucesso! O saldo só será deduzido após a aprovação do Administrador.");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
         atualizarDados();
