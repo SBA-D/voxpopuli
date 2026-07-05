@@ -3,218 +3,131 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Super Admin Engine (Cloud)</title>
+    <title>VoxPopuli - Master Admin Painel</title>
     <style>
-        :root { --bg-main: #060913; --bg-card: #0d1222; --bg-input: #111728; --border-color: #1a2238; --accent-blue: #4371f7; --accent-green: #00b37e; --accent-red: #f75a68; --text-muted: #7d859a; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
-        .header-left h1 { color: var(--accent-blue); font-size: 28px; margin: 0; font-weight: 800; }
-        .card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 24px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        h2 { font-size: 18px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; font-weight: 600; color: #fff; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
-        input, select { width: 100%; padding: 14px; background: var(--bg-input); border: 1px solid #1c253d; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
-        .btn { padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }
-        .btn-blue { background: var(--accent-blue); color: white; width: 100%; margin-top: 10px; }
-        .btn-success { background: var(--accent-green); color: #0d1222; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-danger { background: var(--accent-red); color: white; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .btn-warn { background: #ff9f43; color: #0d1222; padding: 8px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        th { color: var(--text-muted); text-transform: uppercase; font-size: 12px; }
-        .caixa-box { background: #091a18; border: 1px solid var(--accent-green); padding: 15px 25px; border-radius: 10px; font-size: 22px; font-weight: bold; color: var(--accent-green); display: inline-block; }
-        .pote-badge { background: #1c253d; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: #ff9f43; font-weight: bold; }
+        :root { --bg-main: #0a0e1a; --bg-card: #121829; --bg-input: #172036; --border-color: #222f4d; --accent-blue: #3b82f6; --accent-green: #10b981; --accent-red: #ef4444; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-main); color: #fff; margin:0; padding:0; }
+        .header { background: var(--bg-card); padding: 18px 30px; border-bottom: 1px solid var(--border-color); font-size: 22px; font-weight: bold; color: #3b82f6; }
+        .grid-master { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 30px; max-width: 1400px; margin: 0 auto; }
+        .box-adm { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; }
+        .box-adm h2 { margin-top: 0; font-size: 18px; color: #fff; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
+        input, select { flex: 1; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); color:#fff; border-radius: 6px; font-size: 14px; }
+        .btn-master { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; font-size: 14px; }
+        .btn-master:hover { opacity: 0.9; }
+        .btn-blue { background: var(--accent-blue); color:#fff; }
+        .btn-green { background: var(--accent-green); color:#000; }
+        .btn-red { background: var(--accent-red); color:#fff; }
+        .lista-itens { max-height: 280px; overflow-y: auto; margin-top: 15px; }
+        .item-row { background: var(--bg-input); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        th { color: #6b7280; font-size: 11px; text-transform: uppercase; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="container">
-    <div class="admin-header">
-        <div class="header-left"><h1>VoxPopuli - Painel Administrativo</h1></div>
-        <button class="btn" style="background:#202431; color:white; padding: 10px 20px;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
-    </div>
 
-    <div class="card" style="border-color: #ff9f43;">
-        <h2 style="color: #ff9f43;">📥 Solicitações de Depósito PIX (Pendentes)</h2>
-        <table>
-            <thead><tr><th>Membro</th><th>Valor Solicitado</th><th>Ações de Liberação</th></tr></thead>
-            <tbody id="listaDepositosPendentes"></tbody>
-        </table>
-    </div>
+<div class="header">VoxPopuli - Administração Master Core 🛠️</div>
 
-    <div class="card" style="border-color: var(--accent-red);">
-        <h2 style="color: var(--accent-red);">📤 Solicitações de Saque PIX (Pendentes)</h2>
-        <table>
-            <thead><tr><th>Membro</th><th>Chave PIX Informada</th><th>Valor do Saque</th><th>Ações</th></tr></thead>
-            <tbody id="listaSaquesPendentes"></tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h2>💰 Caixa Geral da Plataforma</h2>
-        <div class="caixa-box">🏦 Total em Custódia: R$ <span id="caixaPlataforma">0.00</span></div>
-    </div>
-
-    <div class="card">
-        <h2>🎯 Controle de Enquetes Ativas</h2>
-        <table>
-            <thead><tr><th>Ativo / Mercado</th><th>Volume Acumulado</th><th>Ações</th><th>Liquidação</th></tr></thead>
-            <tbody id="listaRodadasAbertas"></tbody>
-        </table>
-    </div>
-
-    <div class="card">
-        <h2>🚀 Injetar Nova Rodada</h2>
-        <div class="grid-2">
-            <div><label>Tipo de Categoria</label><select id="enqTipo"><option value="financeiro">📊 Mercado Financeiro</option><option value="esportes">⚽ Esportes</option></select></div>
-            <div><label>Ativo / Confronto</label><input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT"></div>
+<div class="grid-master">
+    <!-- Bloco 1: Criar Enquetes -->
+    <div class="box-adm">
+        <h2>📊 Lançar Novo Mercado / Enquete</h2>
+        <div class="form-row">
+            <input type="text" id="enqAtivo" placeholder="Nome do Ativo (Ex: BTC/USD, Flamengo)">
+            <select id="enqTipo">
+                <option value="financeiro">Mercado Financeiro</option>
+                <option value="esportes">Esportes</option>
+            </select>
         </div>
-        <div class="grid-3">
-            <div><label>Alvo (Opcional)</label><input type="text" id="enqPrecoAlvo" placeholder="Ex: 65000"></div>
-            <div><label>Opção 1</label><input type="text" id="enqOp1" value="Acima"></div>
-            <div><label>Opção 2</label><input type="text" id="enqOp2" value="Abaixo"></div>
+        <div class="form-row">
+            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Alvo acima)">
+            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Alvo abaixo)">
         </div>
-        <div class="grid-2">
-            <div><label>Data</label><input type="date" id="enqDataFim"></div>
-            <div><label>Hora</label><input type="time" id="enqHoraFim"></div>
+        <div class="form-row">
+            <input type="text" id="enqPrecoAlvo" placeholder="Parâmetro/Preço Alvo (Ex: 65.200, Vitória)">
+            <input type="date" id="enqDataFim">
+            <input type="time" id="enqHoraFim">
         </div>
-        <button class="btn btn-blue" onclick="criarEnquete()">Publicar Enquete Globalmente</button>
+        <button class="btn-master btn-blue" style="width:100%;" onclick="criarEnquete()">Publicar no Painel dos Membros</button>
+    </div>
+
+    <!-- Bloco 2: Gestão de Enquetes Ativas -->
+    <div class="box-adm">
+        <h2>⚡ Liquidar e Finalizar Enquetes Ativas (Com Rateio Automático)</h2>
+        <div class="lista-itens" id="admListaEnquetes"></div>
+    </div>
+
+    <!-- Bloco 3: Depósitos Pendentes -->
+    <div class="box-adm">
+        <h2>📥 Validar Depósitos PIX Recebidos</h2>
+        <div class="lista-itens" id="admListaDepositos"></div>
+    </div>
+
+    <!-- Bloco 4: Saques Solicitados -->
+    <div class="box-adm">
+        <h2>📤 Processar Pedidos de Saque</h2>
+        <div class="lista-itens" id="admListaSaques"></div>
     </div>
 </div>
 
 <script>
-    if(localStorage.getItem('usuarioLogado') !== 'voxadmin') window.location.href = './index.html';
-
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D35oaRAeby0oZmoUwfhl9A_guti3olc"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     async function inicializarPainel() {
-        await calcularCaixaGeral();
-        await renderizarDepositos();
-        await renderizarSaques();
-        await renderizarRodadasAbertas();
-    }
-
-    async function calcularCaixaGeral() {
-        let { data: users } = await _supabase.from('usuarios').select('saldo');
-        let total = 0; if(users) users.forEach(u => total += parseFloat(u.saldo || 0));
-        document.getElementById('caixaPlataforma').innerText = total.toFixed(2);
-    }
-
-    async function renderizarDepositos() {
-        const { data: deps } = await _supabase.from('depositos').select('*').eq('status', 'pendente');
-        const tbody = document.getElementById('listaDepositosPendentes'); tbody.innerHTML = '';
-        if(!deps || deps.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nenhum PIX pendente.</td></tr>`; return; }
-
-        deps.forEach(d => {
-            tbody.innerHTML += `<tr>
-                <td><b>${d.usuario}</b></td>
-                <td style="color:var(--accent-green); font-weight:bold;">R$ ${Number(d.valor).toFixed(2)}</td>
-                <td>
-                    <button class="btn btn-success" onclick="processarDeposito(${d.id}, '${d.usuario}', ${d.valor}, 'aprovado')">✔️ Aprovar</button>
-                    <button class="btn btn-danger" onclick="processarDeposito(${d.id}, '${d.usuario}', ${d.valor}, 'recusado')">❌ Recusar</button>
-                </td>
-            </tr>`;
-        });
-    }
-
-    async function processarDeposito(depId, username, valor, novoStatus) {
-        if(novoStatus === 'aprovado') {
-            let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', username).single();
-            await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo || 0) + parseFloat(valor) }).eq('username', username);
-            await _supabase.from('transacoes').insert([{ usuario: username, tipo: 'deposito', descricao: 'Depósito via PIX aprovado pela Moderação', valor: parseFloat(valor) }]);
-        }
-        await _supabase.from('depositos').update({ status: novoStatus }).eq('id', depId);
-        alert("Depósito processado!");
-        inicializarPainel();
-    }
-
-    async function renderizarSaques() {
-        const { data: sqs } = await _supabase.from('saques').select('*').eq('status', 'pendente');
-        const tbody = document.getElementById('listaSaquesPendentes'); tbody.innerHTML = '';
-        if(!sqs || sqs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma solicitação de saque pendente.</td></tr>`; return; }
-
-        sqs.forEach(s => {
-            tbody.innerHTML += `<tr>
-                <td><b>${s.usuario}</b></td>
-                <td><code style="background:#111728; padding:5px; border-radius:4px; border:1px solid #1a2238;">${s.chave_pix}</code></td>
-                <td style="color:var(--accent-red); font-weight:bold;">R$ ${Number(s.valor).toFixed(2)}</td>
-                <td>
-                    <button class="btn btn-success" onclick="processarSaque(${s.id}, '${s.usuario}', ${s.valor}, '${s.chave_pix}', 'aprovado')">✔️ Aprovar e Descontar</button>
-                    <button class="btn btn-danger" onclick="processarSaque(${s.id}, '${s.usuario}', ${s.valor}, '${s.chave_pix}', 'recusado')">❌ Recusar</button>
-                </td>
-            </tr>`;
-        });
-    }
-
-    async function processarSaque(saqueId, username, valor, chavePix, novoStatus) {
-        if(novoStatus === 'aprovado') {
-            let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', username).single();
-            let saldoAtual = parseFloat(user.saldo || 0);
-
-            if(saldoAtual < parseFloat(valor)) {
-                alert("Erro crítico: O usuário não possui mais esse saldo em conta para efetuar o desconto do saque.");
-                return;
-            }
-
-            await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', username);
-            
-            await _supabase.from('transacoes').insert([{ 
-                usuario: username, 
-                tipo: 'saque', 
-                descricao: `Saque PIX Aprovado e Pago (Chave: ${chavePix})`, 
-                valor: -parseFloat(valor) 
-            }]);
-        }
-        
-        await _supabase.from('saques').update({ status: novoStatus }).eq('id', saqueId);
-        alert(`Solicitação de saque marcada como: ${novoStatus}`);
-        inicializarPainel();
+        await listarEnquetesAdm();
+        await listarDepositosAdm();
+        await listarSaquesAdm();
     }
 
     async function criarEnquete() {
-        const tipo = document.getElementById('enqTipo').value;
         const ativo = document.getElementById('enqAtivo').value.trim();
-        const op1 = document.getElementById('enqOp1').value;
-        const op2 = document.getElementById('enqOp2').value;
-        const data_fim = document.getElementById('enqDataFim').value;
-        const hora_fim = document.getElementById('enqHoraFim').value;
-        const preco_alvo = document.getElementById('enqPrecoAlvo').value;
+        const tipo = document.getElementById('enqTipo').value;
+        const op1 = document.getElementById('enqOp1').value.trim();
+        const op2 = document.getElementById('enqOp2').value.trim();
+        const precoAlvo = document.getElementById('enqPrecoAlvo').value.trim();
+        const dataFim = document.getElementById('enqDataFim').value;
+        const horaFim = document.getElementById('enqHoraFim').value;
 
-        await _supabase.from('enquetes').insert([{ tipo, ativo, preco_alvo, op1, op2, data_fim, hora_fim, finalizada: false, pausada: false }]);
-        alert("Enquete publicada!");
-        document.getElementById('enqAtivo').value = '';
+        if(!ativo || !op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
+
+        await _supabase.from('enquetes').insert([{
+            ativo: ativo, tipo: tipo, op1: op1, op2: op2, preco_alvo: precoAlvo,
+            data_fim: dataFim, hora_fim: horaFim, finalizada: false, pausada: false
+        }]);
+
+        alert("Mercado criado com sucesso!");
         inicializarPainel();
     }
 
-    async function renderizarRodadasAbertas() {
+    async function listarEnquetesAdm() {
         let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
-        let { data: apostas } = await _supabase.from('apostas').select('*');
-        const tbody = document.getElementById('listaRodadasAbertas'); tbody.innerHTML = '';
-        if(!enquetes || enquetes.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma enquete ativa.</td></tr>`; return; }
+        const container = document.getElementById('admListaEnquetes');
+        container.innerHTML = '';
+
+        if(!enquetes || enquetes.length === 0) {
+            container.innerHTML = `<p style="color:#6b7280;">Nenhuma enquete ativa no momento.</p>`;
+            return;
+        }
 
         enquetes.forEach(enq => {
-            let totalPote = 0;
-            if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) totalPote += parseFloat(a.valor); });
-
-            tbody.innerHTML += `<tr>
-                <td><b>${enq.ativo}</b></td>
-                <td><span class="pote-badge">R$ ${totalPote.toFixed(2)}</span></td>
-                <td><button class="btn-warn" onclick="togglePausa(${enq.id}, ${enq.pausada})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
-                <td>
-                    <button class="btn btn-success" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op1}', '${enq.ativo}')">Vitória ${enq.op1}</button>
-                    <button class="btn btn-danger" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op2}', '${enq.ativo}')">Vitória ${enq.op2}</button>
-                </td>
-            </tr>`;
+            container.innerHTML += `<div class="item-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+                <div><b>${enq.ativo}</b> (${enq.tipo.toUpperCase()})</div>
+                <div class="form-row" style="width:100%;">
+                    <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op1}', '${enq.ativo}')">Venceu: ${enq.op1}</button>
+                    <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op2}', '${enq.ativo}')">Venceu: ${enq.op2}</button>
+                    <button class="btn-master btn-red" style="padding:6px 12px; font-size:12px; background:#e67e22;" onclick="alternarPausaEnquete(${enq.id}, ${enq.pausada})">${enq.pausada ? 'Despausar' : 'Pausar/Suspender'}</button>
+                </div>
+            </div>`;
         });
     }
 
-    async function togglePausa(id, status) {
-        await _supabase.from('enquetes').update({ pausada: !status }).eq('id', id);
-        renderizarRodadasAbertas();
+    async function alternarPausaEnquete(id, statusAtual) {
+        await _supabase.from('enquetes').update({ pausada: !statusAtual }).eq('id', id);
+        inicializarPainel();
     }
 
     async function liquidarEnqueteComRateio(enqueteId, opcaoVencedora, nomeAtivo) {
@@ -226,40 +139,131 @@
             let poteTotal = 0;
             let poteVencedores = 0;
             let vencedores = [];
+            let perdedores = [];
 
             todasAsApostas.forEach(aposta => {
                 poteTotal += parseFloat(aposta.valor);
                 if(aposta.palpite === opcaoVencedora) {
                     poteVencedores += parseFloat(aposta.valor);
                     vencedores.push(aposta);
+                } else {
+                    perdedores.push(aposta);
                 }
             });
 
+            // 1. PROCESSAR OS VENDEDORES (ADICIONA PREMIO E REGISTRA LUCRO)
             if(vencedores.length > 0 && poteVencedores > 0) {
                 for(let vencedor of vencedores) {
                     let proporcao = parseFloat(vencedor.valor) / poteVencedores;
-                    let premioGanhocapitulo = poteTotal * proporcao;
+                    let premioGanho = poteTotal * proporcao;
 
                     let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario).single();
-                    let saldoNovo = parseFloat(u.saldo || 0) + premioGanhocapitulo;
+                    let saldoNovo = parseFloat(u.saldo || 0) + premioGanho;
 
                     await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario);
+                    
                     await _supabase.from('transacoes').insert([{
                         usuario: vencedor.usuario,
-                        tipo: 'premio',
-                        descricao: `Prêmio/Rateio ganho na enquete [${nomeAtivo}]`,
-                        valor: premioGanhocapitulo
+                        tipo: 'lucro_enquete',
+                        descricao: `Acertou a enquete [${nomeAtivo}] - Recebeu Rateio`,
+                        valor: premioGanho
+                    }]);
+                }
+            }
+
+            // 2. PROCESSAR OS PERDEDORES (REGISTRA APENAS A LINHA DE PERDA NO EXTRATO)
+            if(perdedores.length > 0) {
+                for(let perdedor of perdedores) {
+                    await _supabase.from('transacoes').insert([{
+                        usuario: perdedor.usuario,
+                        tipo: 'perda_enquete',
+                        descricao: `Errou a enquete [${nomeAtivo}] - Palpite: ${perdedor.palpite}`,
+                        valor: -parseFloat(perdedor.valor)
                     }]);
                 }
             }
         }
 
         await _supabase.from('enquetes').update({ finalizada: true }).eq('id', enqueteId);
-        alert("Mercado liquidado e saldo distribuído via rateio!");
+        alert("Mercado liquidado com extratos gerados para membros!");
         inicializarPainel();
     }
 
-    // Executa a inicialização de forma segura ao carregar a página
+    async function listarDepositosAdm() {
+        let { data: deps } = await _supabase.from('depositos').select('*').eq('status', 'pendente');
+        const container = document.getElementById('admListaDepositos');
+        container.innerHTML = '';
+
+        if(!deps || deps.length === 0) {
+            container.innerHTML = `<p style="color:#6b7280;">Nenhum depósito aguardando aprovação.</p>`;
+            return;
+        }
+
+        deps.forEach(d => {
+            container.innerHTML += `<div class="item-row">
+                <div>👤 <b>${d.usuario}</b> enviou R$ ${Number(d.valor).toFixed(2)}</div>
+                <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="aprovarDeposito(${d.id}, '${d.usuario}', ${d.valor})">Aprovar PIX</button>
+            </div>`;
+        });
+    }
+
+    async function aprovarDeposito(id, usuario, valor) {
+        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario).single();
+        let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
+
+        await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', usuario);
+        await _supabase.from('depositos').update({ status: 'aprovado' }).eq('id', id);
+        
+        await _supabase.from('transacoes').insert([{
+            usuario: usuario,
+            tipo: 'deposito',
+            descricao: `Depósito via PIX aprovado com sucesso`,
+            valor: parseFloat(valor)
+        }]);
+
+        alert("Depósito computado!");
+        inicializarPainel();
+    }
+
+    async function listarSaquesAdm() {
+        let { data: saqs } = await _supabase.from('saques').select('*').eq('status', 'pendente');
+        const container = document.getElementById('admListaSaques');
+        container.innerHTML = '';
+
+        if(!saqs || saqs.length === 0) {
+            container.innerHTML = `<p style="color:#6b7280;">Nenhum pedido de retirada na fila.</p>`;
+            return;
+        }
+
+        saqs.forEach(s => {
+            container.innerHTML += `<div class="item-row" style="flex-direction:column; align-items:flex-start; gap:5px;">
+                <div>👤 <b>${s.usuario}</b> solicita <b>R$ ${Number(s.valor).toFixed(2)}</b></div>
+                <div style="font-size:11px; color:#9ca3af;">Chave PIX: ${s.chave_pix}</div>
+                <button class="btn-master btn-red" style="padding:6px 12px; font-size:12px; width:100%; margin-top:5px;" onclick="aprovarSaque(${s.id}, '${s.usuario}', ${s.valor})">Confirmar Pagamento Efetuado</button>
+            </div>`;
+        });
+    }
+
+    async function aprovarSaque(id, usuario, valor) {
+        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario).single();
+        let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
+
+        // Deduz de forma real o dinheiro do saldo total do cliente
+        await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', usuario);
+        await _supabase.from('saques').update({ status: 'aprovado' }).eq('id', id);
+        
+        // Grava no extrato do membro que o saque saiu da conta
+        await _supabase.from('transacoes').insert([{
+            usuario: usuario,
+            tipo: 'saque',
+            descricao: `Saque via PIX enviado para sua conta bancária`,
+            valor: -parseFloat(valor)
+        }]);
+
+        alert("Retirada concluída e processada no extrato!");
+        inicializarPainel();
+    }
+
     window.onload = function() {
         inicializarPainel();
     };
