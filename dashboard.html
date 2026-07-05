@@ -32,7 +32,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
-        .badge-trans { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge-trans { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -121,6 +121,7 @@
 
     async function notificarPagamento() {
         const valor = parseFloat(document.getElementById('valorPix').value);
+        if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
         await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
         alert("Notificação enviada com sucesso!");
         document.getElementById('qrContainer').style.display = 'none';
@@ -139,15 +140,15 @@
         const { error } = await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
         if(error) return alert("Erro ao solicitar: " + error.message);
 
-        // Criar linha temporária de aviso também na tabela transações para controle visual do usuário
+        // Aloca como saque pendente na tabela de transações
         await _supabase.from('transacoes').insert([{
             usuario: usuarioLogado,
             tipo: 'saque_pend',
-            descricao: `Solicitação de Saque enviada (Aguardando Admin). Chave: ${chave}`,
+            descricao: `Solicitação de Saque enviada (Aguardando aprovação). Chave: ${chave}`,
             valor: -valor
         }]);
 
-        alert("Solicitação enviada com sucesso! O saldo só será deduzido após a aprovação do Administrador.");
+        alert("Solicitação enviada com sucesso! Aguarde a liberação do Administrador.");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
         atualizarDados();
@@ -160,41 +161,57 @@
 
         if(error) {
             console.error("Erro ao carregar histórico:", error);
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro ao carregar histórico do banco de dados.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro ao carregar extrato financeiro.</td></tr>`;
             return;
         }
 
         if(!trans || trans.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação encontrada.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação de saldo encontrada.</td></tr>`;
             return;
         }
 
         trans.forEach(t => {
             let dataFormatada = new Date(t.created_at).toLocaleDateString('pt-BR');
+            let valorNumerico = parseFloat(t.valor);
             
-            // Define cores e badges inteligentes com base no tipo da transação
-            let corVal = t.valor > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-            let sinal = t.valor > 0 ? '+' : '';
-            
+            let corVal = valorNumerico >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            let sinal = valorNumerico > 0 ? '+' : '';
             let bgBadge = '#1a121e';
             let txtBadge = 'var(--accent-red)';
-            let tipoTxt = t.tipo ? t.tipo.toUpperCase() : 'INFO';
+            let tipoTxt = 'INFO';
 
-            if(t.tipo === 'deposito' || t.tipo === 'premio' || t.valor > 0) {
+            if (t.tipo === 'deposito') {
                 bgBadge = '#091a18';
                 txtBadge = 'var(--accent-green)';
-            } else if(t.tipo === 'saque_pend') {
+                tipoTxt = '📥 DEPÓSITO';
+            } else if (t.tipo === 'saque_pend') {
                 bgBadge = '#2c1a0a';
                 txtBadge = '#ff9f43';
-                tipoTxt = "PENDENTE";
-                sinal = ""; // Não mostra de forma definitiva ainda
+                tipoTxt = '⏳ SAQUE PENDENTE';
+                sinal = ''; 
+            } else if (t.tipo === 'saque') {
+                bgBadge = '#241217';
+                txtBadge = 'var(--accent-red)';
+                tipoTxt = '📤 SAQUE PAGO';
+            } else if (t.tipo === 'lucro_enquete') {
+                bgBadge = '#091a18';
+                txtBadge = 'var(--accent-green)';
+                tipoTxt = '🟢 LUCRO';
+            } else if (t.tipo === 'perda_enquete') {
+                bgBadge = '#241217';
+                txtBadge = 'var(--accent-red)';
+                tipoTxt = '🔴 ERRO/PERDA';
+            } else if (t.tipo === 'alocacao') {
+                bgBadge = '#1c253d';
+                txtBadge = '#7d859a';
+                tipoTxt = '🎰 APOSTADO';
             }
 
             tbody.innerHTML += `<tr>
                 <td>${dataFormatada}</td>
                 <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}">${tipoTxt}</span></td>
                 <td>${t.descricao}</td>
-                <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Math.abs(Number(t.valor)).toFixed(2)}</td>
+                <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Math.abs(valorNumerico).toFixed(2)}</td>
             </tr>`;
         });
     }
@@ -212,11 +229,10 @@
         let { data: apostas } = await _supabase.from('apostas').select('*');
         const container = document.getElementById('containerEnquetes');
         
-        // Filtra apenas as enquetes do tipo selecionado
         let enquetesFiltradas = enquetes ? enquetes.filter(e => e.tipo === categoryAtual) : [];
 
         if(enquetesFiltradas.length === 0) { 
-            container.innerHTML = `<div class="card-info">Nenhum mercado ativo nesta categoria.</div>`; 
+            container.innerHTML = `<div class="card-info">Nenhum mercado ativo nesta categoria no momento.</div>`; 
             return; 
         }
 
@@ -254,11 +270,10 @@
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
         
-        alert("Alocação efetuada!");
+        alert("Alocação efetuada com sucesso!");
         atualizarDados();
     }
 
-    // Inicialização amigável
     window.onload = function() {
         atualizarDados();
     };
