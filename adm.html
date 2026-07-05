@@ -1,51 +1,270 @@
-async function liquidarEnqueteComRateio(enqueteId, opcaoVencedora, nomeAtivo) {
-    if(!confirm(`Confirmar vitória de "${opcaoVencedora}" com cálculo de rateio?`)) return;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxPopuli - Super Admin Engine (Cloud)</title>
+    <style>
+        :root { --bg-main: #060913; --bg-card: #0d1222; --bg-input: #111728; --border-color: #1a2238; --accent-blue: #4371f7; --accent-green: #00b37e; --accent-red: #f75a68; --text-muted: #7d859a; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg-main); color: #fff; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .header-left h1 { color: var(--accent-blue); font-size: 28px; margin: 0; font-weight: 800; }
+        .card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 24px; border-radius: 14px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        h2 { font-size: 18px; margin-top: 0; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; font-weight: 600; color: #fff; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; }
+        input, select { width: 100%; padding: 14px; background: var(--bg-input); border: 1px solid #1c253d; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        .btn { padding: 14px 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 15px; }
+        .btn-blue { background: var(--accent-blue); color: white; width: 100%; margin-top: 10px; }
+        .btn-success { background: var(--accent-green); color: #0d1222; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-danger { background: var(--accent-red); color: white; font-size: 12px; padding: 8px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-warn { background: #ff9f43; color: #0d1222; padding: 8px 12px; font-size: 12px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); text-transform: uppercase; font-size: 12px; }
+        .caixa-box { background: #091a18; border: 1px solid var(--accent-green); padding: 15px 25px; border-radius: 10px; font-size: 22px; font-weight: bold; color: var(--accent-green); display: inline-block; }
+        .pote-badge { background: #1c253d; padding: 4px 10px; border-radius: 4px; font-size: 13px; color: #ff9f43; font-weight: bold; }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="container">
+    <div class="admin-header">
+        <div class="header-left"><h1>VoxPopuli - Painel Administrativo</h1></div>
+        <button class="btn" style="background:#202431; color:white; padding: 10px 20px;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
+    </div>
 
-    // 1. Pega todas as apostas que foram feitas nessa enquete específica
-    let { data: todasAsApostas } = await _supabase.from('apostas').select('*').eq('enquete_id', enqueteId);
-    
-    if(todasAsApostas && todasAsApostas.length > 0) {
-        let poteTotal = 0;
-        let poteVencedores = 0;
-        let vencedores = [];
+    <!-- CONTROLAR DEPÓSITOS -->
+    <div class="card" style="border-color: #ff9f43;">
+        <h2 style="color: #ff9f43;">📥 Solicitações de Depósito PIX (Pendentes)</h2>
+        <table>
+            <thead><tr><th>Membro</th><th>Valor Solicitado</th><th>Ações de Liberação</th></tr></thead>
+            <tbody id="listaDepositosPendentes"></tbody>
+        </table>
+    </div>
 
-        // 2. Soma o dinheiro total da enquete (Pote Total) 
-        // e descobre quanto os acertadores apostaram juntos (Pote Vencedores)
-        todasAsApostas.forEach(aposta => {
-            poteTotal += parseFloat(aposta.valor);
-            if(aposta.palpite === opcaoVencedora) {
-                poteVencedores += parseFloat(aposta.valor);
-                vencedores.push(aposta); // Guarda quem acertou
-            }
-        });
+    <!-- 🔥 NOVO: CONTROLAR SOLICITAÇÕES DE SAQUES -->
+    <div class="card" style="border-color: var(--accent-red);">
+        <h2 style="color: var(--accent-red);">📤 Solicitações de Saque PIX (Pendentes)</h2>
+        <table>
+            <thead><tr><th>Membro</th><th>Chave PIX Informada</th><th>Valor do Saque</th><th>Ações</th></tr></thead>
+            <tbody id="listaSaquesPendentes"></tbody>
+        </table>
+    </div>
 
-        // 3. Se houver ganhadores, faz a divisão proporcional (o rateio)
-        if(vencedores.length > 0 && poteVencedores > 0) {
-            for(let vencedor of vencedores) {
-                // Descobre a porcentagem que este membro representa no grupo dos vencedores
-                let proporcao = parseFloat(vencedor.valor) / poteVencedores;
-                
-                // O prêmio dele é a parte proporcional do Pote Total arrecadado!
-                let premioGanho = poteTotal * proporcao;
+    <div class="card">
+        <h2>💰 Caixa Geral da Plataforma</h2>
+        <div class="caixa-box">🏦 Total em Custódia: R$ <span id="caixaPlataforma">0.00</span></div>
+    </div>
 
-                // Busca o saldo atual dele no banco para não ter erro
-                let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario).single();
-                let saldoNovo = parseFloat(u.saldo || 0) + premioGanho;
+    <div class="card">
+        <h2>🎯 Controle de Enquetes Ativas</h2>
+        <table>
+            <thead><tr><th>Ativo / Mercado</th><th>Volume Acumulado</th><th>Ações</th><th>Liquidação</th></tr></thead>
+            <tbody id="listaRodadasAbertas"></tbody>
+        </table>
+    </div>
 
-                // 4. ATUALIZA O SALDO DELE (SOMA O LUCRO) E CRIA O HISTÓRICO
-                await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario);
-                await _supabase.from('transacoes').insert([{
-                    usuario: vencedor.usuario,
-                    tipo: 'premio',
-                    descricao: `Prêmio/Rateio ganho na enquete [${nomeAtivo}]`,
-                    valor: premioGanho // Valor positivo que vai aparecer no extrato
-                }]);
-            }
-        }
+    <div class="card">
+        <h2>🚀 Injetar Nova Rodada</h2>
+        <div class="grid-2">
+            <div><label>Tipo de Categoria</label><select id="enqTipo"><option value="financeiro">📊 Mercado Financeiro</option><option value="esportes">⚽ Esportes</option></select></div>
+            <div><label>Ativo / Confronto</label><input type="text" id="enqAtivo" placeholder="Ex: BTC/USDT"></div>
+        </div>
+        <div class="grid-3">
+            <div><label>Alvo (Opcional)</label><input type="text" id="enqPrecoAlvo" placeholder="Ex: 65000"></div>
+            <div><label>Opção 1</label><input type="text" id="enqOp1" value="Acima"></div>
+            <div><label>Opção 2</label><input type="text" id="enqOp2" value="Abaixo"></div>
+        </div>
+        <div class="grid-2">
+            <div><label>Data</label><input type="date" id="enqDataFim"></div>
+            <div><label>Hora</label><input type="time" id="enqHoraFim"></div>
+        </div>
+        <button class="btn btn-blue" onclick="criarEnquete()">Publicar Enquete Globalmente</button>
+    </div>
+</div>
+
+<script>
+    if(localStorage.getItem('usuarioLogado') !== 'voxadmin') window.location.href = './index.html';
+
+    const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_D35oaRAeby0oZmoUwfhl9A_guti3olc"; 
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function inicializarPainel() {
+        await calcularCaixaGeral();
+        await renderizarDepositos();
+        await renderizarSaques();
+        await renderizarRodadasAbertas();
     }
 
-    // 5. Finaliza a enquete para sumir do painel deles
-    await _supabase.from('enquetes').update({ finalizada: true }).eq('id', enqueteId);
-    alert("Mercado liquidado e saldo distribuído via rateio!");
+    async function calcularCaixaGeral() {
+        let { data: users } = await _supabase.from('usuarios').select('saldo');
+        let total = 0; if(users) users.forEach(u => total += parseFloat(u.saldo || 0));
+        document.getElementById('caixaPlataforma').innerText = total.toFixed(2);
+    }
+
+    async function renderizarDepositos() {
+        const { data: deps } = await _supabase.from('depositos').select('*').eq('status', 'pendente');
+        const tbody = document.getElementById('listaDepositosPendentes'); tbody.innerHTML = '';
+        if(!deps || deps.length === 0) { tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Nenhum PIX pendente.</td></tr>`; return; }
+
+        deps.forEach(d => {
+            tbody.innerHTML += `<tr>
+                <td><b>${d.usuario}</b></td>
+                <td style="color:var(--accent-green); font-weight:bold;">R$ ${Number(d.valor).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-success" onclick="processarDeposito(${d.id}, '${d.usuario}', ${d.valor}, 'aprovado')">✔️ Aprovar</button>
+                    <button class="btn btn-danger" onclick="processarDeposito(${d.id}, '${d.usuario}', ${d.valor}, 'recusado')">❌ Recusar</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function processarDeposito(depId, username, valor, novoStatus) {
+        if(novoStatus === 'aprovado') {
+            let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', username).single();
+            await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo || 0) + parseFloat(valor) }).eq('username', username);
+            await _supabase.from('transacoes').insert([{ usuario: username, tipo: 'deposito', descricao: 'Depósito via PIX aprovado pela Moderação', valor: parseFloat(valor) }]);
+        }
+        await _supabase.from('depositos').update({ status: novoStatus }).eq('id', depId);
+        alert("Depósito processado!");
+        inicializarPainel();
+    }
+
+    // 🔥 NOVO: RENDERIZAR E PROCESSAR OS PEDIDOS DE SAQUE
+    async function renderizarSaques() {
+        const { data: sqs } = await _supabase.from('saques').select('*').eq('status', 'pendente');
+        const tbody = document.getElementById('listaSaquesPendentes'); tbody.innerHTML = '';
+        if(!sqs || sqs.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma solicitação de saque pendente.</td></tr>`; return; }
+
+        sqs.forEach(s => {
+            tbody.innerHTML += `<tr>
+                <td><b>${s.usuario}</b></td>
+                <td><code style="background:#111728; padding:5px; border-radius:4px; border:1px solid #1a2238;">${s.chave_pix}</code></td>
+                <td style="color:var(--accent-red); font-weight:bold;">R$ ${Number(s.valor).toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-success" onclick="processarSaque(${s.id}, '${s.usuario}', ${s.valor}, '${s.chave_pix}', 'aprovado')">✔️ Aprovar e Descontar</button>
+                    <button class="btn btn-danger" onclick="processarSaque(${s.id}, '${s.usuario}', ${s.valor}, '${s.chave_pix}', 'recusado')">❌ Recusar</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function processarSaque(saqueId, username, valor, chavePix, novoStatus) {
+        if(novoStatus === 'aprovado') {
+            let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', username).single();
+            let saldoAtual = parseFloat(user.saldo || 0);
+
+            if(saldoAtual < parseFloat(valor)) {
+                alert("Erro crítico: O usuário não possui mais esse saldo em conta para efetuar o desconto do saque.");
+                return;
+            }
+
+            // Descontar definitivamente do saldo do usuário apenas agora!
+            await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', username);
+            
+            // Gerar registro histórico negativo
+            await _supabase.from('transacoes').insert([{ 
+                usuario: username, 
+                tipo: 'saque', 
+                descricao: `Saque PIX Aprovado e Pago (Chave: ${chavePix})`, 
+                valor: -parseFloat(valor) 
+            }]);
+        }
+        
+        await _supabase.from('saques').update({ status: novoStatus }).eq('id', saqueId);
+        alert(`Solicitação de saque marcada como: ${novoStatus}`);
+        inicializarPainel();
+    }
+
+    async function criarEnquete() {
+        const tipo = document.getElementById('enqTipo').value;
+        const ativo = document.getElementById('enqAtivo').value.trim();
+        const op1 = document.getElementById('enqOp1').value;
+        const op2 = document.getElementById('enqOp2').value;
+        const data_fim = document.getElementById('enqDataFim').value;
+        const hora_fim = document.getElementById('enqHoraFim').value;
+        const preco_alvo = document.getElementById('enqPrecoAlvo').value;
+
+        await _supabase.from('enquetes').insert([{ tipo, ativo, preco_alvo, op1, op2, data_fim, hora_fim, finalizada: false, pausada: false }]);
+        alert("Enquete publicada!");
+        document.getElementById('enqAtivo').value = '';
+        inicializarPainel();
+    }
+
+    async function renderizarRodadasAbertas() {
+        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
+        let { data: apostas } = await _supabase.from('apostas').select('*');
+        const tbody = document.getElementById('listaRodadasAbertas'); tbody.innerHTML = '';
+        if(!enquetes || enquetes.length === 0) { tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma enquete ativa.</td></tr>`; return; }
+
+        enquetes.forEach(enq => {
+            let totalPote = 0;
+            if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) totalPote += parseFloat(a.valor); });
+
+            tbody.innerHTML += `<tr>
+                <td><b>${enq.ativo}</b></td>
+                <td><span class="pote-badge">R$ ${totalPote.toFixed(2)}</span></td>
+                <td><button class="btn-warn" onclick="togglePausa(${enq.id}, ${enq.pausada})">${enq.pausada ? '▶️ Liberar' : '⏸️ Pausar'}</button></td>
+                <td>
+                    <button class="btn btn-success" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op1}', '${enq.ativo}')">Vitória ${enq.op1}</button>
+                    <button class="btn btn-danger" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op2}', '${enq.ativo}')">Vitória ${enq.op2}</button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    async function togglePausa(id, status) {
+        await _supabase.from('enquetes').update({ pausada: !status }).eq('id', id);
+        renderizarRodadasAbertas();
+    }
+
+    async function liquidarEnqueteComRateio(enqueteId, opcaoVencedora, nomeAtivo) {
+        if(!confirm(`Confirmar vitória de "${opcaoVencedora}" com cálculo de rateio?`)) return;
+
+        let { data: todasAsApostas } = await _supabase.from('apostas').select('*').eq('enquete_id', enqueteId);
+        
+        if(todasAsApostas && todasAsApostas.length > 0) {
+            let poteTotal = 0;
+            let poteVencedores = 0;
+            let vencedores = [];
+
+            todasAsApostas.forEach(aposta => {
+                poteTotal += parseFloat(aposta.valor);
+                if(aposta.palpite === opcaoVencedora) {
+                    poteVencedores += parseFloat(aposta.valor);
+                    vencedores.push(aposta);
+                }
+            });
+
+            if(vencedores.length > 0 && poteVencedores > 0) {
+                for(let vencedor of vencedores) {
+                    let proporcao = parseFloat(vencedor.valor) / poteVencedores;
+                    let premioGanhocapitulo = poteTotal * proporcao;
+
+                    let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario).single();
+                    let saldoNovo = parseFloat(u.saldo || 0) + premioGanhocapitulo;
+
+                    await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario);
+                    await _supabase.from('transacoes').insert([{
+                        usuario: vencedor.usuario,
+                        tipo: 'premio',
+                        descricao: `Prêmio/Rateio ganho na enquete [${nomeAtivo}]`,
+                        valor: premioGanhocapitulo
+                    }]);
+                }
+            }
+        }
+
+        await _supabase.from('enquetes').update({ finalizada: true }).eq('id', enqueteId);
+        alert("Mercado liquidado e saldo distribuído via rateio!");
+        inicializarPainel();
+    }
+
     inicializarPainel();
-}
+</script>
+</body>
+</html>
