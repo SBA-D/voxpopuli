@@ -12,25 +12,29 @@
         .main-content { padding: 24px; max-width: 950px; margin: 0 auto; }
         .financeiro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
         .fin-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 20px; border-radius: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-        .fin-card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .fin-card h3 { margin-top: 0; margin-bottom: 12px; font-size: 16px; color: #fff; }
         .grid-inputs { display: flex; gap: 10px; margin-bottom: 10px; }
         input { flex: 1; padding: 12px; background: var(--bg-input); border: 1px solid #1c253d; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 14px; }
         input:focus { outline: none; border-color: var(--accent-blue); }
         .btn { padding: 12px 18px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 14px; transition: background 0.2s; white-space: nowrap; }
         .btn-green { background: var(--accent-green); color: #060913; }
-        .btn-green:hover { background: #02966a; }
         .btn-blue { background: var(--accent-blue); color: white; }
-        .btn-blue:hover { background: #2f59d1; }
         .category-selector { display: flex; gap: 15px; margin-top: 10px; margin-bottom: 10px; }
-        .tab-btn { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 15px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .tab-btn.active { background: #0640df; color: white; border-color: #0640df; box-shadow: 0 0 12px rgba(6,64,223,0.4); }
+        .tab-btn { flex: 1; background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .tab-btn.active { background: #0640df; color: white; border-color: #0640df; }
         .card-info { background: var(--bg-card); padding: 30px; margin-top: 20px; border-radius: 16px; border: 1px solid var(--border-color); text-align: center; color: var(--text-muted); }
-        .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; margin-top: 20px; display: grid; grid-template-columns: 1fr 240px; gap: 20px; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px 18px; border-radius: 8px; text-align: left; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; transition: border-color 0.2s; }
+        .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; margin-top: 20px; display: grid; grid-template-columns: 1fr 240px; gap: 20px; align-items: center; }
+        .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px 18px; border-radius: 8px; text-align: left; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; }
         .opcao-btn:hover { border-color: var(--accent-blue); }
         .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; }
         .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; text-align: center; }
         .qr-area { margin-top: 10px; background: #fff; color: #000; padding: 15px; border-radius: 8px; display: none; text-align: center; }
+        
+        /* Estilos tabela de extrato */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
+        .badge-trans { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -53,11 +57,9 @@
                 <input type="number" id="valorPix" placeholder="Valor em R$ (Ex: 50)" min="1">
                 <button class="btn btn-green" onclick="gerarPix()">Gerar Copia e Cola</button>
             </div>
-            
             <div id="qrContainer" class="qr-area">
-                <p style="color:#000; margin-top:0; font-weight:bold;">Chave Copia e Cola Gerada:</p>
-                <textarea id="pixCodeText" readonly style="width:100%; height:60px; background:#f4f5f7; color:#333; border:1px solid #ccc; border-radius:6px; font-family:monospace; font-size:11px; padding:5px; box-sizing:border-box; resize:none;"></textarea>
-                <button class="btn btn-blue" style="width:100%; margin-top:8px; padding:10px;" onclick="notificarPagamento()">Notificar Envio (Avisar Admin)</button>
+                <textarea id="pixCodeText" readonly style="width:100%; height:50px; background:#f4f5f7; color:#333; border:1px solid #ccc; border-radius:6px; font-family:monospace; font-size:11px; padding:5px; box-sizing:border-box; resize:none;"></textarea>
+                <button class="btn btn-blue" style="width:100%; margin-top:8px;" onclick="notificarPagamento()">Notificar Envio (Avisar Admin)</button>
             </div>
         </div>
 
@@ -77,6 +79,21 @@
     </div>
     
     <div id="containerEnquetes"></div>
+
+    <div class="fin-card" style="margin-top: 35px;">
+        <h3>📜 Histórico de Transações e Extrato</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Operação</th>
+                    <th>Descrição / Detalhes</th>
+                    <th>Movimentação</th>
+                </tr>
+            </thead>
+            <tbody id="historicoTransacoes"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -86,37 +103,28 @@
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
     const SUPABASE_KEY = "sb_publishable_D35oaRAeby0oZmoUwfhl9A_guti3olc"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
     let categoryAtual = 'financeiro';
 
     async function atualizarDados() {
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
         if(user) document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
         await carregarEnquetes();
+        await carregarHistorico();
     }
 
     function gerarPix() {
         const valor = parseFloat(document.getElementById('valorPix').value);
-        if(isNaN(valor) || valor <= 0) return alert("Insira um valor válido para o depósito.");
-        
+        if(isNaN(valor) || valor <= 0) return alert("Insira um valor válido.");
         const chaveCopiaCola = `00020101021126580014br.gov.bcb.pix0136voxpopuli2026produtofkwkhfkeyfgsqerhpzpm520400005303986540${valor.toFixed(2)}5802BR5909VoxPopuli6009SAOPAULO62070503***63047A1B`;
-        
         document.getElementById('pixCodeText').value = chaveCopiaCola;
         document.getElementById('qrContainer').style.display = 'block';
-        
         navigator.clipboard.writeText(chaveCopiaCola);
-        alert("Chave PIX Copia e Cola copiada automaticamente para a área de transferência!");
     }
 
     async function notificarPagamento() {
         const valor = parseFloat(document.getElementById('valorPix').value);
-        if(isNaN(valor) || valor <= 0) return;
-
-        const { error } = await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
-        
-        if(error) return alert("Erro ao notificar: " + error.message);
-
-        alert("Notificação enviada! O Administrador recebeu seu alerta e validará seu saldo em instantes.");
+        await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
+        alert("Notificação enviada com sucesso!");
         document.getElementById('qrContainer').style.display = 'none';
         document.getElementById('valorPix').value = '';
     }
@@ -124,19 +132,44 @@
     async function solicitarSaque() {
         const chave = document.getElementById('chavePixSaque').value.trim();
         const valor = parseFloat(document.getElementById('valorSaque').value);
-
-        if(!chave || isNaN(valor) || valor <= 0) return alert("Preencha a chave PIX e o valor corretamente.");
+        if(!chave || isNaN(valor) || valor <= 0) return alert("Dados inválidos.");
 
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente para efetuar este saque.");
+        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente.");
 
-        const novoSaldo = parseFloat(user.saldo) - valor;
-        await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuarioLogado);
+        await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - valor }).eq('username', usuarioLogado);
+        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'saque', descricao: `Retirada PIX solicitada para chave: ${chave}`, valor: -valor }]);
         
-        alert("Solicitação de saque enviada para análise da administração!");
+        alert("Saque debitado e enviado para análise!");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
         atualizarDados();
+    }
+
+    async function carregarHistorico() {
+        const { data: trans } = await _supabase.from('transacoes').select('*').eq('usuario', usuarioLogado).order('created_at', { ascending: false });
+        const tbody = document.getElementById('historicoTransacoes');
+        tbody.innerHTML = '';
+
+        if(!trans || trans.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação encontrada.</td></tr>`;
+            return;
+        }
+
+        trans.forEach(t => {
+            let dataFormatada = new Date(t.created_at).toLocaleDateString('pt-BR');
+            let corVal = t.valor > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+            let sinal = t.valor > 0 ? '+' : '';
+            let bgBadge = t.tipo === 'deposito' || t.tipo === 'premio' ? '#091a18' : '#1a121e';
+            let txtBadge = t.tipo === 'deposito' || t.tipo === 'premio' ? 'var(--accent-green)' : 'var(--accent-red)';
+
+            tbody.innerHTML += `<tr>
+                <td>${dataFormatada}</td>
+                <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}">${t.tipo.toUpperCase()}</span></td>
+                <td>${t.descricao}</td>
+                <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Number(t.valor).toFixed(2)}</td>
+            </tr>`;
+        });
     }
 
     function mudarCategoria(cat) {
@@ -151,11 +184,7 @@
         let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('tipo', categoryAtual).eq('finalizada', false);
         let { data: apostas } = await _supabase.from('apostas').select('*');
         const container = document.getElementById('containerEnquetes');
-        
-        if(!enquetes || enquetes.length === 0) {
-            container.innerHTML = `<div class="card-info">Nenhum mercado ativo no momento nesta categoria.</div>`;
-            return;
-        }
+        if(!enquetes || enquetes.length === 0) { container.innerHTML = `<div class="card-info">Nenhum mercado ativo.</div>`; return; }
 
         container.innerHTML = '';
         enquetes.forEach(enq => {
@@ -163,7 +192,7 @@
             if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) volumePote += parseFloat(a.valor); });
 
             let corpoVotos = enq.pausada 
-                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:12px; border-radius:8px; text-align:center; font-weight:bold; font-size:14px; border:1px solid #523414;">⏸️ Mercado Suspenso Temporariamente</div>`
+                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:12px; border-radius:8px; text-align:center; font-weight:bold;">⏸️ Mercado Suspenso</div>`
                 : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')"><span>▲ ${enq.op1}</span> <span>Selecionar</span></button>
                    <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')"><span>▼ ${enq.op2}</span> <span>Selecionar</span></button>`;
 
@@ -171,12 +200,10 @@
                 <div>
                     <div class="pote-acumulado-marcador">💰 Pote: R$ ${volumePote.toFixed(2)}</div>
                     <div style="font-size:22px; font-weight:800; margin-bottom:5px;">${enq.ativo}</div>
-                    <p style="color:var(--text-muted); font-size:14px; margin-top:0; margin-bottom:15px;">Alvo / Parâmetro: <b>${enq.preco_alvo || 'Resultado Direto'}</b></p>
+                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
                     ${corpoVotos}
                 </div>
-                <div>
-                    <div class="timer">⏱️ Expira em:<br><span style="font-size:13px; display:inline-block; margin-top:5px; color:#fff;">${enq.data_fim} às ${enq.hora_fim || '00:00'}</span></div>
-                </div>
+                <div><div class="timer">⏱️ Expira em:<br><span style="font-size:13px; color:#fff;">${enq.data_fim} às ${enq.hora_fim || '00:00'}</span></div></div>
             </div>`;
         });
     }
@@ -191,8 +218,9 @@
 
         await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - val }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
+        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
         
-        alert("Alocação realizada com sucesso!");
+        alert("Alocação efetuada!");
         atualizarDados();
     }
 
