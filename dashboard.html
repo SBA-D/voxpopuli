@@ -78,6 +78,7 @@
     
     <div id="containerEnquetes"></div>
 
+    <!-- O quadro importante de histórico preservado e blindado -->
     <div class="fin-card" style="margin-top: 35px;">
         <h3>📜 Histórico de Transações e Extrato</h3>
         <table>
@@ -101,8 +102,8 @@
     if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    // Cole aqui a sua chave ANON PUBLIC correta obtida no painel do Supabase
-    const SUPABASE_KEY = "sb_publishable_D35oaRAeby0oZmoUwfhl9A_guti3olc"; 
+    // CHAVE REAL INSERIDA DIRETAMENTE AQUI:
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrd2toZmtleWZnc3FlcmhwenBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODgxNzksImV4cCI6MjA5ODY2NDE3OX0.F7w89Yyl6tn7KHwUxw4QG0mZ1lNHi2zxe_b6c590AFc"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let categoryAtual = 'financeiro';
 
@@ -138,7 +139,7 @@
         if(!chave || isNaN(valor) || valor <= 0) return alert("Dados inválidos.");
 
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(!user || parseFloat(user.saldo) < val) return alert("Saldo insuficiente.");
+        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente.");
 
         const { error } = await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
         if(error) return alert("Erro ao solicitar: " + error.message);
@@ -163,7 +164,6 @@
         try {
             const usuarioLimpo = usuarioLogado ? usuarioLogado.trim() : "";
             
-            // Busca expandida sem distinção rígida para garantir compatibilidade
             const { data: trans, error } = await _supabase
                 .from('transacoes')
                 .select('*')
