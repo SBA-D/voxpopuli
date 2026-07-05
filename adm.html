@@ -31,7 +31,6 @@
 <div class="header">VoxPopuli - Administração Master Core 🛠️</div>
 
 <div class="grid-master">
-    <!-- Bloco 1: Criar Enquetes -->
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
@@ -53,19 +52,16 @@
         <button class="btn-master btn-blue" style="width:100%;" onclick="criarEnquete()">Publicar no Painel dos Membros</button>
     </div>
 
-    <!-- Bloco 2: Gestão de Enquetes Ativas -->
     <div class="box-adm">
         <h2>⚡ Liquidar e Finalizar Enquetes Ativas (Com Rateio Automático)</h2>
         <div class="lista-itens" id="admListaEnquetes"></div>
     </div>
 
-    <!-- Bloco 3: Depósitos Pendentes -->
     <div class="box-adm">
         <h2>📥 Validar Depósitos PIX Recebidos</h2>
         <div class="lista-itens" id="admListaDepositos"></div>
     </div>
 
-    <!-- Bloco 4: Saques Solicitados -->
     <div class="box-adm">
         <h2>📤 Processar Pedidos de Saque</h2>
         <div class="lista-itens" id="admListaSaques"></div>
@@ -151,19 +147,19 @@
                 }
             });
 
-            // 1. PROCESSAR OS VENDEDORES (ADICIONA PREMIO E REGISTRA LUCRO)
+            // 1. PROCESSAR OS VENCEDORES
             if(vencedores.length > 0 && poteVencedores > 0) {
                 for(let vencedor of vencedores) {
                     let proporcao = parseFloat(vencedor.valor) / poteVencedores;
                     let premioGanho = poteTotal * proporcao;
 
-                    let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario).single();
+                    let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario.trim()).single();
                     let saldoNovo = parseFloat(u.saldo || 0) + premioGanho;
 
-                    await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario);
+                    await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario.trim());
                     
                     await _supabase.from('transacoes').insert([{
-                        usuario: vencedor.usuario,
+                        usuario: vencedor.usuario.trim(),
                         tipo: 'lucro_enquete',
                         descricao: `Acertou a enquete [${nomeAtivo}] - Recebeu Rateio`,
                         valor: premioGanho
@@ -171,11 +167,11 @@
                 }
             }
 
-            // 2. PROCESSAR OS PERDEDORES (REGISTRA APENAS A LINHA DE PERDA NO EXTRATO)
+            // 2. PROCESSAR OS PERDEDORES
             if(perdedores.length > 0) {
                 for(let perdedor of perdedores) {
                     await _supabase.from('transacoes').insert([{
-                        usuario: perdedor.usuario,
+                        usuario: perdedor.usuario.trim(),
                         tipo: 'perda_enquete',
                         descricao: `Errou a enquete [${nomeAtivo}] - Palpite: ${perdedor.palpite}`,
                         valor: -parseFloat(perdedor.valor)
@@ -208,14 +204,15 @@
     }
 
     async function aprovarDeposito(id, usuario, valor) {
-        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario).single();
+        const usuarioLimpo = usuario ? usuario.trim() : "";
+        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLimpo).single();
         let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
 
-        await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', usuario);
+        await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', usuarioLimpo);
         await _supabase.from('depositos').update({ status: 'aprovado' }).eq('id', id);
         
         await _supabase.from('transacoes').insert([{
-            usuario: usuario,
+            usuario: usuarioLimpo,
             tipo: 'deposito',
             descricao: `Depósito via PIX aprovado com sucesso`,
             valor: parseFloat(valor)
@@ -245,16 +242,15 @@
     }
 
     async function aprovarSaque(id, usuario, valor) {
-        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario).single();
+        const usuarioLimpo = usuario ? usuario.trim() : "";
+        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLimpo).single();
         let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
 
-        // Deduz de forma real o dinheiro do saldo total do cliente
-        await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', usuario);
+        await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', usuarioLimpo);
         await _supabase.from('saques').update({ status: 'aprovado' }).eq('id', id);
         
-        // Grava no extrato do membro que o saque saiu da conta
         await _supabase.from('transacoes').insert([{
-            usuario: usuario,
+            usuario: usuarioLimpo,
             tipo: 'saque',
             descricao: `Saque via PIX enviado para sua conta bancária`,
             valor: -parseFloat(valor)
