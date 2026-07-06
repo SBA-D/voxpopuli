@@ -46,12 +46,11 @@
 
 <div class="main-content">
 
-    <!-- NOVO: SISTEMA DE AFILIADOS VISUAL -->
     <div class="afiliados-box">
         <h3 style="margin-top:0; margin-bottom:8px; color: var(--accent-blue); font-size:16px;">📢 Sistema de Convites (Ganhe R$ 9,00)</h3>
-        <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px 0;">Copie seu link de indicação abaixo. Quando seu convidado criar a conta e fizer o primeiro depósito na plataforma, você receberá <b>9 Moedas (R$ 9,00)</b> de bônus instantâneo!</p>
+        <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px 0;">Copie seu link de indicação seguro abaixo. Quando seu convidado criar a conta e fizer o primeiro depósito na plataforma, você receberá <b>9 Moedas (R$ 9,00)</b> de bônus instantâneo!</p>
         <div class="grid-inputs">
-            <input type="text" id="linkAfiliado" readonly style="background:#070b14; border-color:#222f4d; color:#5686ff;">
+            <input type="text" id="linkAfiliado" readonly style="background:#070b14; border-color:#222f4d; color:#5686ff;" placeholder="Carregando link seguro...">
             <button class="btn btn-blue" onclick="copiarLinkAfiliado()">Copiar Link</button>
         </div>
     </div>
@@ -97,12 +96,23 @@
     let categoryAtual = 'financeiro';
 
     async function atualizarDados() {
-        let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(user) document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
+        // Puxa o saldo e também o código de afiliado único do usuário
+        let { data: user } = await _supabase.from('usuarios').select('saldo, codigo_afiliado').eq('username', usuarioLogado).single();
         
-        // Gerar link dinâmico de afiliado baseado no endereço de acesso atual
-        const urlBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-        document.getElementById('linkAfiliado').value = `${urlBase}/index.html?ref=${usuarioLogado}`;
+        if(user) {
+            document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
+            
+            // Se por acaso contas antigas não tiverem código, gera um na hora para não quebrar o link
+            let codigoParaLink = user.codigo_afiliado;
+            if(!codigoParaLink) {
+                codigoParaLink = Math.floor(100000 + Math.random() * 900000).toString();
+                await _supabase.from('usuarios').update({ codigo_afiliado: codigoParaLink }).eq('username', usuarioLogado);
+            }
+
+            // Gerar link dinâmico seguro usando o CÓDIGO ÚNICO em vez do username
+            const urlBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+            document.getElementById('linkAfiliado').value = `${urlBase}/index.html?ref=${codigoParaLink}`;
+        }
         
         await carregarEnquetes();
     }
@@ -111,7 +121,7 @@
         const inputLink = document.getElementById('linkAfiliado');
         inputLink.select();
         navigator.clipboard.writeText(inputLink.value);
-        alert("Link de indicação copiado para a área de transferência!");
+        alert("Link de indicação seguro copiado!");
     }
 
     function gerarPix() {
@@ -159,7 +169,7 @@
         categoryAtual = cat;
         document.getElementById('tabFinanceiro').classList.remove('active');
         document.getElementById('tabEsportes').classList.remove('active');
-        document.getElementById(cat === 'financeiro' ? 'tabFinanceiro' : 'tabEsportes').classList.add('active');
+        document.getElementById(cat === 'financeiro' ? 'tabFinanceiro' : 'tabEsportes').add('active');
         carregarEnquetes();
     }
 
