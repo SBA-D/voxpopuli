@@ -1,141 +1,4 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoxPopuli - Login</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #060913; color: #fff; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { background: #0d1222; padding: 35px 25px; border-radius: 16px; border: 1px solid #1a2238; box-shadow: 0 10px 25px rgba(0,0,0,0.5); width: 340px; text-align: center; box-sizing: border-box; }
-        .logo-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
-        .logo { font-size: 32px; font-weight: bold; color: #4371f7; letter-spacing: 0.5px; }
-        .logo-emoji { font-size: 28px; }
-        h2 { font-size: 20px; margin-top: 0; margin-bottom: 25px; font-weight: 600; }
-        .input-group { text-align: left; margin-bottom: 18px; }
-        .input-group label { display: block; font-size: 14px; color: #7d859a; margin-bottom: 8px; }
-        .password-wrapper { position: relative; display: flex; align-items: center; }
-        input { width: 100%; padding: 14px; border: 1px solid #1c253d; background: #111728; color: #fff; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
-        input:focus { outline: none; border-color: #4371f7; }
-        .toggle-password { position: absolute; right: 12px; cursor: pointer; color: #7d859a; font-size: 18px; user-select: none; }
-        button { width: 100%; padding: 14px; background: #0640df; border: none; color: white; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; font-size: 16px; transition: background 0.2s; }
-        button:hover { background: #022cb3; }
-        .toggle-link { color: #7d859a; font-size: 13px; margin-top: 25px; display: block; cursor: pointer; text-decoration: none; }
-        .toggle-link span { color: #4371f7; font-weight: bold; }
-        .toggle-link span:hover { text-decoration: underline; }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-</head>
-<body>
-
-<div class="container" id="loginBox">
-    <div class="logo-container">
-        <div class="logo">VoxPopuli</div>
-        <div class="logo-emoji">📈</div>
-    </div>
-    <h2>Acessar Painel</h2>
-    <div class="input-group">
-        <label>Usuário / ID</label>
-        <input type="text" id="loginUser" placeholder="Digite seu usuário">
-    </div>
-    <div class="input-group">
-        <label>Senha</label>
-        <div class="password-wrapper">
-            <input type="password" id="loginPass" placeholder="Digite sua senha">
-            <span class="toggle-password" onclick="toggleSenha('loginPass')">👁️</span>
-        </div>
-    </div>
-    <button onclick="fazerLogin()">Entrar no Painel</button>
-    <div class="toggle-link" onclick="mostrarCadastro()">Não tem uma conta? <span>Cadastre-se aqui</span></div>
-</div>
-
-<div class="container" id="cadastroBox" style="display: none;">
-    <div class="logo-container">
-        <div class="logo">VoxPopuli</div>
-        <div class="logo-emoji">📈</div>
-    </div>
-    <h2>Cadastre-se</h2>
-    <div class="input-group">
-        <label>Escolha um Usuário / ID</label>
-        <input type="text" id="cadUser" placeholder="Ex: trader01">
-    </div>
-    <div class="input-group">
-        <label>Crie uma Senha</label>
-        <div class="password-wrapper">
-            <input type="password" id="cadPass" placeholder="Digite sua senha">
-            <span class="toggle-password" onclick="toggleSenha('cadPass')">👁️</span>
-        </div>
-    </div>
-    <button onclick="fazerCadastro()">Criar Conta e Salvar</button>
-    <div class="toggle-link" onclick="mostrarLogin()">Já tem uma conta? <span>Faça Login</span></div>
-</div>
-
-<script>
-    const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrd2toZmtleWZnc3FlcmhwenBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODgxNzksImV4cCI6MjA5ODY2NDE3OX0.F7w89Yyl6tn7KHwUxw4QG0mZ1lNHi2zxe_b6c590AFc"; 
-    
-    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    function toggleSenha(inputId) {
-        const input = document.getElementById(inputId);
-        if (input.type === "password") {
-            input.type = "text";
-        } else {
-            input.type = "password";
-        }
-    }
-
-    function mostrarCadastro() {
-        document.getElementById('loginBox').style.display = 'none';
-        document.getElementById('cadastroBox').style.display = 'block';
-    }
-
-    function mostrarLogin() {
-        document.getElementById('cadastroBox').style.display = 'none';
-        document.getElementById('loginBox').style.display = 'block';
-    }
-
-    async function fazerCadastro() {
-        const user = document.getElementById('cadUser').value.trim().toLowerCase();
-        const pass = document.getElementById('cadPass').value.trim();
-        
-        if (!user || !pass) return alert('Preencha todos os campos!');
-        if (user === 'voxadmin' || user === 'adm') return alert('Nome de usuário reservado pelo sistema.');
-
-        let { data: existe } = await _supabase.from('usuarios').select('username').eq('username', user).maybeSingle();
-        if (existe) return alert('Esse usuário já existe no sistema.');
-
-        // 📊 GERAÇÃO DO CÓDIGO ÚNICO AUTOMÁTICO (Número aleatório de 6 dígitos)
-        const codigoUnico = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // 📢 Captura o código 'ref' vindo do link de indicação da URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const refCodigo = urlParams.get('ref') ? urlParams.get('ref').trim() : null;
-        let padrinhoUsername = null;
-
-        // Se veio um código de referência na URL, descobre quem é o dono dele para salvar como padrinho
-        if (refCodigo) {
-            let { data: donoDoCodigo } = await _supabase.from('usuarios').select('username').eq('codigo_afiliado', refCodigo).maybeSingle();
-            if (donoDoCodigo) {
-                padrinhoUsername = donoDoCodigo.username;
-            }
-        }
-
-        // 📝 Salva o novo usuário vinculando seu próprio código único e o username do padrinho
-        const { error } = await _supabase.from('usuarios').insert([{ 
-            username: user, 
-            password: pass, 
-            saldo: 0,
-            indicado_por: padrinhoUsername,
-            codigo_afiliado: codigoUnico
-        }]);
-
-        if(error) return alert('Erro ao cadastrar: ' + error.message);
-        
-        alert('Conta de membro criada com sucesso!');
-        mostrarLogin();
-    }
-
-    async function fazerLogin() {
+async function fazerLogin() {
         const user = document.getElementById('loginUser').value.trim().toLowerCase();
         const pass = document.getElementById('loginPass').value.trim();
 
@@ -150,12 +13,14 @@
         let { data: usuario } = await _supabase.from('usuarios').select('*').eq('username', user).maybeSingle();
 
         if (usuario && usuario.password === pass) {
+            // 🚫 TRAVA DE SEGURANÇA: Impede login se o admin tiver desativado a conta
+            if (usuario.ativo === false) {
+                return alert('Sua conta está suspensa temporariamente. Entre em contato com o suporte.');
+            }
+
             localStorage.setItem('usuarioLogado', user);
             window.location.href = 'dashboard.html';
         } else {
             alert('Usuário ou senha incorretos!');
         }
     }
-</script>
-</body>
-</html>
