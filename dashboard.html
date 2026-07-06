@@ -29,10 +29,6 @@
         .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; }
         .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; text-align: center; }
         .qr-area { margin-top: 10px; background: #fff; color: #000; padding: 15px; border-radius: 8px; display: none; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-        th { color: var(--text-muted); text-transform: uppercase; font-size: 11px; }
-        .badge-trans { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; display: inline-block; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -77,24 +73,6 @@
     </div>
     
     <div id="containerEnquetes"></div>
-
-    <!-- O quadro importante de histórico preservado e blindado -->
-    <div class="fin-card" style="margin-top: 35px;">
-        <h3>📜 Histórico de Transações e Extrato</h3>
-        <table>
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Operação</th>
-                    <th>Descrição / Detalhes</th>
-                    <th>Movimentação</th>
-                </tr>
-            </thead>
-            <tbody id="historicoTransacoes">
-                <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Carregando histórico...</td></tr>
-            </tbody>
-        </table>
-    </div>
 </div>
 
 <script>
@@ -102,7 +80,6 @@
     if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
-    // CHAVE REAL INSERIDA DIRETAMENTE AQUI:
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZrd2toZmtleWZnc3FlcmhwenBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwODgxNzksImV4cCI6MjA5ODY2NDE3OX0.F7w89Yyl6tn7KHwUxw4QG0mZ1lNHi2zxe_b6c590AFc"; 
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let categoryAtual = 'financeiro';
@@ -111,7 +88,6 @@
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
         if(user) document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
         await carregarEnquetes();
-        await carregarHistorico();
     }
 
     function gerarPix() {
@@ -155,70 +131,6 @@
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
         atualizarDados();
-    }
-
-    async function carregarHistorico() {
-        const tbody = document.getElementById('historicoTransacoes');
-        if (!tbody) return;
-
-        try {
-            const usuarioLimpo = usuarioLogado ? usuarioLogado.trim() : "";
-            
-            const { data: trans, error } = await _supabase
-                .from('transacoes')
-                .select('*')
-                .eq('usuario', usuarioLimpo)
-                .order('id', { ascending: false });
-
-            if (error) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro banco: ${error.message} (Verifique se a tabela 'transacoes' existe)</td></tr>`;
-                return;
-            }
-
-            if (!trans || trans.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Nenhuma movimentação de saldo encontrada para o usuário "${usuarioLimpo}".</td></tr>`;
-                return;
-            }
-
-            let linhasHtml = '';
-            trans.forEach(t => {
-                let dataFormatada = t.created_at ? new Date(t.created_at).toLocaleDateString('pt-BR') : new Date().toLocaleDateString('pt-BR');
-                let valorNumerico = parseFloat(t.valor || 0);
-                
-                let corVal = valorNumerico >= 0 ? 'var(--accent-green)' : 'var(--accent-red)';
-                let sinal = valorNumerico > 0 ? '+' : '';
-                let bgBadge = '#1a121e';
-                let txtBadge = 'var(--accent-red)';
-                let tipoTxt = 'INFO';
-
-                const tipoNormalizado = String(t.tipo || '').toLowerCase().trim();
-
-                if (tipoNormalizado === 'deposito') {
-                    bgBadge = '#091a18'; txtBadge = 'var(--accent-green)'; tipoTxt = '📥 DEPÓSITO';
-                } else if (tipoNormalizado === 'saque_pend') {
-                    bgBadge = '#2c1a0a'; txtBadge = '#ff9f43'; tipoTxt = '⏳ SAQUE PEND.'; sinal = '';
-                } else if (tipoNormalizado === 'saque') {
-                    bgBadge = '#241217'; txtBadge = 'var(--accent-red)'; tipoTxt = '📤 SAQUE PAGO';
-                } else if (tipoNormalizado === 'lucro_enquete') {
-                    bgBadge = '#091a18'; txtBadge = 'var(--accent-green)'; tipoTxt = '🟢 LUCRO';
-                } else if (tipoNormalizado === 'perda_enquete') {
-                    bgBadge = '#241217'; txtBadge = 'var(--accent-red)'; tipoTxt = '🔴 ERRO/PERDA';
-                } else if (tipoNormalizado === 'alocacao') {
-                    bgBadge = '#1c253d'; txtBadge = '#7d859a'; tipoTxt = '🎰 APOSTADO';
-                }
-
-                linhasHtml += `<tr>
-                    <td>${dataFormatada}</td>
-                    <td><span class="badge-trans" style="background:${bgBadge}; color:${txtBadge}">${tipoTxt}</span></td>
-                    <td>${t.descricao || ''}</td>
-                    <td style="color:${corVal}; font-weight:bold;">${sinal} R$ ${Math.abs(valorNumerico).toFixed(2)}</td>
-                </tr>`;
-            });
-
-            tbody.innerHTML = linhasHtml;
-        } catch (err) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--accent-red);">Erro crítico de renderização: ${err.message}</td></tr>`;
-        }
     }
 
     function mudarCategoria(cat) {
