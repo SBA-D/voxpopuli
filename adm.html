@@ -7,7 +7,7 @@
     <style>
         :root { --bg-main: #0a0e1a; --bg-card: #121829; --bg-input: #172036; --border-color: #222f4d; --accent-blue: #3b82f6; --accent-green: #10b981; --accent-red: #ef4444; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-main); color: #fff; margin:0; padding:0; }
-        .header { background: var(--bg-card); padding: 18px 30px; border-bottom: 1px solid var(--border-color); font-size: 22px; font-weight: bold; color: #3b82f6; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 18px 30px; border-bottom: 1px solid var(--border-color); font-size: 22px; font-weight: bold; color: #3b82f6; }
         .grid-master { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 30px; max-width: 1400px; margin: 0 auto; }
         .box-adm { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; }
         .box-adm h2 { margin-top: 0; font-size: 18px; color: #fff; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
@@ -20,17 +20,21 @@
         .btn-red { background: var(--accent-red); color:#fff; }
         .lista-itens { max-height: 280px; overflow-y: auto; margin-top: 15px; }
         .item-row { background: var(--bg-input); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 13px; }
-        th { color: #6b7280; font-size: 11px; text-transform: uppercase; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-<div class="header">VoxPopuli - Administração Master Core 🛠️</div>
+<div class="header">
+    <div>VoxPopuli - Administração Master Core 🛠️</div>
+    <div style="display: flex; gap: 12px;">
+        <button class="btn-master btn-blue" onclick="location.reload()">🔄 Atualizar Painel</button>
+        <button class="btn-master btn-red" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">🚪 Sair</button>
+    </div>
+</div>
 
 <div class="grid-master">
+    <!-- Bloco 1: Criar Enquetes -->
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
@@ -52,16 +56,19 @@
         <button class="btn-master btn-blue" style="width:100%;" onclick="criarEnquete()">Publicar no Painel dos Membros</button>
     </div>
 
+    <!-- Bloco 2: Gestão de Enquetes Ativas -->
     <div class="box-adm">
         <h2>⚡ Liquidar e Finalizar Enquetes Ativas (Com Rateio Automático)</h2>
         <div class="lista-itens" id="admListaEnquetes"></div>
     </div>
 
+    <!-- Bloco 3: Depósitos Pendentes -->
     <div class="box-adm">
         <h2>📥 Validar Depósitos PIX Recebidos</h2>
         <div class="lista-itens" id="admListaDepositos"></div>
     </div>
 
+    <!-- Bloco 4: Saques Solicitados -->
     <div class="box-adm">
         <h2>📤 Processar Pedidos de Saque</h2>
         <div class="lista-itens" id="admListaSaques"></div>
@@ -147,7 +154,6 @@
                 }
             });
 
-            // 1. PROCESSAR OS VENCEDORES
             if(vencedores.length > 0 && poteVencedores > 0) {
                 for(let vencedor of vencedores) {
                     let proporcao = parseFloat(vencedor.valor) / poteVencedores;
@@ -159,29 +165,24 @@
                     await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario.trim());
                     
                     await _supabase.from('transacoes').insert([{
-                        usuario: vencedor.usuario.trim(),
-                        tipo: 'lucro_enquete',
-                        descricao: `Acertou a enquete [${nomeAtivo}] - Recebeu Rateio`,
-                        valor: premioGanho
+                        usuario: vencedor.usuario.trim(), tipo: 'lucro_enquete',
+                        descricao: `Acertou a enquete [${nomeAtivo}] - Recebeu Rateio`, valor: premioGanho
                     }]);
                 }
             }
 
-            // 2. PROCESSAR OS PERDEDORES
             if(perdedores.length > 0) {
                 for(let perdedor of perdedores) {
                     await _supabase.from('transacoes').insert([{
-                        usuario: perdedor.usuario.trim(),
-                        tipo: 'perda_enquete',
-                        descricao: `Errou a enquete [${nomeAtivo}] - Palpite: ${perdedor.palpite}`,
-                        valor: -parseFloat(perdedor.valor)
+                        usuario: perdedor.usuario.trim(), tipo: 'perda_enquete',
+                        descricao: `Errou a enquete [${nomeAtivo}] - Palpite: ${perdedor.palpite}`, valor: -parseFloat(perdedor.valor)
                     }]);
                 }
             }
         }
 
         await _supabase.from('enquetes').update({ finalizada: true }).eq('id', enqueteId);
-        alert("Mercado liquidado com extratos gerados para membros!");
+        alert("Mercado liquidado!");
         inicializarPainel();
     }
 
@@ -205,20 +206,40 @@
 
     async function aprovarDeposito(id, usuario, valor) {
         const usuarioLimpo = usuario ? usuario.trim() : "";
-        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLimpo).single();
+        
+        // 1. Atualizar Saldo do Cliente do depósito
+        let { data: u } = await _supabase.from('usuarios').select('*').eq('username', usuarioLimpo).single();
         let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
-
         await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', usuarioLimpo);
         await _supabase.from('depositos').update({ status: 'aprovado' }).eq('id', id);
         
         await _supabase.from('transacoes').insert([{
-            usuario: usuarioLimpo,
-            tipo: 'deposito',
-            descricao: `Depósito via PIX aprovado com sucesso`,
-            valor: parseFloat(valor)
+            usuario: usuarioLimpo, tipo: 'deposito', descricao: `Depósito via PIX aprovado com sucesso`, valor: parseFloat(valor)
         }]);
 
-        alert("Depósito computado!");
+        // 2. Lógica de Afiliados: Se for o PRIMEIRO depósito dele e tiver padrinho, paga as 9 moedas pro padrinho
+        if (u && u.indicado_por) {
+            let { data: todosDeps } = await _supabase.from('depositos').select('id').eq('usuario', usuarioLimpo).eq('status', 'aprovado');
+            
+            // Se for exatamente 1 (este que acabamos de aprovar), significa que é o primeiro depósito válido dele!
+            if (todosDeps && todosDeps.length === 1) {
+                let padrinho = u.indicado_por.trim();
+                let { data: p } = await _supabase.from('usuarios').select('saldo').eq('username', padrinho).single();
+                
+                if (p) {
+                    let novoSaldoPadrinho = parseFloat(p.saldo || 0) + 9.00;
+                    await _supabase.from('usuarios').update({ saldo: novoSaldoPadrinho }).eq('username', padrinho);
+                    
+                    // Salva registro de bônus na tabela de transações pro padrinho saborear
+                    await _supabase.from('transacoes').insert([{
+                        usuario: padrinho, tipo: 'bonus_afiliado',
+                        descricao: `Bônus de Afiliado: Primeiro depósito do indicado "${usuarioLimpo}"`, valor: 9.00
+                    }]);
+                }
+            }
+        }
+
+        alert("Depósito computado e verificação de bônus executada!");
         inicializarPainel();
     }
 
@@ -250,13 +271,10 @@
         await _supabase.from('saques').update({ status: 'aprovado' }).eq('id', id);
         
         await _supabase.from('transacoes').insert([{
-            usuario: usuarioLimpo,
-            tipo: 'saque',
-            descricao: `Saque via PIX enviado para sua conta bancária`,
-            valor: -parseFloat(valor)
+            usuario: usuarioLimpo, tipo: 'saque', descricao: `Saque via PIX enviado para sua conta bancária`, valor: -parseFloat(valor)
         }]);
 
-        alert("Retirada concluída e processada no extrato!");
+        alert("Retirada concluída!");
         inicializarPainel();
     }
 
