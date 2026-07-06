@@ -104,16 +104,29 @@
         let { data: existe } = await _supabase.from('usuarios').select('username').eq('username', user).maybeSingle();
         if (existe) return alert('Esse usuário já existe no sistema.');
 
-        // 📢 NOVO: Lê as informações da URL para checar se o usuário foi indicado por alguém
-        const urlParams = new URLSearchParams(window.location.search);
-        const padrinho = urlParams.get('ref') ? urlParams.get('ref').trim() : null;
+        // 📊 GERAÇÃO DO CÓDIGO ÚNICO AUTOMÁTICO (Número aleatório de 6 dígitos)
+        const codigoUnico = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // 📝 NOVO: Adicionado 'indicado_por: padrinho' para armazenar a informação no Supabase
+        // 📢 Captura o código 'ref' vindo do link de indicação da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCodigo = urlParams.get('ref') ? urlParams.get('ref').trim() : null;
+        let padrinhoUsername = null;
+
+        // Se veio um código de referência na URL, descobre quem é o dono dele para salvar como padrinho
+        if (refCodigo) {
+            let { data: donoDoCodigo } = await _supabase.from('usuarios').select('username').eq('codigo_afiliado', refCodigo).maybeSingle();
+            if (donoDoCodigo) {
+                padrinhoUsername = donoDoCodigo.username;
+            }
+        }
+
+        // 📝 Salva o novo usuário vinculando seu próprio código único e o username do padrinho
         const { error } = await _supabase.from('usuarios').insert([{ 
             username: user, 
             password: pass, 
             saldo: 0,
-            indicado_por: padrinho 
+            indicado_por: padrinhoUsername,
+            codigo_afiliado: codigoUnico
         }]);
 
         if(error) return alert('Erro ao cadastrar: ' + error.message);
