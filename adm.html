@@ -11,6 +11,7 @@
         .grid-master { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 30px; max-width: 1400px; margin: 0 auto; }
         .box-adm { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; }
         .box-adm h2 { margin-top: 0; font-size: 18px; color: #fff; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+        .box-full { grid-column: span 2; }
         .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
         input, select { flex: 1; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); color:#fff; border-radius: 6px; font-size: 14px; }
         .btn-master { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; font-size: 14px; }
@@ -20,6 +21,12 @@
         .btn-red { background: var(--accent-red); color:#fff; }
         .lista-itens { max-height: 280px; overflow-y: auto; margin-top: 15px; }
         .item-row { background: var(--bg-input); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
+        
+        /* Estilos da tabela de usuários */
+        .tabela-membros { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        .tabela-membros th { text-align: left; padding: 10px; background: #0a0e1a; color: var(--accent-blue); }
+        .tabela-membros td { padding: 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .input-saldo-man { width: 90px; padding: 6px; text-align: center; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -34,7 +41,6 @@
 </div>
 
 <div class="grid-master">
-    <!-- Bloco 1: Criar Enquetes -->
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
@@ -56,22 +62,39 @@
         <button class="btn-master btn-blue" style="width:100%;" onclick="criarEnquete()">Publicar no Painel dos Membros</button>
     </div>
 
-    <!-- Bloco 2: Gestão de Enquetes Ativas -->
     <div class="box-adm">
         <h2>⚡ Liquidar e Finalizar Enquetes Ativas (Com Rateio Automático)</h2>
         <div class="lista-itens" id="admListaEnquetes"></div>
     </div>
 
-    <!-- Bloco 3: Depósitos Pendentes -->
     <div class="box-adm">
         <h2>📥 Validar Depósitos PIX Recebidos</h2>
         <div class="lista-itens" id="admListaDepositos"></div>
     </div>
 
-    <!-- Bloco 4: Saques Solicitados -->
     <div class="box-adm">
         <h2>📤 Processar Pedidos de Saque</h2>
         <div class="lista-itens" id="admListaSaques"></div>
+    </div>
+
+    <div class="box-adm box-full">
+        <h2>👥 Gestão de Membros e Ajustes Manuais (Suporte Antifraude/Bugs)</h2>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table class="tabela-membros">
+                <thead>
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Código Ref</th>
+                        <th>Indicado Por</th>
+                        <th>Saldo Atual (Moedas)</th>
+                        <th>Alterar Saldo Manual</th>
+                        <th>Status da Conta</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaUsuariosAdm">
+                    </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -84,6 +107,73 @@
         await listarEnquetesAdm();
         await listarDepositosAdm();
         await listarSaquesAdm();
+        await listarUsuariosMaster(); // Carrega a tabela de controle manual
+    }
+
+    // --- NOVA FUNÇÃO: LISTAR USUÁRIOS NO PAINEL ADM ---
+    async function listarUsuariosMaster() {
+        let { data: usuarios } = await _supabase.from('usuarios').select('*').order('username', { ascending: true });
+        const tbody = document.getElementById('tabelaUsuariosAdm');
+        tbody.innerHTML = '';
+
+        if (!usuarios || usuarios.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="color:#6b7280; text-align:center;">Nenhum usuário registrado.</td></tr>`;
+            return;
+        }
+
+        usuarios.forEach(u => {
+            const statusTexto = u.ativo !== false ? '✅ Ativa' : '❌ Bloqueada';
+            const btnStatusCor = u.ativo !== false ? 'background:#e67e22;' : 'background:#10b981; color:#000;';
+            const btnStatusTexto = u.ativo !== false ? 'Desativar' : 'Reativar';
+
+            tbody.innerHTML += `<tr>
+                <td><b>${u.username}</b></td>
+                <td><code>${u.codigo_afiliado || '---'}</code></td>
+                <td>${u.indicado_por || '<span style="color:#4b5563;">Ninguém</span>'}</td>
+                <td><span style="color:var(--accent-green); font-weight:bold;">🪙 ${Number(u.saldo || 0).toFixed(2)}</span></td>
+                <td>
+                    <div style="display:flex; gap:5px;">
+                        <input type="number" id="saldo_man_${u.username}" class="input-saldo-man" step="0.01" value="${Number(u.saldo || 0).toFixed(2)}">
+                        <button class="btn-master btn-blue" style="padding:6px 10px; font-size:12px;" onclick="salvarSaldoManual('${u.username}')">Salvar</button>
+                    </div>
+                </td>
+                <td>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span>${statusTexto}</span>
+                        <button class="btn-master" style="padding:4px 10px; font-size:11px; ${btnStatusCor}" onclick="alternarStatusConta('${u.username}', ${u.ativo !== false})">${btnStatusTexto}</button>
+                    </div>
+                </td>
+            </tr>`;
+        });
+    }
+
+    // --- NOVA FUNÇÃO: SALVAR SALDO MANUALMENTE ---
+    async function salvarSaldoManual(username) {
+        const novoSaldo = parseFloat(document.getElementById(`saldo_man_${username}`).value);
+        if (isNaN(novoSaldo) || novoSaldo < 0) return alert("Por favor, digite um saldo válido.");
+
+        if (!confirm(`Deseja alterar forçadamente o saldo de ${username} para R$ ${novoSaldo.toFixed(2)}?`)) return;
+
+        await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', username);
+        
+        // Registrar logs do ajuste manual nas transações para controle
+        await _supabase.from('transacoes').insert([{
+            usuario: username, tipo: 'ajuste_adm',
+            descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
+        }]);
+
+        alert(`Saldo de ${username} atualizado com sucesso!`);
+        listarUsuariosMaster();
+    }
+
+    // --- NOVA FUNÇÃO: ATIVAR OU DESATIVAR CONTA ---
+    async function alternarStatusConta(username, statusAtual) {
+        const acao = statusAtual ? "DESATIVAR/BLOQUEAR" : "REATIVAR";
+        if (!confirm(`Tem certeza que deseja ${acao} a conta do usuário ${username}?`)) return;
+
+        await _supabase.from('usuarios').update({ ativo: !statusAtual }).eq('username', username);
+        alert(`Conta de ${username} atualizada!`);
+        listarUsuariosMaster();
     }
 
     async function criarEnquete() {
@@ -207,7 +297,6 @@
     async function aprovarDeposito(id, usuario, valor) {
         const usuarioLimpo = usuario ? usuario.trim() : "";
         
-        // 1. Atualizar Saldo do Cliente do depósito
         let { data: u } = await _supabase.from('usuarios').select('*').eq('username', usuarioLimpo).single();
         let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
         await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', usuarioLimpo);
@@ -217,20 +306,17 @@
             usuario: usuarioLimpo, tipo: 'deposito', descricao: `Depósito via PIX aprovado com sucesso`, valor: parseFloat(valor)
         }]);
 
-        // 2. Lógica de Afiliados: Se for o PRIMEIRO depósito dele e tiver padrinho, paga as 9 moedas pro padrinho
         if (u && u.indicado_por) {
             let { data: todosDeps } = await _supabase.from('depositos').select('id').eq('usuario', usuarioLimpo).eq('status', 'aprovado');
             
-            // Se for exatamente 1 (este que acabamos de aprovar), significa que é o primeiro depósito válido dele!
             if (todosDeps && todosDeps.length === 1) {
                 let padrinho = u.indicado_por.trim();
-                let { data: p } = await _supabase.from('usuarios').select('saldo').eq('username', padrinho).single();
+                let { data: p = null } = await _supabase.from('usuarios').select('saldo').eq('username', padrinho).single();
                 
                 if (p) {
                     let novoSaldoPadrinho = parseFloat(p.saldo || 0) + 9.00;
                     await _supabase.from('usuarios').update({ saldo: novoSaldoPadrinho }).eq('username', padrinho);
                     
-                    // Salva registro de bônus na tabela de transações pro padrinho saborear
                     await _supabase.from('transacoes').insert([{
                         usuario: padrinho, tipo: 'bonus_afiliado',
                         descricao: `Bônus de Afiliado: Primeiro depósito do indicado "${usuarioLimpo}"`, valor: 9.00
