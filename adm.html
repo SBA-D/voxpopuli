@@ -44,8 +44,9 @@
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
+            <!-- SELETOR COMPLETO COM ATIVOS E MODALIDADES ESPORTIVAS -->
             <select id="enqAtivo">
-                <option value="" disabled selected>-- Escolha um Ativo Seguro para Gráfico --</option>
+                <option value="" disabled selected>-- Escolha o Ativo ou Esporte para a Enquete --</option>
                 
                 <optgroup label="💱 FOREX (Alta Volatilidade)">
                     <option value="EURUSD">EUR/USD (Euro / Dólar)</option>
@@ -95,6 +96,15 @@
                     <option value="XPLG11">XPLG11 (XP Log)</option>
                     <option value="KNRI11">KNRI11 (Kinea Renda Imobiliária)</option>
                 </optgroup>
+
+                <optgroup label="🏆 MODALIDADES ESPORTIVAS">
+                    <option value="Futebol">Futebol</option>
+                    <option value="Basquete">Basquete</option>
+                    <option value="Vôlei">Vôlei</option>
+                    <option value="Tênis">Tênis</option>
+                    <option value="Beisebol">Beisebol</option>
+                    <option value="Futebol Americano">Futebol Americano</option>
+                </optgroup>
             </select>
 
             <select id="enqTipo">
@@ -103,11 +113,11 @@
             </select>
         </div>
         <div class="form-row">
-            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Alvo acima)">
-            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Alvo abaixo)">
+            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Vitória Time A / Mais de 2.5)">
+            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Empate ou Time B / Menos de 2.5)">
         </div>
         <div class="form-row">
-            <input type="text" id="enqPrecoAlvo" placeholder="Parâmetro/Preço Alvo (Ex: 65.200, Vitória)">
+            <input type="text" id="enqPrecoAlvo" placeholder="Parâmetro/Preço Alvo (Ex: 65.200, Real Madrid x Barcelona, UFC 300)">
             <input type="date" id="enqDataFim">
             <input type="time" id="enqHoraFim">
         </div>
@@ -211,7 +221,7 @@
             descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
         }]);
 
-        alert(`Saldo de ${username} updated!`);
+        alert(`Saldo de ${username} atualizado!`);
         listarUsuariosMaster();
     }
 
@@ -220,7 +230,7 @@
         if (!confirm(`Tem certeza que deseja ${acao} a conta do usuário ${username}?`)) return;
 
         await _supabase.from('usuarios').update({ ativo: !statusAtual }).eq('username', username);
-        alert(`Conta de ${username} atualizada!`);
+        alert(`Conta de ${username} updated!`);
         listarUsuariosMaster();
     }
 
@@ -233,7 +243,7 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo) return alert("Selecione um ativo válido na lista.");
+        if(!ativo) return alert("Selecione um ativo ou esporte válido na lista.");
         if(!op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
 
         await _supabase.from('enquetes').insert([{
@@ -243,7 +253,6 @@
 
         alert("Mercado criado com sucesso!");
         
-        // Limpa os campos visuais após publicar (exceto os seletores)
         document.getElementById('enqOp1').value = '';
         document.getElementById('enqOp2').value = '';
         document.getElementById('enqPrecoAlvo').value = '';
