@@ -26,17 +26,59 @@
         .enquete-box { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; margin-top: 20px; display: grid; grid-template-columns: 1fr 240px; gap: 20px; align-items: center; }
         .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px 18px; border-radius: 8px; text-align: left; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; }
         .opcao-btn:hover { border-color: var(--accent-blue); }
-        .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; }
+        .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; margin-right: 8px; }
+        .stats-badge { color: #3b82f6; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #182238; display: inline-block; padding: 5px 12px; border-radius: 4px; }
         .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; text-align: center; }
         .qr-area { margin-top: 10px; background: #fff; color: #000; padding: 15px; border-radius: 8px; display: none; text-align: center; }
         .afiliados-box { background: linear-gradient(135deg, #0e162e 0%, #060a17 100%); border: 1px dashed var(--accent-blue); padding: 20px; border-radius: 14px; margin-bottom: 25px; }
+
+        .tendencia-container { margin: 12px 0; font-size: 12px; color: var(--text-muted); }
+        .barra-progresso-bg { background: #1c253d; height: 8px; border-radius: 4px; overflow: hidden; display: flex; margin-top: 4px; margin-bottom: 15px; }
+        .barra-op1 { background: var(--accent-blue); height: 100%; transition: width 0.3s; }
+        .barra-op2 { background: #e28743; height: 100%; transition: width 0.3s; }
+
+        /* Modais (Ajuda e Gráfico) */
+        .modal-regras { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-conteudo { background: var(--bg-card); border: 1px solid var(--border-color); width: 90%; max-width: 500px; padding: 25px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
+        .modal-conteudo h3 { margin-top: 0; color: var(--accent-blue); }
+        .modal-conteudo p { font-size: 14px; line-height: 1.6; color: #cbd5e1; }
+        
+        /* Modal Ampliado para o Gráfico */
+        .modal-grafico-conteudo { background: #131722; border: 1px solid var(--border-color); width: 95%; max-width: 900px; height: 550px; padding: 20px; border-radius: 14px; display: flex; flex-direction: column; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
+<!-- Modal de Regras -->
+<div id="modalAjuda" class="modal-regras">
+    <div class="modal-conteudo">
+        <h3>❓ Como funciona o Rateio Dinâmico?</h3>
+        <p>A VoxPopuli opera no modelo de <b>pote coletivo distribuído</b>:</p>
+        <p>1. Todas as moedas alocadas em um mercado entram no mesmo Pote.</p>
+        <p>2. Quando o resultado sai, o Pote total é dividido <b>apenas entre as pessoas que acertaram o palpite</b>.</p>
+        <p>3. O seu prêmio é proporcional ao tamanho do seu palpite. Quem arriscou mais moedas do lado correto, leva uma fatia maior do prêmio total!</p>
+        <button class="btn btn-blue" style="width: 100%; margin-top: 15px;" onclick="fecharModalAjuda()">Entendi!</button>
+    </div>
+</div>
+
+<!-- NOVO: Modal do Gráfico Avançado -->
+<div id="modalGrafico" class="modal-regras">
+    <div class="modal-grafico-conteudo">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0; color: #fff;" id="tituloGrafico">Análise do Ativo</h3>
+            <button class="btn btn-blue" style="padding: 6px 15px; background: var(--accent-red);" onclick="fecharModalGrafico()">Fechar ✕</button>
+        </div>
+        <!-- Container onde o widget do gráfico vai carregar via Script dinâmico -->
+        <div id="tradingview_widget_area" style="flex: 1; width: 100%;"></div>
+    </div>
+</div>
+
 <div class="header">
-    <div style="font-size:24px; font-weight:800; color:var(--accent-blue);">VoxPopuli 📈</div>
+    <div style="font-size:24px; font-weight:800; color:var(--accent-blue); display: flex; align-items: center; gap: 15px;">
+        VoxPopuli 📈
+        <button class="btn btn-blue" style="padding: 6px 12px; font-size: 12px; background: #1c253d; border: 1px solid var(--border-color);" onclick="abrirModalAjuda()">❓ Como funciona?</button>
+    </div>
     <div style="display: flex; align-items: center; gap: 12px;">
         <button style="padding:10px 14px; background:#1c253d; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="location.reload()">🔄 Recarregar</button>
         <div class="moedas-badge">🪙 <span id="saldoUsuario">0.00</span> Moedas</div>
@@ -81,10 +123,14 @@
     <div class="category-selector">
         <button class="tab-btn active" id="tabFinanceiro" onclick="mudarCategoria('financeiro')">📊 Mercado Financeiro</button>
         <button class="tab-btn" id="tabEsportes" onclick="mudarCategoria('esportes')">⚽ Esportes</button>
+        <button class="tab-btn" id="tabEncerrados" onclick="mudarCategoria('encerrados')">🏛️ Mercados Encerrados</button>
     </div>
     
     <div id="containerEnquetes"></div>
 </div>
+
+<!-- Script oficial de gráficos do TradingView (Usado mundialmente pelo Investing.com) -->
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
     const usuarioLogado = localStorage.getItem('usuarioLogado');
@@ -95,25 +141,51 @@
     const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let categoryAtual = 'financeiro';
 
-    async function atualizarDados() {
-        // Puxa o saldo e também o código de afiliado único do usuário
-        let { data: user } = await _supabase.from('usuarios').select('saldo, codigo_afiliado').eq('username', usuarioLogado).single();
+    function abrirModalAjuda() { document.getElementById('modalAjuda').style.display = 'flex'; }
+    function fecharModalAjuda() { document.getElementById('modalAjuda').style.display = 'none'; }
+
+    // --- NOVAS FUNÇÕES: GERENCIAMENTO DO GRÁFICO DINÂMICO ---
+    function abrirModalGrafico(nomeAtivo) {
+        document.getElementById('modalGrafico').style.display = 'flex';
+        document.getElementById('tituloGrafico').innerText = `Análise Técnica Avançada: ${nomeAtivo}`;
         
+        // Limpa o nome do ativo removendo barras para alinhar com o formato padrão (Ex: BTC/USD vira BTCUSD)
+        let ativoFormatado = nomeAtivo.replace('/', '').replace(' ', '').toUpperCase();
+        
+        // Se o administrador escreveu algo fora do padrão, define um fallback seguro
+        if(ativoFormatado.length < 3) ativoFormatado = "BTCUSD";
+
+        // Inicializa o Widget Avançado do TradingView/Investing dentro da div
+        new TradingView.widget({
+            "width": "100%",
+            "height": "100%",
+            "symbol": ativoFormatado,
+            "interval": "15",
+            "timezone": "America/Sao_Paulo",
+            "theme": "dark",
+            "style": "1",
+            "locale": "br",
+            "toolbar_bg": "#f1f3f6",
+            "enable_publishing": false,
+            "hide_side_toolbar": false,
+            "allow_symbol_change": true,
+            "container_id": "tradingview_widget_area"
+        });
+    }
+
+    function fecharModalGrafico() {
+        document.getElementById('modalGrafico').style.display = 'none';
+        document.getElementById('tradingview_widget_area').innerHTML = ''; // Destrói o widget para poupar memória
+    }
+
+    async function atualizarDados() {
+        let { data: user } = await _supabase.from('usuarios').select('saldo, codigo_afiliado').eq('username', usuarioLogado).single();
         if(user) {
             document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
-            
-            // Se por acaso contas antigas não tiverem código, gera um na hora para não quebrar o link
-            let codigoParaLink = user.codigo_afiliado;
-            if(!codigoParaLink) {
-                codigoParaLink = Math.floor(100000 + Math.random() * 900000).toString();
-                await _supabase.from('usuarios').update({ codigo_afiliado: codigoParaLink }).eq('username', usuarioLogado);
-            }
-
-            // Gerar link dinâmico seguro usando o CÓDIGO ÚNICO em vez do username
+            let codigoParaLink = user.codigo_afiliado || Math.floor(100000 + Math.random() * 900000).toString();
             const urlBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
             document.getElementById('linkAfiliado').value = `${urlBase}/index.html?ref=${codigoParaLink}`;
         }
-        
         await carregarEnquetes();
     }
 
@@ -137,7 +209,7 @@
         const valor = parseFloat(document.getElementById('valorPix').value);
         if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
         await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
-        alert("Notificação enviada com sucesso!");
+        alert("Notificação enviada!");
         document.getElementById('qrContainer').style.display = 'none';
         document.getElementById('valorPix').value = '';
         atualizarDados();
@@ -147,18 +219,11 @@
         const chave = document.getElementById('chavePixSaque').value.trim();
         const valor = parseFloat(document.getElementById('valorSaque').value);
         if(!chave || isNaN(valor) || valor <= 0) return alert("Dados inválidos.");
-
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
         if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente.");
 
-        const { error } = await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
-        if(error) return alert("Erro ao solicitar: " + error.message);
-
-        await _supabase.from('transacoes').insert([{
-            usuario: usuarioLogado, tipo: 'saque_pend',
-            descricao: `Solicitação de Saque enviada. Chave: ${chave}`, valor: -valor
-        }]);
-
+        await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
+        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'saque_pend', descricao: `Solicitação de Saque enviada. Chave: ${chave}`, valor: -valor }]);
         alert("Solicitação enviada!");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
@@ -169,41 +234,87 @@
         categoryAtual = cat;
         document.getElementById('tabFinanceiro').classList.remove('active');
         document.getElementById('tabEsportes').classList.remove('active');
-        document.getElementById(cat === 'financeiro' ? 'tabFinanceiro' : 'tabEsportes').add('active');
+        document.getElementById('tabEncerrados').classList.remove('active');
+        if(cat === 'financeiro') document.getElementById('tabFinanceiro').classList.add('active');
+        if(cat === 'esportes') document.getElementById('tabEsportes').classList.add('active');
+        if(cat === 'encerrados') document.getElementById('tabEncerrados').classList.add('active');
         carregarEnquetes();
     }
 
     async function carregarEnquetes() {
-        let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
-        let { data: apostas } = await _supabase.from('apostas').select('*');
         const container = document.getElementById('containerEnquetes');
-        
-        let enquetesFiltradas = enquetes ? enquetes.filter(e => e.tipo === categoryAtual) : [];
+        let query = _supabase.from('enquetes').select('*');
+        if (categoryAtual === 'encerrados') { query = query.eq('finalizada', true); } 
+        else { query = query.eq('finalizada', false).eq('tipo', categoryAtual); }
 
-        if(enquetesFiltradas.length === 0) { 
-            container.innerHTML = `<div class="card-info">Nenhum mercado ativo nesta categoria no momento.</div>`; 
+        let { data: enquetes } = await query;
+        let { data: apostas } = await _supabase.from('apostas').select('*');
+        
+        if(!enquetes || enquetes.length === 0) { 
+            container.innerHTML = `<div class="card-info">Nenhum mercado encontrado para esta categoria.</div>`; 
             return; 
         }
 
         container.innerHTML = '';
-        enquetesFiltradas.forEach(enq => {
-            let volumePote = 0;
-            if(apostas) apostas.forEach(a => { if(a.enquete_id == enq.id) volumePote += parseFloat(a.valor); });
+        enquetes.forEach(enq => {
+            let volumePote = 0, totalPalpites = 0, moedasOp1 = 0, moedasOp2 = 0;
+            if(apostas) {
+                apostas.forEach(a => { 
+                    if(a.enquete_id == enq.id) { 
+                        volumePote += parseFloat(a.valor); totalPalpites++;
+                        if(a.palpite === enq.op1) moedasOp1 += parseFloat(a.valor);
+                        if(a.palpite === enq.op2) moedasOp2 += parseFloat(a.valor);
+                    } 
+                });
+            }
 
-            let corpoVotos = enq.pausada 
-                ? `<div style="background:#2c1a0a; color:#ff9f43; padding:12px; border-radius:8px; text-align:center; font-weight:bold;">⏸️ Mercado Suspenso</div>`
-                : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')"><span>▲ ${enq.op1}</span> <span>Selecionar</span></button>
-                   <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')"><span>▼ ${enq.op2}</span> <span>Selecionar</span></button>`;
+            let pctOp1 = volumePote > 0 ? Math.round((moedasOp1 / volumePote) * 100) : 50;
+            let pctOp2 = volumePote > 0 ? Math.round((moedasOp2 / volumePote) * 100) : 50;
 
-            container.innerHTML += `<div class="enquete-box">
-                <div>
-                    <div class="pote-acumulado-marcador">💰 Pote: R$ ${volumePote.toFixed(2)}</div>
-                    <div style="font-size:22px; font-weight:800; margin-bottom:5px;">${enq.ativo}</div>
-                    <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
-                    ${corpoVotos}
-                </div>
-                <div><div class="timer">⏱️ Expira em:<br><span style="font-size:13px; color:#fff;">${enq.data_fim} às ${enq.hora_fim || '00:00'}</span></div></div>
-            </div>`;
+            // Define se exibe o botão de gráfico (apenas para mercado financeiro ativo)
+            let botaoGraficoHtml = (enq.tipo === 'financeiro' && !enq.finalizada)
+                ? `<button class="btn btn-blue" style="background:#1e293b; border:1px solid #334155; font-size:12px; padding:6px 12px; margin-left:10px;" onclick="abrirModalGrafico('${enq.ativo}')">🔍 Ver Gráfico / Dados</button>`
+                : '';
+
+            if (categoryAtual === 'encerrados') {
+                container.innerHTML += `<div class="enquete-box" style="grid-template-columns: 1fr; border-color: #222f4d;">
+                    <div>
+                        <div class="pote-acumulado-marcador" style="background:#0a101d; color:#9ca3af;">💰 Pote Final: R$ ${volumePote.toFixed(2)}</div>
+                        <div style="font-size:22px; font-weight:800; margin-bottom:5px; color:#9ca3af;">${enq.ativo}</div>
+                        <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
+                        <div style="background:#0b1d16; color:var(--accent-green); padding:14px; border-radius:8px; font-weight:bold; display:inline-block; border: 1px solid #104c32;">
+                            🏆 Resultado Oficial: Venceu a opção "${enq.op1}"
+                        </div>
+                    </div>
+                </div>`;
+            } else {
+                let corpoVotos = enq.pausada 
+                    ? `<div style="background:#2c1a0a; color:#ff9f43; padding:12px; border-radius:8px; text-align:center; font-weight:bold;">⏸️ Mercado Suspenso</div>`
+                    : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Selecionar</span></button>
+                       <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')"><span>▼ ${enq.op2} (${pctOp2}%)</span> <span>Selecionar</span></button>`;
+
+                container.innerHTML += `<div class="enquete-box">
+                    <div>
+                        <div style="display:flex; align-items:center;">
+                            <div class="pote-acumulado-marcador">💰 Pote: R$ ${volumePote.toFixed(2)}</div>
+                            <div class="stats-badge">📊 ${totalPalpites} palpites</div>
+                            ${botaoGraficoHtml}
+                        </div>
+                        
+                        <div style="font-size:22px; font-weight:800; margin-bottom:5px;">${enq.ativo}</div>
+                        <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
+                        
+                        <div class="tendencia-container">Tendência do mercado: ${pctOp1}% ${enq.op1} vs ${pctOp2}% ${enq.op2}</div>
+                        <div class="barra-progresso-bg">
+                            <div class="barra-op1" style="width: ${pctOp1}%;"></div>
+                            <div class="barra-op2" style="width: ${pctOp2}%;"></div>
+                        </div>
+
+                        ${corpoVotos}
+                    </div>
+                    <div><div class="timer">⏱️ Expira em:<br><span style="font-size:13px; color:#fff;">${enq.data_fim} às ${enq.hora_fim || '00:00'}</span></div></div>
+                </div>`;
+            }
         });
     }
 
@@ -211,21 +322,17 @@
         let qte = prompt("Quantas moedas deseja alocar nesta opção?", "10");
         let val = parseFloat(qte);
         if(isNaN(val) || val <= 0) return;
-
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
         if(!user || parseFloat(user.saldo) < val) return alert("Saldo insuficiente.");
 
         await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - val }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
-        
         alert("Alocação efetuada!");
         atualizarDados();
     }
 
-    window.onload = function() {
-        atualizarDados();
-    };
+    window.onload = function() { atualizarDados(); };
 </script>
 </body>
 </html>
