@@ -44,7 +44,59 @@
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
-            <input type="text" id="enqAtivo" placeholder="Nome do Ativo (Ex: BTC/USD, Flamengo)">
+            <select id="enqAtivo">
+                <option value="" disabled selected>-- Escolha um Ativo Seguro para Gráfico --</option>
+                
+                <optgroup label="💱 FOREX (Alta Volatilidade)">
+                    <option value="EURUSD">EUR/USD (Euro / Dólar)</option>
+                    <option value="GBPUSD">GBP/USD (Libra / Dólar)</option>
+                    <option value="USDJPY">USD/JPY (Dólar / Iene)</option>
+                    <option value="AUDUSD">AUD/USD (Dólar Australiano / Dólar)</option>
+                    <option value="USDCAD">USD/CAD (Dólar / Dólar Canadense)</option>
+                    <option value="EURJPY">EUR/JPY (Euro / Iene)</option>
+                    <option value="GBPJPY">GBP/JPY (Libra / Iene)</option>
+                </optgroup>
+
+                <optgroup label="🪙 CRIPTOMOEDAS (Mais Procuradas)">
+                    <option value="BTCUSD">BTC/USD (Bitcoin)</option>
+                    <option value="ETHUSD">ETH/USD (Ethereum)</option>
+                    <option value="SOLUSD">SOL/USD (Solana)</option>
+                    <option value="BNBUSD">BNB/USD (Binance Coin)</option>
+                    <option value="XRPUSD">XRP/USD (Ripple)</option>
+                </optgroup>
+
+                <optgroup label="📊 ÍNDICES & MOEDAS LOCAIS">
+                    <option value="WIN1!">WIN1! (Mini Índice Ibovespa)</option>
+                    <option value="USDBRL">USD/BRL (Mini Dólar / Dólar Comercial)</option>
+                    <option value="NAS100">NAS100 (NASDAQ 100)</option>
+                    <option value="SPX500">SPX500 (S&P 500)</option>
+                    <option value="US30">US30 (Dow Jones)</option>
+                </optgroup>
+
+                <optgroup label="📈 AÇÕES BRASILEIRAS (B3)">
+                    <option value="PETR4">PETR4 (Petrobras)</option>
+                    <option value="VALE3">VALE3 (Vale)</option>
+                    <option value="MGLU3">MGLU3 (Magazine Luiza)</option>
+                    <option value="ITUB4">ITUB4 (Itaú Unibanco)</option>
+                    <option value="BBDC4">BBDC4 (Bradesco)</option>
+                </optgroup>
+
+                <optgroup label="🇺🇸 AÇÕES AMERICANAS (EUA)">
+                    <option value="AAPL">AAPL (Apple)</option>
+                    <option value="TSLA">TSLA (Tesla)</option>
+                    <option value="AMZN">AMZN (Amazon)</option>
+                    <option value="MSFT">MSFT (Microsoft)</option>
+                    <option value="NVDA">NVDA (NVIDIA)</option>
+                </optgroup>
+
+                <optgroup label="🏢 FIIs (Fundos Imobiliários)">
+                    <option value="MXRF11">MXRF11 (Maxi Renda)</option>
+                    <option value="HGLG11">HGLG11 (CGHG Logística)</option>
+                    <option value="XPLG11">XPLG11 (XP Log)</option>
+                    <option value="KNRI11">KNRI11 (Kinea Renda Imobiliária)</option>
+                </optgroup>
+            </select>
+
             <select id="enqTipo">
                 <option value="financeiro">Mercado Financeiro</option>
                 <option value="esportes">Esportes</option>
@@ -107,10 +159,9 @@
         await listarEnquetesAdm();
         await listarDepositosAdm();
         await listarSaquesAdm();
-        await listarUsuariosMaster(); // Carrega a tabela de controle manual
+        await listarUsuariosMaster(); 
     }
 
-    // --- NOVA FUNÇÃO: LISTAR USUÁRIOS NO PAINEL ADM ---
     async function listarUsuariosMaster() {
         let { data: usuarios } = await _supabase.from('usuarios').select('*').order('username', { ascending: true });
         const tbody = document.getElementById('tabelaUsuariosAdm');
@@ -147,7 +198,6 @@
         });
     }
 
-    // --- NOVA FUNÇÃO: SALVAR SALDO MANUALMENTE ---
     async function salvarSaldoManual(username) {
         const novoSaldo = parseFloat(document.getElementById(`saldo_man_${username}`).value);
         if (isNaN(novoSaldo) || novoSaldo < 0) return alert("Por favor, digite um saldo válido.");
@@ -156,17 +206,15 @@
 
         await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', username);
         
-        // Registrar logs do ajuste manual nas transações para controle
         await _supabase.from('transacoes').insert([{
             usuario: username, tipo: 'ajuste_adm',
             descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
         }]);
 
-        alert(`Saldo de ${username} atualizado com sucesso!`);
+        alert(`Saldo de ${username} updated!`);
         listarUsuariosMaster();
     }
 
-    // --- NOVA FUNÇÃO: ATIVAR OU DESATIVAR CONTA ---
     async function alternarStatusConta(username, statusAtual) {
         const acao = statusAtual ? "DESATIVAR/BLOQUEAR" : "REATIVAR";
         if (!confirm(`Tem certeza que deseja ${acao} a conta do usuário ${username}?`)) return;
@@ -177,7 +225,7 @@
     }
 
     async function criarEnquete() {
-        const ativo = document.getElementById('enqAtivo').value.trim();
+        const ativo = document.getElementById('enqAtivo').value;
         const tipo = document.getElementById('enqTipo').value;
         const op1 = document.getElementById('enqOp1').value.trim();
         const op2 = document.getElementById('enqOp2').value.trim();
@@ -185,7 +233,8 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo || !op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
+        if(!ativo) return alert("Selecione um ativo válido na lista.");
+        if(!op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
 
         await _supabase.from('enquetes').insert([{
             ativo: ativo, tipo: tipo, op1: op1, op2: op2, preco_alvo: precoAlvo,
@@ -193,6 +242,14 @@
         }]);
 
         alert("Mercado criado com sucesso!");
+        
+        // Limpa os campos visuais após publicar (exceto os seletores)
+        document.getElementById('enqOp1').value = '';
+        document.getElementById('enqOp2').value = '';
+        document.getElementById('enqPrecoAlvo').value = '';
+        document.getElementById('enqDataFim').value = '';
+        document.getElementById('enqHoraFim').value = '';
+
         inicializarPainel();
     }
 
@@ -350,10 +407,9 @@
 
     async function aprovarSaque(id, usuario, valor) {
         const usuarioLimpo = usuario ? usuario.trim() : "";
-        let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLimpo).single();
+        let { data: u = null } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLimpo).single();
         let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
 
-        await _supabase.from('usuarios').update({ saldo: saldoAtual - parseFloat(valor) }).eq('username', usuarioLimpo);
         await _supabase.from('saques').update({ status: 'aprovado' }).eq('id', id);
         
         await _supabase.from('transacoes').insert([{
