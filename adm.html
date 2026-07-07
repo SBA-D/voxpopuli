@@ -45,7 +45,7 @@
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
             <select id="enqAtivo">
-                <option value="" disabled selected>-- Escolha o Ativo ou Time para a Enquete --</option>
+                <option value="" disabled selected>-- Escolha um Ativo Seguro para Gráfico --</option>
                 
                 <optgroup label="💱 FOREX (Alta Volatilidade)">
                     <option value="EURUSD">EUR/USD (Euro / Dólar)</option>
@@ -95,46 +95,6 @@
                     <option value="XPLG11">XPLG11 (XP Log)</option>
                     <option value="KNRI11">KNRI11 (Kinea Renda Imobiliária)</option>
                 </optgroup>
-
-                <optgroup label="🇧🇷 FUTEBOL BRASILEIRO (Principais Clubes)">
-                    <option value="Flamengo">Flamengo</option>
-                    <option value="Palmeiras">Palmeiras</option>
-                    <option value="São Paulo">São Paulo</option>
-                    <option value="Corinthians">Corinthians</option>
-                    <option value="Santos">Santos</option>
-                    <option value="Fluminense">Fluminense</option>
-                    <option value="Botafogo">Botafogo</option>
-                    <option value="Vasco">Vasco da Gama</option>
-                    <option value="Atlético-MG">Atlético Mineiro</option>
-                    <option value="Cruzeiro">Cruzeiro</option>
-                    <option value="Grêmio">Grêmio</option>
-                    <option value="Internacional">Internacional</option>
-                    <option value="Bahia">Bahia</option>
-                    <option value="Fortaleza">Fortaleza</option>
-                    <option value="Athletico-PR">Athletico Paranaense</option>
-                    <option value="Red Bull Bragantino">RB Bragantino</option>
-                    <option value="Cuiabá">Cuiabá</option>
-                    <option value="Criciúma">Criciúma</option>
-                    <option value="Juventude">Juventude</option>
-                    <option value="Vitória">Vitória</option>
-                </optgroup>
-
-                <optgroup label="🇪🇺 FUTEBOL EUROPEU (Gigantes Mundiais)">
-                    <option value="Real Madrid">Real Madrid</option>
-                    <option value="Barcelona">Barcelona</option>
-                    <option value="Manchester City">Manchester City</option>
-                    <option value="Manchester United">Manchester United</option>
-                    <option value="Liverpool">Liverpool</option>
-                    <option value="Arsenal">Arsenal</option>
-                    <option value="Chelsea">Chelsea</option>
-                    <option value="Bayern de Munique">Bayern de Munique</option>
-                    <option value="Borussia Dortmund">Borussia Dortmund</option>
-                    <option value="Paris Saint-Germain">PSG</option>
-                    <option value="Juventus">Juventus</option>
-                    <option value="Inter de Milão">Inter de Milão</option>
-                    <option value="Milan">Milan</option>
-                    <option value="Atletico de Madrid">Atlético de Madrid</option>
-                </optgroup>
             </select>
 
             <select id="enqTipo">
@@ -143,11 +103,11 @@
             </select>
         </div>
         <div class="form-row">
-            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Alvo acima / Vitória Casa)">
-            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Alvo abaixo / Empate ou Fora)">
+            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Alvo acima)">
+            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Alvo abaixo)">
         </div>
         <div class="form-row">
-            <input type="text" id="enqPrecoAlvo" placeholder="Parâmetro/Preço Alvo (Ex: 65.200, Vitória, Ambos Marcam)">
+            <input type="text" id="enqPrecoAlvo" placeholder="Parâmetro/Preço Alvo (Ex: 65.200, Vitória)">
             <input type="date" id="enqDataFim">
             <input type="time" id="enqHoraFim">
         </div>
@@ -251,7 +211,7 @@
             descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
         }]);
 
-        alert(`Saldo de ${username} atualizado!`);
+        alert(`Saldo de ${username} updated!`);
         listarUsuariosMaster();
     }
 
@@ -273,7 +233,7 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo) return alert("Selecione um ativo ou time válido na lista.");
+        if(!ativo) return alert("Selecione um ativo válido na lista.");
         if(!op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
 
         await _supabase.from('enquetes').insert([{
@@ -283,6 +243,7 @@
 
         alert("Mercado criado com sucesso!");
         
+        // Limpa os campos visuais após publicar (exceto os seletores)
         document.getElementById('enqOp1').value = '';
         document.getElementById('enqOp2').value = '';
         document.getElementById('enqPrecoAlvo').value = '';
