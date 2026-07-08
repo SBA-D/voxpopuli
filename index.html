@@ -117,10 +117,12 @@
             }
         }
 
+        // Garante que a conta seja criada explicitamente como ativo: true
         const { error } = await _supabase.from('usuarios').insert([{ 
             username: user, 
             password: pass, 
             saldo: 0,
+            ativo: true,
             indicado_por: padrinhoUsername,
             codigo_afiliado: codigoUnico
         }]);
