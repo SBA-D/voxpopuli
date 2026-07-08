@@ -27,6 +27,7 @@
         .opcao-btn { width: 100%; background: var(--bg-input); border: 1px solid #1c253d; color: white; padding: 14px 18px; border-radius: 8px; text-align: left; margin-bottom: 10px; cursor: pointer; display: flex; justify-content: space-between; font-weight: 600; font-size: 14px; }
         .opcao-btn:hover { border-color: var(--accent-blue); }
         .pote-acumulado-marcador { color: #ff9f43; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #1c253d; display: inline-block; padding: 5px 12px; border-radius: 4px; margin-right: 8px; }
+        .fechamento-marcador { color: #00b37e; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #0a1a14; display: inline-block; padding: 5px 12px; border-radius: 4px; margin-right: 8px; border: 1px solid #0f4c35; }
         .stats-badge { color: #3b82f6; font-weight: bold; font-size: 13px; margin-bottom: 12px; background: #182238; display: inline-block; padding: 5px 12px; border-radius: 4px; }
         .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; text-align: center; }
         .qr-area { margin-top: 10px; background: #fff; color: #000; padding: 15px; border-radius: 8px; display: none; text-align: center; }
@@ -256,11 +257,22 @@
                 ? `<button class="btn btn-blue" style="background:#1e293b; border:1px solid #334155; font-size:12px; padding:6px 12px; margin-left:10px;" onclick="abrirModalGrafico('${enq.ativo}')">🔍 Ver Gráfico / Dados</button>`
                 : '';
 
+            // Renderiza o marcador do fechamento caso ele exista preenchido no banco
+            let marcadorFechamentoHtml = enq.fechamento_anterior 
+                ? `<div class="fechamento-marcador">📉 Fechamento Anterior: ${enq.fechamento_anterior}</div>` 
+                : '';
+
             if (categoryAtual === 'encerrados') {
                 container.innerHTML += `<div class="enquete-box" style="grid-template-columns: 1fr; border-color: #222f4d;">
                     <div>
-                        <div class="pote-acumulado-marcador" style="background:#0a101d; color:#9ca3af;">💰 Pote Final: R$ ${volumePote.toFixed(2)}</div>
-                        <div style="font-size:22px; font-weight:800; margin-bottom:5px; color:#9ca3af;">${enq.ativo}</div>
+                        <div style="display:flex; align-items:center; flex-wrap: wrap;">
+                            <div class="pote-acumulado-marcador" style="background:#0a101d; color:#9ca3af;">💰 Pote Final: R$ ${volumePote.toFixed(2)}</div>
+                            ${marcadorFechamentoHtml}
+                        </div>
+                        <div style="font-size:15px; text-transform:uppercase; font-weight:700; color:var(--accent-blue); margin-bottom:2px;">📊 Ativo: ${enq.ativo}</div>
+                        
+                        <div style="font-size:20px; font-weight:800; margin-bottom:8px; color:#fff;">❓ Pergunta: ${enq.pergunta || 'Mercado de Tendência'}</div>
+                        
                         <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
                         <div style="background:#0b1d16; color:var(--accent-green); padding:14px; border-radius:8px; font-weight:bold; display:inline-block; border: 1px solid #104c32;">
                             🏆 Resultado Oficial: Venceu a opção "${enq.op1}"
@@ -268,7 +280,6 @@
                     </div>
                 </div>`;
             } else {
-                // ALTERAÇÃO CRÍTICA: Se a enquete estiver pausada, os botões ficam travados com estilo adequado, mas continuam visíveis!
                 let corpoVotos = enq.pausada 
                     ? `<div style="background:#251418; color:var(--accent-red); border: 1px solid #4a1d24; padding:12px; border-radius:8px; text-align:center; font-weight:bold; font-size:14px; margin-bottom:10px;">🔒 Apostas encerradas! Acompanhe o encerramento técnico.</div>
                        <button class="opcao-btn" disabled style="opacity:0.4; cursor:not-allowed;"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Bloqueado</span></button>
@@ -278,14 +289,18 @@
 
                 container.innerHTML += `<div class="enquete-box">
                     <div>
-                        <div style="display:flex; align-items:center;">
+                        <div style="display:flex; align-items:center; flex-wrap: wrap;">
                             <div class="pote-acumulado-marcador">💰 Pote: R$ ${volumePote.toFixed(2)}</div>
                             <div class="stats-badge">📊 ${totalPalpites} palpites</div>
+                            ${marcadorFechamentoHtml}
                             ${botaoGraficoHtml}
                         </div>
                         
-                        <div style="font-size:22px; font-weight:800; margin-bottom:5px;">${enq.ativo}</div>
-                        <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
+                        <div style="font-size:14px; text-transform:uppercase; font-weight:700; color:var(--accent-blue); margin-top:5px; margin-bottom:2px;">📊 Ativo: ${enq.ativo}</div>
+                        
+                        <div style="font-size:20px; font-weight:800; color:#fff; margin-bottom:5px; line-height:1.4;">❓ ${enq.pergunta || 'O ativo vai subir ou descer em relação ao fechamento?'}</div>
+                        
+                        <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro técnico: <b>${enq.preco_alvo || 'Direto'}</b></p>
                         
                         <div class="tendencia-container">Tendência do mercado: ${pctOp1}% ${enq.op1} vs ${pctOp2}% ${enq.op2}</div>
                         <div class="barra-progresso-bg">
@@ -302,7 +317,6 @@
     }
 
     async function apostar(id, palpite, ativo) {
-        // Validação de Segurança Secundária: Verifica no banco em tempo real se a enquete foi bloqueada
         let { data: enqCheck } = await _supabase.from('enquetes').select('pausada').eq('id', id).single();
         if(enqCheck && enqCheck.pausada === true) {
             alert("🔒 Operação cancelada! As apostas para este mercado acabam de ser encerradas.");
