@@ -124,7 +124,9 @@
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
-    const usuarioLogado = localStorage.getItem('usuarioLogado');
+    // Sanitização e formatação idêntica ao index.html para evitar conflitos de caixa alta/baixa
+    const usuarioLogadoRaw = localStorage.getItem('usuarioLogado');
+    const usuarioLogado = usuarioLogadoRaw ? usuarioLogadoRaw.trim().toLowerCase() : null;
     if(!usuarioLogado || usuarioLogado === 'voxadmin') window.location.href = './index.html';
 
     const SUPABASE_URL = "https://fkwkhfkeyfgsqerhpzpm.supabase.co";
@@ -176,7 +178,7 @@
         }
 
         if(isManual) {
-            alert("Dados atualizados com sucesso!");
+            alert("Dados sincronizados em tempo real com o banco de dados!");
         }
     }
 
@@ -199,7 +201,10 @@
     async function notificarPagamento() {
         const valor = parseFloat(document.getElementById('valorPix').value);
         if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
-        await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
+        
+        const { error } = await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
+        if(error) return alert("Erro ao enviar notificação: " + error.message);
+
         alert("Notificação enviada com sucesso para o administrador!");
         document.getElementById('qrContainer').style.display = 'none';
         document.getElementById('valorPix').value = '';
@@ -215,14 +220,18 @@
         if(!user || parseFloat(user.saldo) < valor) return alert("❌ Saldo insuficiente para solicitar este saque.");
 
         const novoSaldoRetido = parseFloat(user.saldo) - valor;
+        
+        // Bloqueia e atualiza o saldo imediatamente no banco
         await _supabase.from('usuarios').update({ saldo: novoSaldoRetido }).eq('username', usuarioLogado);
-
         await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'saque_pend', descricao: `Solicitação de Saque (Retido). Chave: ${chave}`, valor: -valor }]);
         
-        alert("Solicitação de saque enviada! O valor correspondente foi pré-deduzido.");
+        alert("Solicitação de saque enviada! O valor correspondente foi deduzido.");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
+        
+        // Força a atualização do elemento visual na tela sem depender do delay da nuvem
+        document.getElementById('saldoUsuario').innerText = novoSaldoRetido.toFixed(2);
         await atualizarDados();
     }
 
@@ -342,9 +351,13 @@
 
         const novoSaldo = parseFloat(user.saldo) - val;
 
+        // Atualização imediata em lote no banco
         await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
+        
+        // Altera o elemento visual imediatamente na tela
+        document.getElementById('saldoUsuario').innerText = novoSaldo.toFixed(2);
         
         alert("Alocação efetuada com sucesso!");
         await atualizarDados();
