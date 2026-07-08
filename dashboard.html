@@ -50,7 +50,6 @@
 </head>
 <body>
 
-<!-- Modal de Regras -->
 <div id="modalAjuda" class="modal-regras">
     <div class="modal-conteudo">
         <h3>❓ Como funciona o Rateio Dinâmico?</h3>
@@ -62,14 +61,12 @@
     </div>
 </div>
 
-<!-- NOVO: Modal do Gráfico Avançado -->
 <div id="modalGrafico" class="modal-regras">
     <div class="modal-grafico-conteudo">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3 style="margin: 0; color: #fff;" id="tituloGrafico">Análise do Ativo</h3>
             <button class="btn btn-blue" style="padding: 6px 15px; background: var(--accent-red);" onclick="fecharModalGrafico()">Fechar ✕</button>
         </div>
-        <!-- Container onde o widget do gráfico vai carregar via Script dinâmico -->
         <div id="tradingview_widget_area" style="flex: 1; width: 100%;"></div>
     </div>
 </div>
@@ -129,7 +126,6 @@
     <div id="containerEnquetes"></div>
 </div>
 
-<!-- Script oficial de gráficos do TradingView (Usado mundialmente pelo Investing.com) -->
 <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 
 <script>
@@ -144,38 +140,23 @@
     function abrirModalAjuda() { document.getElementById('modalAjuda').style.display = 'flex'; }
     function fecharModalAjuda() { document.getElementById('modalAjuda').style.display = 'none'; }
 
-    // --- NOVAS FUNÇÕES: GERENCIAMENTO DO GRÁFICO DINÂMICO ---
     function abrirModalGrafico(nomeAtivo) {
         document.getElementById('modalGrafico').style.display = 'flex';
         document.getElementById('tituloGrafico').innerText = `Análise Técnica Avançada: ${nomeAtivo}`;
-        
-        // Limpa o nome do ativo removendo barras para alinhar com o formato padrão (Ex: BTC/USD vira BTCUSD)
         let ativoFormatado = nomeAtivo.replace('/', '').replace(' ', '').toUpperCase();
-        
-        // Se o administrador escreveu algo fora do padrão, define um fallback seguro
         if(ativoFormatado.length < 3) ativoFormatado = "BTCUSD";
 
-        // Inicializa o Widget Avançado do TradingView/Investing dentro da div
         new TradingView.widget({
-            "width": "100%",
-            "height": "100%",
-            "symbol": ativoFormatado,
-            "interval": "15",
-            "timezone": "America/Sao_Paulo",
-            "theme": "dark",
-            "style": "1",
-            "locale": "br",
-            "toolbar_bg": "#f1f3f6",
-            "enable_publishing": false,
-            "hide_side_toolbar": false,
-            "allow_symbol_change": true,
-            "container_id": "tradingview_widget_area"
+            "width": "100%", "height": "100%", "symbol": ativoFormatado, "interval": "15",
+            "timezone": "America/Sao_Paulo", "theme": "dark", "style": "1", "locale": "br",
+            "toolbar_bg": "#f1f3f6", "enable_publishing": false, "hide_side_toolbar": false,
+            "allow_symbol_change": true, "container_id": "tradingview_widget_area"
         });
     }
 
     function fecharModalGrafico() {
         document.getElementById('modalGrafico').style.display = 'none';
-        document.getElementById('tradingview_widget_area').innerHTML = ''; // Destrói o widget para poupar memória
+        document.getElementById('tradingview_widget_area').innerHTML = '';
     }
 
     async function atualizarDados() {
@@ -271,7 +252,6 @@
             let pctOp1 = volumePote > 0 ? Math.round((moedasOp1 / volumePote) * 100) : 50;
             let pctOp2 = volumePote > 0 ? Math.round((moedasOp2 / volumePote) * 100) : 50;
 
-            // Define se exibe o botão de gráfico (apenas para mercado financeiro ativo)
             let botaoGraficoHtml = (enq.tipo === 'financeiro' && !enq.finalizada)
                 ? `<button class="btn btn-blue" style="background:#1e293b; border:1px solid #334155; font-size:12px; padding:6px 12px; margin-left:10px;" onclick="abrirModalGrafico('${enq.ativo}')">🔍 Ver Gráfico / Dados</button>`
                 : '';
@@ -288,8 +268,11 @@
                     </div>
                 </div>`;
             } else {
+                // ALTERAÇÃO CRÍTICA: Se a enquete estiver pausada, os botões ficam travados com estilo adequado, mas continuam visíveis!
                 let corpoVotos = enq.pausada 
-                    ? `<div style="background:#2c1a0a; color:#ff9f43; padding:12px; border-radius:8px; text-align:center; font-weight:bold;">⏸️ Mercado Suspenso</div>`
+                    ? `<div style="background:#251418; color:var(--accent-red); border: 1px solid #4a1d24; padding:12px; border-radius:8px; text-align:center; font-weight:bold; font-size:14px; margin-bottom:10px;">🔒 Apostas encerradas! Acompanhe o encerramento técnico.</div>
+                       <button class="opcao-btn" disabled style="opacity:0.4; cursor:not-allowed;"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Bloqueado</span></button>
+                       <button class="opcao-btn" disabled style="opacity:0.4; cursor:not-allowed;"><span>▼ ${enq.op2} (${pctOp2}%)</span> <span>Bloqueado</span></button>`
                     : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Selecionar</span></button>
                        <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')"><span>▼ ${enq.op2} (${pctOp2}%)</span> <span>Selecionar</span></button>`;
 
@@ -319,6 +302,14 @@
     }
 
     async function apostar(id, palpite, ativo) {
+        // Validação de Segurança Secundária: Verifica no banco em tempo real se a enquete foi bloqueada
+        let { data: enqCheck } = await _supabase.from('enquetes').select('pausada').eq('id', id).single();
+        if(enqCheck && enqCheck.pausada === true) {
+            alert("🔒 Operação cancelada! As apostas para este mercado acabam de ser encerradas.");
+            carregarEnquetes();
+            return;
+        }
+
         let qte = prompt("Quantas moedas deseja alocar nesta opção?", "10");
         let val = parseFloat(qte);
         if(isNaN(val) || val <= 0) return;
