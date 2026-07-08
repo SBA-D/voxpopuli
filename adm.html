@@ -12,8 +12,10 @@
         .box-adm { background: var(--bg-card); border: 1px solid var(--border-color); padding: 25px; border-radius: 12px; }
         .box-adm h2 { margin-top: 0; font-size: 18px; color: #fff; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
         .box-full { grid-column: span 2; }
-        .form-row { display: flex; gap: 12px; margin-bottom: 12px; }
-        input, select { flex: 1; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); color:#fff; border-radius: 6px; font-size: 14px; }
+        .form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 12px; color: #9ca3af; font-weight: 500; }
+        input, select { width: 100%; padding: 12px; background: var(--bg-input); border: 1px solid var(--border-color); color:#fff; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
         .btn-master { padding: 12px 20px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: opacity 0.2s; font-size: 14px; }
         .btn-master:hover { opacity: 0.9; }
         .btn-blue { background: var(--accent-blue); color:#fff; }
@@ -44,42 +46,79 @@
 <div class="grid-master">
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
+        
         <div class="form-row">
-            <select id="enqAtivo">
-                <option value="" disabled selected>-- Escolha a Categoria do Mercado --</option>
-                <optgroup label="💼 MERCADO FINANCEIRO">
-                    <option value="Forex">Forex</option>
-                    <option value="Criptomoedas">Criptomoedas</option>
-                    <option value="Índices">Índices</option>
-                    <option value="Ações Nacionais (B3)">Ações Nacionais (B3)</option>
-                    <option value="Ações Internacionais">Ações Internacionais</option>
-                    <option value="FIIs (Fundos Imobiliários)">FIIs (Fundos Imobiliários)</option>
-                </optgroup>
-                <optgroup label="🏆 MODALIDADES ESPORTIVAS">
-                    <option value="Futebol">Futebol</option>
-                    <option value="Basquete">Basquete</option>
-                    <option value="Vôlei">Vôlei</option>
-                    <option value="Tênis">Tênis</option>
-                    <option value="Beisebol">Beisebol</option>
-                    <option value="Futebol Americano">Futebol Americano</option>
-                </optgroup>
-            </select>
+            <div class="form-group" style="flex: 2;">
+                <label for="enqPergunta">Pergunta da Enquete / Meta de Mercado</label>
+                <input type="text" id="enqPergunta" placeholder="Ex: O par XAU/USD vai fechar acima do valor de referência?">
+            </div>
+        </div>
 
-            <select id="enqTipo">
-                <option value="financeiro">Mercado Financeiro</option>
-                <option value="esportes">Esportes</option>
-            </select>
-        </div>
         <div class="form-row">
-            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Vitória Casa)">
-            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Empate ou Fora)">
+            <div class="form-group">
+                <label for="enqAtivo">Ativo / Modalidade</label>
+                <select id="enqAtivo">
+                    <option value="" disabled selected>-- Escolha o Ativo --</option>
+                    <optgroup label="💼 MERCADO FINANCEIRO">
+                        <option value="Forex">Forex</option>
+                        <option value="Criptomoedas">Criptomoedas</option>
+                        <option value="Índices">Índices</option>
+                        <option value="Ações Nacionais (B3)">Ações Nacionais (B3)</option>
+                        <option value="Ações Internacionais">Ações Internacionais</option>
+                        <option value="FIIs (Fundos Imobiliários)">FIIs (Fundos Imobiliários)</option>
+                    </optgroup>
+                    <optgroup label="🏆 MODALIDADES ESPORTIVAS">
+                        <option value="Futebol">Futebol</option>
+                        <option value="Basquete">Basquete</option>
+                        <option value="Vôlei">Vôlei</option>
+                        <option value="Tênis">Tênis</option>
+                        <option value="Beisebol">Beisebol</option>
+                        <option value="Futebol Americano">Futebol Americano</option>
+                    </optgroup>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="enqFechamento">Último Fechamento / Cotação Atual</label>
+                <input type="text" id="enqFechamento" placeholder="Ex: 2,331.50 ou 1.0854">
+            </div>
+
+            <div class="form-group">
+                <label for="enqTipo">Painel de Destino</label>
+                <select id="enqTipo">
+                    <option value="financeiro">Mercado Financeiro</option>
+                    <option value="esportes">Esportes</option>
+                </select>
+            </div>
         </div>
+
         <div class="form-row">
-            <input type="text" id="enqPrecoAlvo" placeholder="Ativo / Jogo / Detalhes (Ex: EURUSD no fechamento, Real Madrid x Milan)">
-            <input type="date" id="enqDataFim">
-            <input type="time" id="enqHoraFim">
+            <div class="form-group">
+                <label for="enqOp1">Opção de Resposta 1</label>
+                <input type="text" id="enqOp1" placeholder="Ex: ▲ ACIMA (50%) ou Vitória Casa">
+            </div>
+            <div class="form-group">
+                <label for="enqOp2">Opção de Resposta 2</label>
+                <input type="text" id="enqOp2" placeholder="Ex: ▼ ABAIXO (50%) ou Empate/Fora">
+            </div>
         </div>
-        <button class="btn-master btn-blue" style="width:100%;" onclick="criarEnquete()">Publicar no Painel dos Membros</button>
+
+        <div class="form-row">
+            <div class="form-group" style="flex: 1.5;">
+                <label for="enqPrecoAlvo">Detalhes Contextuais (Parâmetro Técnico / Estádio)</label>
+                <input type="text" id="enqPrecoAlvo" placeholder="Ex: Parâmetro: XAU/USD ou Real Madrid x Milan">
+            </div>
+            <div class="form-group">
+                <label for="enqDataFim">Data Limite</label>
+                <input type="date" id="enqDataFim">
+            </div>
+            <div class="form-group">
+                <label for="enqHoraFim">Hora Limite</label>
+                <input type="time" id="enqHoraFim">
+            </div>
+        </div>
+        
+        <button class="btn-master btn-blue" style="width:100%; margin-top: 10px;" onclick="criarEnquete()">Publicar no Painel dos Membros</button>
     </div>
 
     <div class="box-adm">
@@ -166,7 +205,7 @@
         if (isNaN(novoSaldo) || novoSaldo < 0) return alert("Digite um saldo válido.");
         await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', username);
         await _supabase.from('transacoes').insert([{
-            usuario: username, tipo: 'ajuste_adm', descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
+            usuario: username, tipo: 'ajuste_adm', descricao: `Ajuste manual de saldo feito pelo Administrator`, valor: novoSaldo
         }]);
         alert(`Saldo de ${username} atualizado!`);
         listarUsuariosMaster();
@@ -178,7 +217,9 @@
     }
 
     async function criarEnquete() {
+        const pergunta = document.getElementById('enqPergunta').value.trim();
         const ativo = document.getElementById('enqAtivo').value;
+        const fechamento = document.getElementById('enqFechamento').value.trim();
         const tipo = document.getElementById('enqTipo').value;
         const op1 = document.getElementById('enqOp1').value.trim();
         const op2 = document.getElementById('enqOp2').value.trim();
@@ -186,11 +227,20 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo || !op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
+        if(!pergunta || !ativo || !op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios (Pergunta, Ativo, Opções e Data).");
 
         await _supabase.from('enquetes').insert([{
-            ativo: ativo, tipo: tipo, op1: op1, op2: op2, preco_alvo: precoAlvo,
-            data_fim: dataFim, hora_fim: horaFim, finalizada: false, pausada: false
+            pergunta: pergunta,
+            ativo: ativo,
+            fechamento_anterior: fechamento,
+            tipo: tipo,
+            op1: op1,
+            op2: op2,
+            preco_alvo: precoAlvo,
+            data_fim: dataFim,
+            hora_fim: horaFim,
+            finalizada: false,
+            pausada: false
         }]);
 
         alert("Mercado criado com sucesso!");
@@ -210,12 +260,13 @@
 
             container.innerHTML += `<div class="item-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
                 <div style="width:100%; display:flex; justify-content: space-between; align-items:center;">
-                    <div><b>${enq.ativo}</b> (${enq.tipo.toUpperCase()})</div>
+                    <div>📊 <b>${enq.ativo}</b> (${enq.tipo.toUpperCase()})</div>
                     <span class="status-badge" style="${badgeCor}">${badgeTexto}</span>
                 </div>
-                <div style="font-size:13px; color:#9ca3af;">Contexto: ${enq.preco_alvo || 'Sem detalhes'} | Expira em: ${enq.data_fim} às ${enq.hora_fim || '00:00'}</div>
+                <div style="font-size:14px; color:#fff; font-weight:600; margin: 2px 0;">❓ Pergunta: ${enq.pergunta || 'Sem pergunta cadastrada'}</div>
+                <div style="font-size:13px; color:#9ca3af;">Fechamento Ref: ${enq.fechamento_anterior || 'Nenhum'} | Contexto: ${enq.preco_alvo || 'Sem detalhes'} | Expira em: ${enq.data_fim} às ${enq.hora_fim || '00:00'}</div>
                 
-                <div class="form-row" style="width:100%;">
+                <div class="form-row" style="width:100%; margin-top:5px;">
                     <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op1}', '${enq.ativo}')">Venceu: ${enq.op1}</button>
                     <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op2}', '${enq.ativo}')">Venceu: ${enq.op2}</button>
                     <button class="btn-master btn-orange" style="padding:6px 12px; font-size:12px;" onclick="alternarTravaAposta(${enq.id}, ${enq.pausada})">${botaoTravaTexto}</button>
