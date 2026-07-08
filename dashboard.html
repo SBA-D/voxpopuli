@@ -76,7 +76,7 @@
         <button class="btn btn-blue" style="padding: 6px 12px; font-size: 12px; background: #1c253d; border: 1px solid var(--border-color);" onclick="abrirModalAjuda()">❓ Como funciona?</button>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <button style="padding:10px 14px; background:#1c253d; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="location.reload()">🔄 Recarregar</button>
+        <button style="padding:10px 14px; background:#1c253d; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="atualizarDados()">🔄 Recarregar</button>
         <div class="moedas-badge">🪙 <span id="saldoUsuario">0.00</span> Moedas</div>
         <button style="padding:10px 18px; background:#202431; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
@@ -189,25 +189,31 @@
         const valor = parseFloat(document.getElementById('valorPix').value);
         if(isNaN(valor) || valor <= 0) return alert("Valor inválido.");
         await _supabase.from('depositos').insert([{ usuario: usuarioLogado, valor: valor, status: 'pendente' }]);
-        alert("Notificação enviada!");
+        alert("Notificação enviada com sucesso para o administrador!");
         document.getElementById('qrContainer').style.display = 'none';
         document.getElementById('valorPix').value = '';
-        atualizarDados();
+        await atualizarDados();
     }
 
     async function solicitarSaque() {
         const chave = document.getElementById('chavePixSaque').value.trim();
         const valor = parseFloat(document.getElementById('valorSaque').value);
-        if(!chave || isNaN(valor) || valor <= 0) return alert("Dados inválidos.");
+        if(!chave || isNaN(valor) || valor <= 0) return alert("Dados de saque inválidos.");
+        
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(!user || parseFloat(user.saldo) < valor) return alert("Saldo insuficiente.");
+        if(!user || parseFloat(user.saldo) < valor) return alert("❌ Saldo insuficiente para solicitar este saque.");
+
+        // O valor já é retido imediatamente para evitar golpes de gastos duplos
+        const novoSaldoRetido = parseFloat(user.saldo) - valor;
+        await _supabase.from('usuarios').update({ saldo: novoSaldoRetido }).eq('username', usuarioLogado);
 
         await _supabase.from('saques').insert([{ usuario: usuarioLogado, chave_pix: chave, valor: valor, status: 'pendente' }]);
-        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'saque_pend', descricao: `Solicitação de Saque enviada. Chave: ${chave}`, valor: -valor }]);
-        alert("Solicitação enviada!");
+        await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'saque_pend', descricao: `Solicitação de Saque (Retido). Chave: ${chave}`, valor: -valor }]);
+        
+        alert("Solicitação de saque enviada! O valor correspondente foi pré-deduzido.");
         document.getElementById('chavePixSaque').value = '';
         document.getElementById('valorSaque').value = '';
-        atualizarDados();
+        await atualizarDados();
     }
 
     function mudarCategoria(cat) {
@@ -317,12 +323,12 @@
         let { data: enqCheck } = await _supabase.from('enquetes').select('pausada').eq('id', id).single();
         if(enqCheck && enqCheck.pausada === true) {
             alert("🔒 Operação cancelada! As apostas para este mercado acabam de ser encerradas.");
-            carregarEnquetes();
+            await carregarEnquetes();
             return;
         }
 
         let qte = prompt("Quantas moedas deseja alocar nesta opção?", "10");
-        if (qte === null) return; // Se o usuário cancelar o prompt
+        if (qte === null) return; 
         
         let val = parseFloat(qte);
         if(isNaN(val) || val <= 0) return alert("Por favor, insira um valor válido maior que zero.");
@@ -332,13 +338,13 @@
 
         const novoSaldo = parseFloat(user.saldo) - val;
 
-        // Executa as atualizações de forma linear e síncrona usando await
+        // Execuções estritamente sequenciais para impedir descompasso visual
         await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
         
         alert("Alocação efetuada com sucesso!");
-        atualizarDados();
+        await atualizarDados();
     }
 
     window.onload = function() { atualizarDados(); };
