@@ -297,6 +297,7 @@
                 else { perdedores.push(aposta); }
             });
 
+            // Usando for...of para evitar problemas com concorrência assíncrona no DB
             if(vencedores.length > 0 && poteVencedores > 0) {
                 for(let vencedor of vencedores) {
                     let proporcao = parseFloat(vencedor.valor) / poteVencedores;
@@ -330,7 +331,6 @@
         });
     }
 
-    // CORREÇÃO MESTRE: Coleta o saldo síncrono e injeta de verdade na carteira do usuário
     async function aprovarDeposito(id, usuario, valor) {
         try {
             let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario.trim()).single();
@@ -339,11 +339,8 @@
             let saldoAtual = parseFloat(u.saldo || 0);
             let novoSaldo = saldoAtual + parseFloat(valor);
 
-            // Grava o novo saldo consolidado
             await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuario.trim());
-            // Muda o status da transação de PIX para aprovado
             await _supabase.from('depositos').update({ status: 'aprovado' }).eq('id', id);
-            // Registra no extrato histórico
             await _supabase.from('transacoes').insert([{ usuario: usuario.trim(), tipo: 'deposito', descricao: `Depósito via PIX aprovado (Crédito inserido)`, valor: parseFloat(valor) }]);
             
             alert(`Sucesso! R$ ${valor} injetados na conta de ${usuario}.`);
@@ -370,7 +367,6 @@
         });
     }
 
-    // CORREÇÃO MESTRE SAQUE: Gerencia a aprovação definitiva ou faz o estorno caso seja recusado
     async function processarSaqueAdmin(idSaque, usuario, valor, acao) {
         try {
             if(acao === 'aprovar') {
@@ -378,7 +374,6 @@
                 await _supabase.from('transacoes').insert([{ usuario: usuario.trim(), tipo: 'saque', descricao: `Saque via PIX enviado com sucesso`, valor: -parseFloat(valor) }]);
                 alert("Retirada concluída e arquivada!");
             } else if(acao === 'rejeitar') {
-                // Se recusar, busca o saldo atual e devolve o valor pré-deduzido
                 await _supabase.from('saques').update({ status: 'rejeitado' }).eq('id', idSaque);
                 let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', usuario.trim()).single();
                 let saldoAtual = parseFloat(u.saldo || 0);
