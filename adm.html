@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxPopuli - Master Admin Painel</title>
     <style>
-        :root { --bg-main: #0a0e1a; --bg-card: #121829; --bg-input: #172036; --border-color: #222f4d; --accent-blue: #3b82f6; --accent-green: #10b981; --accent-red: #ef4444; }
+        :root { --bg-main: #0a0e1a; --bg-card: #121829; --bg-input: #172036; --border-color: #222f4d; --accent-blue: #3b82f6; --accent-green: #10b981; --accent-red: #ef4444; --accent-orange: #f39c12; }
         body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg-main); color: #fff; margin:0; padding:0; }
         .header { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 18px 30px; border-bottom: 1px solid var(--border-color); font-size: 22px; font-weight: bold; color: #3b82f6; }
         .grid-master { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; padding: 30px; max-width: 1400px; margin: 0 auto; }
@@ -19,14 +19,15 @@
         .btn-blue { background: var(--accent-blue); color:#fff; }
         .btn-green { background: var(--accent-green); color:#000; }
         .btn-red { background: var(--accent-red); color:#fff; }
+        .btn-orange { background: var(--accent-orange); color:#fff; }
         .lista-itens { max-height: 280px; overflow-y: auto; margin-top: 15px; }
         .item-row { background: var(--bg-input); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
         
-        /* Estilos da tabela de usuários */
         .tabela-membros { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         .tabela-membros th { text-align: left; padding: 10px; background: #0a0e1a; color: var(--accent-blue); }
         .tabela-membros td { padding: 10px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
         .input-saldo-man { width: 90px; padding: 6px; text-align: center; }
+        .status-badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -44,10 +45,8 @@
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
-            <!-- SELETOR ULTRA SIMPLIFICADO POR CATEGORIAS GERAIS -->
             <select id="enqAtivo">
                 <option value="" disabled selected>-- Escolha a Categoria do Mercado --</option>
-                
                 <optgroup label="💼 MERCADO FINANCEIRO">
                     <option value="Forex">Forex</option>
                     <option value="Criptomoedas">Criptomoedas</option>
@@ -56,7 +55,6 @@
                     <option value="Ações Internacionais">Ações Internacionais</option>
                     <option value="FIIs (Fundos Imobiliários)">FIIs (Fundos Imobiliários)</option>
                 </optgroup>
-
                 <optgroup label="🏆 MODALIDADES ESPORTIVAS">
                     <option value="Futebol">Futebol</option>
                     <option value="Basquete">Basquete</option>
@@ -73,11 +71,11 @@
             </select>
         </div>
         <div class="form-row">
-            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Vitória Casa / Mais de 2.5)">
-            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Empate ou Fora / Menos de 2.5)">
+            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Vitória Casa)">
+            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Empate ou Fora)">
         </div>
         <div class="form-row">
-            <input type="text" id="enqPrecoAlvo" placeholder="Ativo / Jogo / Detalhes (Ex: BTC/USD a $68k, Real Madrid x Milan, PETR4)">
+            <input type="text" id="enqPrecoAlvo" placeholder="Ativo / Jogo / Detalhes (Ex: EURUSD no fechamento, Real Madrid x Milan)">
             <input type="date" id="enqDataFim">
             <input type="time" id="enqHoraFim">
         </div>
@@ -85,7 +83,7 @@
     </div>
 
     <div class="box-adm">
-        <h2>⚡ Liquidar e Finalizar Enquetes Ativas (Com Rateio Automático)</h2>
+        <h2>⚡ Controlar e Liquidar Enquetes Ativas</h2>
         <div class="lista-itens" id="admListaEnquetes"></div>
     </div>
 
@@ -100,7 +98,7 @@
     </div>
 
     <div class="box-adm box-full">
-        <h2>👥 Gestão de Membros e Ajustes Manuais (Suporte Antifraude/Bugs)</h2>
+        <h2>👥 Gestão de Membros e Ajustes Manuais</h2>
         <div style="max-height: 400px; overflow-y: auto;">
             <table class="tabela-membros">
                 <thead>
@@ -113,8 +111,7 @@
                         <th>Status da Conta</th>
                     </tr>
                 </thead>
-                <tbody id="tabelaUsuariosAdm">
-                    </tbody>
+                <tbody id="tabelaUsuariosAdm"></tbody>
             </table>
         </div>
     </div>
@@ -136,11 +133,7 @@
         let { data: usuarios } = await _supabase.from('usuarios').select('*').order('username', { ascending: true });
         const tbody = document.getElementById('tabelaUsuariosAdm');
         tbody.innerHTML = '';
-
-        if (!usuarios || usuarios.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" style="color:#6b7280; text-align:center;">Nenhum usuário registrado.</td></tr>`;
-            return;
-        }
+        if (!usuarios || usuarios.length === 0) return;
 
         usuarios.forEach(u => {
             const statusTexto = u.ativo !== false ? '✅ Ativa' : '❌ Bloqueada';
@@ -170,27 +163,17 @@
 
     async function salvarSaldoManual(username) {
         const novoSaldo = parseFloat(document.getElementById(`saldo_man_${username}`).value);
-        if (isNaN(novoSaldo) || novoSaldo < 0) return alert("Por favor, digite um saldo válido.");
-
-        if (!confirm(`Deseja alterar forçadamente o saldo de ${username} para R$ ${novoSaldo.toFixed(2)}?`)) return;
-
+        if (isNaN(novoSaldo) || novoSaldo < 0) return alert("Digite um saldo válido.");
         await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', username);
-        
         await _supabase.from('transacoes').insert([{
-            usuario: username, tipo: 'ajuste_adm',
-            descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
+            usuario: username, tipo: 'ajuste_adm', descricao: `Ajuste manual de saldo feito pelo Administrador`, valor: novoSaldo
         }]);
-
         alert(`Saldo de ${username} atualizado!`);
         listarUsuariosMaster();
     }
 
     async function alternarStatusConta(username, statusAtual) {
-        const acao = statusAtual ? "DESATIVAR/BLOQUEAR" : "REATIVAR";
-        if (!confirm(`Tem certeza que deseja ${acao} a conta do usuário ${username}?`)) return;
-
         await _supabase.from('usuarios').update({ ativo: !statusAtual }).eq('username', username);
-        alert(`Conta de ${username} atualizada!`);
         listarUsuariosMaster();
     }
 
@@ -203,8 +186,7 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo) return alert("Selecione uma categoria válida na lista.");
-        if(!op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
+        if(!ativo || !op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
 
         await _supabase.from('enquetes').insert([{
             ativo: ativo, tipo: tipo, op1: op1, op2: op2, preco_alvo: precoAlvo,
@@ -212,94 +194,72 @@
         }]);
 
         alert("Mercado criado com sucesso!");
-        
-        document.getElementById('enqOp1').value = '';
-        document.getElementById('enqOp2').value = '';
-        document.getElementById('enqPrecoAlvo').value = '';
-        document.getElementById('enqDataFim').value = '';
-        document.getElementById('enqHoraFim').value = '';
-
-        inicializarPainel();
+        location.reload();
     }
 
     async function listarEnquetesAdm() {
         let { data: enquetes } = await _supabase.from('enquetes').select('*').eq('finalizada', false);
         const container = document.getElementById('admListaEnquetes');
         container.innerHTML = '';
-
-        if(!enquetes || enquetes.length === 0) {
-            container.innerHTML = `<p style="color:#6b7280;">Nenhuma enquete ativa no momento.</p>`;
-            return;
-        }
+        if(!enquetes || enquetes.length === 0) { container.innerHTML = `<p style="color:#6b7280;">Nenhum mercado ativo.</p>`; return; }
 
         enquetes.forEach(enq => {
+            const badgeCor = enq.pausada ? 'background:var(--accent-red); color:#fff;' : 'background:var(--accent-green); color:#000;';
+            const badgeTexto = enq.pausada ? '🔒 APOSTAS BLOQUEADAS' : '🟢 RECEBENDO APOSTAS';
+            const botaoTravaTexto = enq.pausada ? '🔓 Liberar Apostas' : '🔒 Bloquear Apostas';
+
             container.innerHTML += `<div class="item-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
-                <div><b>${enq.ativo}</b> (${enq.tipo.toUpperCase()})</div>
-                <div style="font-size:13px; color:#9ca3af;">Alvo/Contexto: ${enq.preco_alvo || 'Sem detalhes'}</div>
+                <div style="width:100%; display:flex; justify-content: space-between; align-items:center;">
+                    <div><b>${enq.ativo}</b> (${enq.tipo.toUpperCase()})</div>
+                    <span class="status-badge" style="${badgeCor}">${badgeTexto}</span>
+                </div>
+                <div style="font-size:13px; color:#9ca3af;">Contexto: ${enq.preco_alvo || 'Sem detalhes'} | Expira em: ${enq.data_fim} às ${enq.hora_fim || '00:00'}</div>
+                
                 <div class="form-row" style="width:100%;">
                     <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op1}', '${enq.ativo}')">Venceu: ${enq.op1}</button>
                     <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op2}', '${enq.ativo}')">Venceu: ${enq.op2}</button>
-                    <button class="btn-master btn-red" style="padding:6px 12px; font-size:12px; background:#e67e22;" onclick="alternarPausaEnquete(${enq.id}, ${enq.pausada})">${enq.pausada ? 'Despausar' : 'Pausar/Suspender'}</button>
+                    <button class="btn-master btn-orange" style="padding:6px 12px; font-size:12px;" onclick="alternarTravaAposta(${enq.id}, ${enq.pausada})">${botaoTravaTexto}</button>
                 </div>
             </div>`;
         });
     }
 
-    async function alternarPausaEnquete(id, statusAtual) {
+    async function alternarTravaAposta(id, statusAtual) {
         await _supabase.from('enquetes').update({ pausada: !statusAtual }).eq('id', id);
         inicializarPainel();
     }
 
     async function liquidarEnqueteComRateio(enqueteId, opcaoVencedora, nomeAtivo) {
-        if(!confirm(`Confirmar vitória de "${opcaoVencedora}" com cálculo de rateio?`)) return;
-
+        if(!confirm(`Confirmar vitória de "${opcaoVencedora}"?`)) return;
         let { data: todasAsApostas } = await _supabase.from('apostas').select('*').eq('enquete_id', enqueteId);
         
         if(todasAsApostas && todasAsApostas.length > 0) {
-            let poteTotal = 0;
-            let poteVencedores = 0;
-            let vencedores = [];
-            let perdedores = [];
+            let poteTotal = 0, poteVencedores = 0;
+            let vencedores = [], perdedores = [];
 
             todasAsApostas.forEach(aposta => {
                 poteTotal += parseFloat(aposta.valor);
-                if(aposta.palpite === opcaoVencedora) {
-                    poteVencedores += parseFloat(aposta.valor);
-                    vencedores.push(aposta);
-                } else {
-                    perdedores.push(aposta);
-                }
+                if(aposta.palpite === opcaoVencedora) { poteVencedores += parseFloat(aposta.valor); vencedores.push(aposta); }
+                else { perdedores.push(aposta); }
             });
 
             if(vencedores.length > 0 && poteVencedores > 0) {
                 for(let vencedor of vencedores) {
                     let proporcao = parseFloat(vencedor.valor) / poteVencedores;
                     let premioGanho = poteTotal * proporcao;
-
                     let { data: u } = await _supabase.from('usuarios').select('saldo').eq('username', vencedor.usuario.trim()).single();
-                    let saldoNovo = parseFloat(u.saldo || 0) + premioGanho;
-
-                    await _supabase.from('usuarios').update({ saldo: saldoNovo }).eq('username', vencedor.usuario.trim());
-                    
-                    await _supabase.from('transacoes').insert([{
-                        usuario: vencedor.usuario.trim(), tipo: 'lucro_enquete',
-                        descricao: `Acertou a enquete [${nomeAtivo}] - Recebeu Rateio`, valor: premioGanho
-                    }]);
+                    await _supabase.from('usuarios').update({ saldo: parseFloat(u.saldo || 0) + premioGanho }).eq('username', vencedor.usuario.trim());
+                    await _supabase.from('transacoes').insert([{ usuario: vencedor.usuario.trim(), tipo: 'lucro_enquete', descricao: `Acertou [${nomeAtivo}] - Rateio`, valor: premioGanho }]);
                 }
             }
-
             if(perdedores.length > 0) {
                 for(let perdedor of perdedores) {
-                    await _supabase.from('transacoes').insert([{
-                        usuario: perdedor.usuario.trim(), tipo: 'perda_enquete',
-                        descricao: `Errou a enquete [${nomeAtivo}] - Palpite: ${perdedor.palpite}`, valor: -parseFloat(perdedor.valor)
-                    }]);
+                    await _supabase.from('transacoes').insert([{ usuario: perdedor.usuario.trim(), tipo: 'perda_enquete', descricao: `Errou [${nomeAtivo}] - Palpite: ${perdedor.palpite}`, valor: -parseFloat(perdedor.valor) }]);
                 }
             }
         }
-
         await _supabase.from('enquetes').update({ finalizada: true }).eq('id', enqueteId);
-        alert("Mercado liquidado!");
+        alert("Mercado finalizado!");
         inicializarPainel();
     }
 
@@ -307,12 +267,7 @@
         let { data: deps } = await _supabase.from('depositos').select('*').eq('status', 'pendente');
         const container = document.getElementById('admListaDepositos');
         container.innerHTML = '';
-
-        if(!deps || deps.length === 0) {
-            container.innerHTML = `<p style="color:#6b7280;">Nenhum depósito aguardando aprovação.</p>`;
-            return;
-        }
-
+        if(!deps || deps.length === 0) return;
         deps.forEach(d => {
             container.innerHTML += `<div class="item-row">
                 <div>👤 <b>${d.usuario}</b> enviou R$ ${Number(d.valor).toFixed(2)}</div>
@@ -322,37 +277,11 @@
     }
 
     async function aprovarDeposito(id, usuario, valor) {
-        const usuarioLimpo = usuario ? usuario.trim() : "";
-        
-        let { data: u } = await _supabase.from('usuarios').select('*').eq('username', usuarioLimpo).single();
-        let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
-        await _supabase.from('usuarios').update({ saldo: saldoAtual + parseFloat(valor) }).eq('username', usuarioLimpo);
+        let { data: u } = await _supabase.from('usuarios').select('*').eq('username', usuario.trim()).single();
+        await _supabase.from('usuarios').update({ saldo: parseFloat(u.saldo || 0) + parseFloat(valor) }).eq('username', usuario.trim());
         await _supabase.from('depositos').update({ status: 'aprovado' }).eq('id', id);
-        
-        await _supabase.from('transacoes').insert([{
-            usuario: usuarioLimpo, tipo: 'deposito', descricao: `Depósito via PIX aprovado com sucesso`, valor: parseFloat(valor)
-        }]);
-
-        if (u && u.indicado_por) {
-            let { data: todosDeps } = await _supabase.from('depositos').select('id').eq('usuario', usuarioLimpo).eq('status', 'aprovado');
-            
-            if (todosDeps && todosDeps.length === 1) {
-                let padrinho = u.indicado_por.trim();
-                let { data: p = null } = await _supabase.from('usuarios').select('saldo').eq('username', padrinho).single();
-                
-                if (p) {
-                    let novoSaldoPadrinho = parseFloat(p.saldo || 0) + 9.00;
-                    await _supabase.from('usuarios').update({ saldo: novoSaldoPadrinho }).eq('username', padrinho);
-                    
-                    await _supabase.from('transacoes').insert([{
-                        usuario: padrinho, tipo: 'bonus_afiliado',
-                        descricao: `Bônus de Afiliado: Primeiro depósito do indicado "${usuarioLimpo}"`, valor: 9.00
-                    }]);
-                }
-            }
-        }
-
-        alert("Depósito computado e verificação de bônus executada!");
+        await _supabase.from('transacoes').insert([{ usuario: usuario.trim(), tipo: 'deposito', descricao: `Depósito via PIX aprovado`, valor: parseFloat(valor) }]);
+        alert("Depósito aprovado!");
         inicializarPainel();
     }
 
@@ -360,12 +289,7 @@
         let { data: saqs } = await _supabase.from('saques').select('*').eq('status', 'pendente');
         const container = document.getElementById('admListaSaques');
         container.innerHTML = '';
-
-        if(!saqs || saqs.length === 0) {
-            container.innerHTML = `<p style="color:#6b7280;">Nenhum pedido de retirada na fila.</p>`;
-            return;
-        }
-
+        if(!saqs || saqs.length === 0) return;
         saqs.forEach(s => {
             container.innerHTML += `<div class="item-row" style="flex-direction:column; align-items:flex-start; gap:5px;">
                 <div>👤 <b>${s.usuario}</b> solicita <b>R$ ${Number(s.valor).toFixed(2)}</b></div>
@@ -376,23 +300,13 @@
     }
 
     async function aprovarSaque(id, usuario, valor) {
-        const usuarioLimpo = usuario ? usuario.trim() : "";
-        let { data: u = null } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLimpo).single();
-        let saldoAtual = u ? parseFloat(u.saldo || 0) : 0;
-
         await _supabase.from('saques').update({ status: 'aprovado' }).eq('id', id);
-        
-        await _supabase.from('transacoes').insert([{
-            usuario: usuarioLimpo, tipo: 'saque', descricao: `Saque via PIX enviado para sua conta bancária`, valor: -parseFloat(valor)
-        }]);
-
+        await _supabase.from('transacoes').insert([{ usuario: usuario.trim(), tipo: 'saque', descricao: `Saque via PIX enviado`, valor: -parseFloat(valor) }]);
         alert("Retirada concluída!");
         inicializarPainel();
     }
 
-    window.onload = function() {
-        inicializarPainel();
-    };
+    window.onload = function() { inicializarPainel(); };
 </script>
 </body>
 </html>
