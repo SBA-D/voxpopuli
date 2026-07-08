@@ -32,17 +32,14 @@
         .timer { font-size: 16px; font-weight: 700; color: var(--accent-red); background: #1a121e; padding: 12px; border-radius: 8px; border: 1px solid #3d1c24; text-align: center; }
         .qr-area { margin-top: 10px; background: #fff; color: #000; padding: 15px; border-radius: 8px; display: none; text-align: center; }
         .afiliados-box { background: linear-gradient(135deg, #0e162e 0%, #060a17 100%); border: 1px dashed var(--accent-blue); padding: 20px; border-radius: 14px; margin-bottom: 25px; }
-
         .tendencia-container { margin: 12px 0; font-size: 12px; color: var(--text-muted); }
         .barra-progresso-bg { background: #1c253d; height: 8px; border-radius: 4px; overflow: hidden; display: flex; margin-top: 4px; margin-bottom: 15px; }
         .barra-op1 { background: var(--accent-blue); height: 100%; transition: width 0.3s; }
         .barra-op2 { background: #e28743; height: 100%; transition: width 0.3s; }
-
         .modal-regras { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-conteudo { background: var(--bg-card); border: 1px solid var(--border-color); width: 90%; max-width: 500px; padding: 25px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
         .modal-conteudo h3 { margin-top: 0; color: var(--accent-blue); }
         .modal-conteudo p { font-size: 14px; line-height: 1.6; color: #cbd5e1; }
-        
         .modal-grafico-conteudo { background: #131722; border: 1px solid var(--border-color); width: 95%; max-width: 900px; height: 550px; padding: 20px; border-radius: 14px; display: flex; flex-direction: column; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -76,14 +73,13 @@
         <button class="btn btn-blue" style="padding: 6px 12px; font-size: 12px; background: #1c253d; border: 1px solid var(--border-color);" onclick="abrirModalAjuda()">❓ Como funciona?</button>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-        <button style="padding:10px 14px; background:#1c253d; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="atualizarDados()">🔄 Recarregar</button>
+        <button style="padding:10px 14px; background:#1c253d; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="atualizarDados(true)">🔄 Recarregar</button>
         <div class="moedas-badge">🪙 <span id="saldoUsuario">0.00</span> Moedas</div>
         <button style="padding:10px 18px; background:#202431; border:none; color:white; border-radius:8px; cursor:pointer; font-weight: bold;" onclick="localStorage.removeItem('usuarioLogado'); window.location.href='./index.html';">Sair</button>
     </div>
 </div>
 
 <div class="main-content">
-
     <div class="afiliados-box">
         <h3 style="margin-top:0; margin-bottom:8px; color: var(--accent-blue); font-size:16px;">📢 Sistema de Convites (Ganhe R$ 9,00)</h3>
         <p style="font-size:13px; color:var(--text-muted); margin:0 0 12px 0;">Copie seu link de indicação seguro abaixo. Quando seu convidado criar a conta e fizer o primeiro depósito na plataforma, você receberá <b>9 Moedas (R$ 9,00)</b> de bônus instantâneo!</p>
@@ -142,7 +138,7 @@
     function abrirModalGrafico(nomeAtivo) {
         document.getElementById('modalGrafico').style.display = 'flex';
         document.getElementById('tituloGrafico').innerText = `Análise Técnica Avançada: ${nomeAtivo}`;
-        let ativoFormatado = nomeAtivo.replace('/', '').replace(' ', '').toUpperCase();
+        let ativoFormatado = nomeAtivo ? nomeAtivo.replace('/', '').replace(' ', '').toUpperCase() : "BTCUSD";
         if(ativoFormatado.length < 3) ativoFormatado = "BTCUSD";
 
         new TradingView.widget({
@@ -158,15 +154,30 @@
         document.getElementById('tradingview_widget_area').innerHTML = '';
     }
 
-    async function atualizarDados() {
-        let { data: user } = await _supabase.from('usuarios').select('saldo, codigo_afiliado').eq('username', usuarioLogado).single();
-        if(user) {
-            document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
-            let codigoParaLink = user.codigo_afiliado || Math.floor(100000 + Math.random() * 900000).toString();
-            const urlBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-            document.getElementById('linkAfiliado').value = `${urlBase}/index.html?ref=${codigoParaLink}`;
+    async function atualizarDados(isManual = false) {
+        try {
+            let { data: user, error } = await _supabase.from('usuarios').select('saldo, codigo_afiliado').eq('username', usuarioLogado).maybeSingle();
+            if(error) console.error("Erro Supabase Usuário:", error);
+            
+            if(user) {
+                document.getElementById('saldoUsuario').innerText = Number(user.saldo || 0).toFixed(2);
+                let codigoParaLink = user.codigo_afiliado || Math.floor(100000 + Math.random() * 900000).toString();
+                const urlBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+                document.getElementById('linkAfiliado').value = `${urlBase}/index.html?ref=${codigoParaLink}`;
+            }
+        } catch(e) {
+            console.error("Erro crítico na sincronização do saldo:", e);
         }
-        await carregarEnquetes();
+
+        try {
+            await carregarEnquetes();
+        } catch(e) {
+            console.error("Erro ao renderizar enquetes:", e);
+        }
+
+        if(isManual) {
+            alert("Dados atualizados com sucesso!");
+        }
     }
 
     function copiarLinkAfiliado() {
@@ -200,10 +211,9 @@
         const valor = parseFloat(document.getElementById('valorSaque').value);
         if(!chave || isNaN(valor) || valor <= 0) return alert("Dados de saque inválidos.");
         
-        let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
+        let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).maybeSingle();
         if(!user || parseFloat(user.saldo) < valor) return alert("❌ Saldo insuficiente para solicitar este saque.");
 
-        // O valor já é retido imediatamente para evitar golpes de gastos duplos
         const novoSaldoRetido = parseFloat(user.saldo) - valor;
         await _supabase.from('usuarios').update({ saldo: novoSaldoRetido }).eq('username', usuarioLogado);
 
@@ -247,9 +257,10 @@
             if(apostas) {
                 apostas.forEach(a => { 
                     if(a.enquete_id == enq.id) { 
-                        volumePote += parseFloat(a.valor); totalPalpites++;
-                        if(a.palpite === enq.op1) moedasOp1 += parseFloat(a.valor);
-                        if(a.palpite === enq.op2) moedasOp2 += parseFloat(a.valor);
+                        let vAposta = parseFloat(a.valor) || 0;
+                        volumePote += vAposta; totalPalpites++;
+                        if(a.palpite === enq.op1) moedasOp1 += vAposta;
+                        if(a.palpite === enq.op2) moedasOp2 += vAposta;
                     } 
                 });
             }
@@ -257,7 +268,7 @@
             let pctOp1 = volumePote > 0 ? Math.round((moedasOp1 / volumePote) * 100) : 50;
             let pctOp2 = volumePote > 0 ? Math.round((moedasOp2 / volumePote) * 100) : 50;
 
-            let botaoGraficoHtml = (enq.tipo === 'financeiro' && !enq.finalizada)
+            let botaoGraficoHtml = (enq.tipo === 'financeiro' && !enq.finalizada && enq.ativo && enq.ativo !== 'EMPTY')
                 ? `<button class="btn btn-blue" style="background:#1e293b; border:1px solid #334155; font-size:12px; padding:6px 12px; margin-left:10px;" onclick="abrirModalGrafico('${enq.ativo}')">🔍 Ver Gráfico / Dados</button>`
                 : '';
 
@@ -272,13 +283,11 @@
                             <div class="pote-acumulado-marcador" style="background:#0a101d; color:#9ca3af;">💰 Pote Final: R$ ${volumePote.toFixed(2)}</div>
                             ${marcadorFechamentoHtml}
                         </div>
-                        <div style="font-size:15px; text-transform:uppercase; font-weight:700; color:var(--accent-blue); margin-bottom:2px;">📊 Ativo: ${enq.ativo}</div>
-                        
+                        <div style="font-size:15px; text-transform:uppercase; font-weight:700; color:var(--accent-blue); margin-bottom:2px;">📊 Ativo: ${enq.ativo || 'N/A'}</div>
                         <div style="font-size:20px; font-weight:800; margin-bottom:8px; color:#fff;">❓ Pergunta: ${enq.pergunta || 'Mercado de Tendência'}</div>
-                        
                         <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro: <b>${enq.preco_alvo || 'Direto'}</b></p>
                         <div style="background:#0b1d16; color:var(--accent-green); padding:14px; border-radius:8px; font-weight:bold; display:inline-block; border: 1px solid #104c32;">
-                            🏆 Resultado Oficial: Venceu a opção "${enq.op1}"
+                            🏆 Resultado Oficial: Venceu a opção "${enq.resultado_vencedor || enq.op1}"
                         </div>
                     </div>
                 </div>`;
@@ -287,8 +296,8 @@
                     ? `<div style="background:#251418; color:var(--accent-red); border: 1px solid #4a1d24; padding:12px; border-radius:8px; text-align:center; font-weight:bold; font-size:14px; margin-bottom:10px;">🔒 Apostas encerradas! Acompanhe o encerramento técnico.</div>
                        <button class="opcao-btn" disabled style="opacity:0.4; cursor:not-allowed;"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Bloqueado</span></button>
                        <button class="opcao-btn" disabled style="opacity:0.4; cursor:not-allowed;"><span>▼ ${enq.op2} (${pctOp2}%)</span> <span>Bloqueado</span></button>`
-                    : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo}')"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Selecionar</span></button>
-                       <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo}')"><span>▼ ${enq.op2} (${pctOp2}%)</span> <span>Selecionar</span></button>`;
+                    : `<button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op1}', '${enq.ativo || ''}')"><span>▲ ${enq.op1} (${pctOp1}%)</span> <span>Selecionar</span></button>
+                       <button class="opcao-btn" onclick="apostar(${enq.id}, '${enq.op2}', '${enq.ativo || ''}')"><span>▼ ${enq.op2} (${pctOp2}%)</span> <span>Selecionar</span></button>`;
 
                 container.innerHTML += `<div class="enquete-box">
                     <div>
@@ -298,19 +307,14 @@
                             ${marcadorFechamentoHtml}
                             ${botaoGraficoHtml}
                         </div>
-                        
-                        <div style="font-size:14px; text-transform:uppercase; font-weight:700; color:var(--accent-blue); margin-top:5px; margin-bottom:2px;">📊 Ativo: ${enq.ativo}</div>
-                        
+                        <div style="font-size:14px; text-transform:uppercase; font-weight:700; color:var(--accent-blue); margin-top:5px; margin-bottom:2px;">📊 Ativo: ${enq.ativo || 'N/A'}</div>
                         <div style="font-size:20px; font-weight:800; color:#fff; margin-bottom:5px; line-height:1.4;">❓ ${enq.pergunta || 'O ativo vai subir ou descer em relação ao fechamento?'}</div>
-                        
                         <p style="color:var(--text-muted); font-size:14px; margin:0 0 15px 0;">Parâmetro técnico: <b>${enq.preco_alvo || 'Direto'}</b></p>
-                        
                         <div class="tendencia-container">Tendência do mercado: ${pctOp1}% ${enq.op1} vs ${pctOp2}% ${enq.op2}</div>
                         <div class="barra-progresso-bg">
                             <div class="barra-op1" style="width: ${pctOp1}%;"></div>
                             <div class="barra-op2" style="width: ${pctOp2}%;"></div>
                         </div>
-
                         ${corpoVotos}
                     </div>
                     <div><div class="timer">⏱️ Expira em:<br><span style="font-size:13px; color:#fff;">${enq.data_fim} às ${enq.hora_fim || '00:00'}</span></div></div>
@@ -320,7 +324,7 @@
     }
 
     async function apostar(id, palpite, ativo) {
-        let { data: enqCheck } = await _supabase.from('enquetes').select('pausada').eq('id', id).single();
+        let { data: enqCheck } = await _supabase.from('enquetes').select('pausada').eq('id', id).maybeSingle();
         if(enqCheck && enqCheck.pausada === true) {
             alert("🔒 Operação cancelada! As apostas para este mercado acabam de ser encerradas.");
             await carregarEnquetes();
@@ -333,12 +337,11 @@
         let val = parseFloat(qte);
         if(isNaN(val) || val <= 0) return alert("Por favor, insira um valor válido maior que zero.");
         
-        let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
+        let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).maybeSingle();
         if(!user || parseFloat(user.saldo) < val) return alert("❌ Saldo insuficiente para realizar este palpite.");
 
         const novoSaldo = parseFloat(user.saldo) - val;
 
-        // Execuções estritamente sequenciais para impedir descompasso visual
         await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
