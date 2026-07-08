@@ -38,13 +38,11 @@
         .barra-op1 { background: var(--accent-blue); height: 100%; transition: width 0.3s; }
         .barra-op2 { background: #e28743; height: 100%; transition: width 0.3s; }
 
-        /* Modais (Ajuda e Gráfico) */
         .modal-regras { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; justify-content: center; align-items: center; }
         .modal-conteudo { background: var(--bg-card); border: 1px solid var(--border-color); width: 90%; max-width: 500px; padding: 25px; border-radius: 14px; box-shadow: 0 10px 30px rgba(0,0,0,0.6); }
         .modal-conteudo h3 { margin-top: 0; color: var(--accent-blue); }
         .modal-conteudo p { font-size: 14px; line-height: 1.6; color: #cbd5e1; }
         
-        /* Modal Ampliado para o Gráfico */
         .modal-grafico-conteudo { background: #131722; border: 1px solid var(--border-color); width: 95%; max-width: 900px; height: 550px; padding: 20px; border-radius: 14px; display: flex; flex-direction: column; }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -257,7 +255,6 @@
                 ? `<button class="btn btn-blue" style="background:#1e293b; border:1px solid #334155; font-size:12px; padding:6px 12px; margin-left:10px;" onclick="abrirModalGrafico('${enq.ativo}')">🔍 Ver Gráfico / Dados</button>`
                 : '';
 
-            // Renderiza o marcador do fechamento caso ele exista preenchido no banco
             let marcadorFechamentoHtml = enq.fechamento_anterior 
                 ? `<div class="fechamento-marcador">📉 Fechamento Anterior: ${enq.fechamento_anterior}</div>` 
                 : '';
@@ -325,15 +322,22 @@
         }
 
         let qte = prompt("Quantas moedas deseja alocar nesta opção?", "10");
+        if (qte === null) return; // Se o usuário cancelar o prompt
+        
         let val = parseFloat(qte);
-        if(isNaN(val) || val <= 0) return;
+        if(isNaN(val) || val <= 0) return alert("Por favor, insira um valor válido maior que zero.");
+        
         let { data: user } = await _supabase.from('usuarios').select('saldo').eq('username', usuarioLogado).single();
-        if(!user || parseFloat(user.saldo) < val) return alert("Saldo insuficiente.");
+        if(!user || parseFloat(user.saldo) < val) return alert("❌ Saldo insuficiente para realizar este palpite.");
 
-        await _supabase.from('usuarios').update({ saldo: parseFloat(user.saldo) - val }).eq('username', usuarioLogado);
+        const novoSaldo = parseFloat(user.saldo) - val;
+
+        // Executa as atualizações de forma linear e síncrona usando await
+        await _supabase.from('usuarios').update({ saldo: novoSaldo }).eq('username', usuarioLogado);
         await _supabase.from('apostas').insert([{ usuario: usuarioLogado, enquete_id: id, ativo: ativo, palpite: palpite, valor: val }]);
         await _supabase.from('transacoes').insert([{ usuario: usuarioLogado, tipo: 'alocacao', descricao: `Alocação na enquete [${ativo}] - Palpite: ${palpite}`, valor: -val }]);
-        alert("Alocação efetuada!");
+        
+        alert("Alocação efetuada com sucesso!");
         atualizarDados();
     }
 
