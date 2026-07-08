@@ -23,6 +23,10 @@
         .btn-red { background: var(--accent-red); color:#fff; }
         .btn-orange { background: var(--accent-orange); color:#fff; }
         .lista-itens { max-height: 280px; overflow-y: auto; margin-top: 15px; }
+        
+        /* Ajuste específico para esticar a área de enquetes ativas e fixar 2 cards sem espremer */
+        #admListaEnquetes { max-height: 630px; }
+
         .item-row { background: var(--bg-input); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-size: 14px; }
         
         .tabela-membros { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
@@ -207,7 +211,7 @@
         await _supabase.from('transacoes').insert([{
             usuario: username, tipo: 'ajuste_adm', descricao: `Ajuste manual de saldo feito pelo Administrator`, valor: novoSaldo
         }]);
-        alert(`Saldo de ${username} atualizado!`);
+        alert(`Saldo de ${username} updated!`);
         listarUsuariosMaster();
     }
 
