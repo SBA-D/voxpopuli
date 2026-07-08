@@ -44,57 +44,17 @@
     <div class="box-adm">
         <h2>📊 Lançar Novo Mercado / Enquete</h2>
         <div class="form-row">
-            <!-- SELETOR COMPLETO COM ATIVOS E MODALIDADES ESPORTIVAS -->
+            <!-- SELETOR ULTRA SIMPLIFICADO POR CATEGORIAS GERAIS -->
             <select id="enqAtivo">
-                <option value="" disabled selected>-- Escolha o Ativo ou Esporte para a Enquete --</option>
+                <option value="" disabled selected>-- Escolha a Categoria do Mercado --</option>
                 
-                <optgroup label="💱 FOREX (Alta Volatilidade)">
-                    <option value="EURUSD">EUR/USD (Euro / Dólar)</option>
-                    <option value="GBPUSD">GBP/USD (Libra / Dólar)</option>
-                    <option value="USDJPY">USD/JPY (Dólar / Iene)</option>
-                    <option value="AUDUSD">AUD/USD (Dólar Australiano / Dólar)</option>
-                    <option value="USDCAD">USD/CAD (Dólar / Dólar Canadense)</option>
-                    <option value="EURJPY">EUR/JPY (Euro / Iene)</option>
-                    <option value="GBPJPY">GBP/JPY (Libra / Iene)</option>
-                </optgroup>
-
-                <optgroup label="🪙 CRIPTOMOEDAS (Mais Procuradas)">
-                    <option value="BTCUSD">BTC/USD (Bitcoin)</option>
-                    <option value="ETHUSD">ETH/USD (Ethereum)</option>
-                    <option value="SOLUSD">SOL/USD (Solana)</option>
-                    <option value="BNBUSD">BNB/USD (Binance Coin)</option>
-                    <option value="XRPUSD">XRP/USD (Ripple)</option>
-                </optgroup>
-
-                <optgroup label="📊 ÍNDICES & MOEDAS LOCAIS">
-                    <option value="WIN1!">WIN1! (Mini Índice Ibovespa)</option>
-                    <option value="USDBRL">USD/BRL (Mini Dólar / Dólar Comercial)</option>
-                    <option value="NAS100">NAS100 (NASDAQ 100)</option>
-                    <option value="SPX500">SPX500 (S&P 500)</option>
-                    <option value="US30">US30 (Dow Jones)</option>
-                </optgroup>
-
-                <optgroup label="📈 AÇÕES BRASILEIRAS (B3)">
-                    <option value="PETR4">PETR4 (Petrobras)</option>
-                    <option value="VALE3">VALE3 (Vale)</option>
-                    <option value="MGLU3">MGLU3 (Magazine Luiza)</option>
-                    <option value="ITUB4">ITUB4 (Itaú Unibanco)</option>
-                    <option value="BBDC4">BBDC4 (Bradesco)</option>
-                </optgroup>
-
-                <optgroup label="🇺🇸 AÇÕES AMERICANAS (EUA)">
-                    <option value="AAPL">AAPL (Apple)</option>
-                    <option value="TSLA">TSLA (Tesla)</option>
-                    <option value="AMZN">AMZN (Amazon)</option>
-                    <option value="MSFT">MSFT (Microsoft)</option>
-                    <option value="NVDA">NVDA (NVIDIA)</option>
-                </optgroup>
-
-                <optgroup label="🏢 FIIs (Fundos Imobiliários)">
-                    <option value="MXRF11">MXRF11 (Maxi Renda)</option>
-                    <option value="HGLG11">HGLG11 (CGHG Logística)</option>
-                    <option value="XPLG11">XPLG11 (XP Log)</option>
-                    <option value="KNRI11">KNRI11 (Kinea Renda Imobiliária)</option>
+                <optgroup label="💼 MERCADO FINANCEIRO">
+                    <option value="Forex">Forex</option>
+                    <option value="Criptomoedas">Criptomoedas</option>
+                    <option value="Índices">Índices</option>
+                    <option value="Ações Nacionais (B3)">Ações Nacionais (B3)</option>
+                    <option value="Ações Internacionais">Ações Internacionais</option>
+                    <option value="FIIs (Fundos Imobiliários)">FIIs (Fundos Imobiliários)</option>
                 </optgroup>
 
                 <optgroup label="🏆 MODALIDADES ESPORTIVAS">
@@ -113,11 +73,11 @@
             </select>
         </div>
         <div class="form-row">
-            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Vitória Time A / Mais de 2.5)">
-            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Empate ou Time B / Menos de 2.5)">
+            <input type="text" id="enqOp1" placeholder="Opção 1 (Ex: Sobe / Vitória Casa / Mais de 2.5)">
+            <input type="text" id="enqOp2" placeholder="Opção 2 (Ex: Desce / Empate ou Fora / Menos de 2.5)">
         </div>
         <div class="form-row">
-            <input type="text" id="enqPrecoAlvo" placeholder="Parâmetro/Preço Alvo (Ex: 65.200, Real Madrid x Barcelona, UFC 300)">
+            <input type="text" id="enqPrecoAlvo" placeholder="Ativo / Jogo / Detalhes (Ex: BTC/USD a $68k, Real Madrid x Milan, PETR4)">
             <input type="date" id="enqDataFim">
             <input type="time" id="enqHoraFim">
         </div>
@@ -230,7 +190,7 @@
         if (!confirm(`Tem certeza que deseja ${acao} a conta do usuário ${username}?`)) return;
 
         await _supabase.from('usuarios').update({ ativo: !statusAtual }).eq('username', username);
-        alert(`Conta de ${username} updated!`);
+        alert(`Conta de ${username} atualizada!`);
         listarUsuariosMaster();
     }
 
@@ -243,7 +203,7 @@
         const dataFim = document.getElementById('enqDataFim').value;
         const horaFim = document.getElementById('enqHoraFim').value;
 
-        if(!ativo) return alert("Selecione um ativo ou esporte válido na lista.");
+        if(!ativo) return alert("Selecione uma categoria válida na lista.");
         if(!op1 || !op2 || !dataFim) return alert("Preencha todos os campos obrigatórios.");
 
         await _supabase.from('enquetes').insert([{
@@ -275,6 +235,7 @@
         enquetes.forEach(enq => {
             container.innerHTML += `<div class="item-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
                 <div><b>${enq.ativo}</b> (${enq.tipo.toUpperCase()})</div>
+                <div style="font-size:13px; color:#9ca3af;">Alvo/Contexto: ${enq.preco_alvo || 'Sem detalhes'}</div>
                 <div class="form-row" style="width:100%;">
                     <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op1}', '${enq.ativo}')">Venceu: ${enq.op1}</button>
                     <button class="btn-master btn-green" style="padding:6px 12px; font-size:12px;" onclick="liquidarEnqueteComRateio(${enq.id}, '${enq.op2}', '${enq.ativo}')">Venceu: ${enq.op2}</button>
